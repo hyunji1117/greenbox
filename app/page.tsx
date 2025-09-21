@@ -6,7 +6,6 @@ import FridgeBoard from '@/app/components/FridgeBoard'
 import AssignmentBoard from '@/app/components/AssignmentBoard'
 import ActivityFeed from '@/app/components/ActivityFeed'
 import { FridgeProvider } from '@/app/context/FridgeContext'
-import IngredientDict from '@/app/components/IngredientDict'
 import FoodBenefitsBoard from '@/app/components/FoodBenefitsBoard'
 
 
@@ -18,8 +17,6 @@ export default function Page() {
     switch (activeTab) {
       case 'fridge':
         return <FridgeBoard />
-      case 'wiki':
-        return <IngredientDict />
       case 'foodBenefits':
         return <FoodBenefitsBoard />
       case 'activity':
