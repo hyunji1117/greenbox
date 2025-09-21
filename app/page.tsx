@@ -6,6 +6,9 @@ import FridgeBoard from '@/app/components/FridgeBoard'
 import AssignmentBoard from '@/app/components/AssignmentBoard'
 import ActivityFeed from '@/app/components/ActivityFeed'
 import { FridgeProvider } from '@/app/context/FridgeContext'
+import IngredientDict from '@/app/components/IngredientDict'
+import FoodBenefitsBoard from '@/app/components/FoodBenefitsBoard'
+
 
 // 중요: default export로 변경
 export default function Page() {
@@ -15,10 +18,14 @@ export default function Page() {
     switch (activeTab) {
       case 'fridge':
         return <FridgeBoard />
-      case 'assignments':
-        return <AssignmentBoard />
+      case 'wiki':
+        return <IngredientDict />
+      case 'foodBenefits':
+        return <FoodBenefitsBoard />
       case 'activity':
         return <ActivityFeed />
+      case 'assignments':
+        return <AssignmentBoard />
       default:
         return <FridgeBoard />
     }
