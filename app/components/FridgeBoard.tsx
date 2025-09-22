@@ -66,7 +66,7 @@ const FridgeBoard: React.FC = () => {
           <span className="font-medium">식료품 저장고</span>
         </button>
       </div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center">
         <div className="text-sm text-gray-500">
           총 {filteredItems.length}개 아이템
         </div>
@@ -94,7 +94,7 @@ const FridgeBoard: React.FC = () => {
           </div>
         ) : (
           <div
-            className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 mt-4' : 'grid-cols-1'} gap-4`}
+            className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 mt-4' : 'grid-cols-1 mt-4'} gap-4`}
           >
             {filteredItems.map((item) => (
               <FridgeItem key={item.id} item={item} />
