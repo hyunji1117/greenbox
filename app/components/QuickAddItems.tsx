@@ -47,15 +47,15 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 'v2',
         name: '브로콜리',
         imageUrl:
-          'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2015/03/14/13/59/vegetables-673181_1280.jpg',
         defaultCategory: 'fridge',
-        expiryDays: 7,
+        expiryDays: 8,
       },
       {
         id: 'v3',
         name: '당근',
         imageUrl:
-          'https://images.unsplash.com/photo-1598170845053-a6b5985412e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2016/08/03/01/09/carrot-1565597_1280.jpg',
         defaultCategory: 'fridge',
         expiryDays: 14,
       },
@@ -65,7 +65,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         imageUrl:
           'https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
         defaultCategory: 'pantry',
-        expiryDays: 30,
+        expiryDays: 14,
       },
       {
         id: 'v5',
@@ -83,23 +83,103 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         defaultCategory: 'fridge',
         expiryDays: 7,
       },
+      {
+        id: 'v7',
+        name: '토마토',
+        imageUrl:
+          'https://cdn.pixabay.com/photo/2022/09/05/09/50/tomatoes-7433786_1280.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 12,
+      },
+      {
+        id: 'v8',
+        name: '애호박',
+        imageUrl:
+          'https://image.8dogam.com/resized/product/asset/v1/upload/a2834566bd534866b526204919a5f6f6.jpeg?type=big&res=3x&ext=jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 6,
+      },
+      {
+        id: 'v9',
+        name: '얼갈이',
+        imageUrl:
+          'https://img-cf.kurly.com/hdims/resize/%5E%3E720x%3E936/cropcenter/720x936/quality/85/src/shop/data/goods/1604383518835l0.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 3,
+      },
+      {
+        id: 'v10',
+        name: '배추',
+        imageUrl:
+          'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRQ4i8epNuFuN6xbVJgOh5Jgum-XkdVE4L9H4nKvKmnZmFkm2N9xj11z6FWkI7v1jqXkyDj2LHbJrzg7sXVMN3YhHE5LefrJWivh-I3NA',
+        defaultCategory: 'fridge',
+        expiryDays: 10,
+      },
+      {
+        id: 'v11',
+        name: '양배추',
+        imageUrl:
+          'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'fridge',
+        expiryDays: 21,
+      },
+      {
+        id: 'v12',
+        name: '꽈리고추',
+        imageUrl:
+          'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTYWB51xmjPIBEBeV6_Qy1DONUb8_AOdTegebTBFwbNss1fXhhvsC0TzjpdDvWMyvszBGA_6WdAegaI3G_zKUnoK6Wwf6HHJSdlxYCUlw',
+        defaultCategory: 'fridge',
+        expiryDays: 5,
+      },
+      {
+        id: 'v13',
+        name: '느타리버섯',
+        imageUrl:
+          'https://www.nongmin.com/-/raw/srv-nongmin/data2/content/image/2022/11/17/.cache/512/2022111701088387.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 4,
+      },
+      {
+        id: 'v14',
+        name: '팽이버섯',
+        imageUrl:
+          'https://oasisprodproduct.edge.naverncp.com/103694/detail/0_c8c66e1f-f318-4f96-9fad-d3bb760d7e74.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 4,
+      },
+      {
+        id: 'v15',
+        name: '검은 콩',
+        imageUrl:
+          'https://www.syu.ac.kr/wp-content/uploads/2021/05/%EA%B2%80%EC%9D%80%EC%BD%A9.jpg',
+        defaultCategory: 'pantry',
+        expiryDays: 365,
+      },
+      {
+        id: 'v16',
+        name: '밤',
+        imageUrl:
+          'https://cdn.100ssd.co.kr/news/photo/202110/81104_61218_5223.jpg',
+        defaultCategory: 'pantry',
+        expiryDays: 30,
+      },
     ],
     fruits: [
       {
         id: 'f1',
         name: '사과',
         imageUrl:
-          'https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2017/09/26/13/31/apple-2788616_1280.jpg',
         defaultCategory: 'fridge',
-        expiryDays: 14,
+        expiryDays: 21,
       },
       {
         id: 'f2',
         name: '바나나',
         imageUrl:
-          'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2014/04/16/09/58/banana-325461_1280.jpg',
         defaultCategory: 'pantry',
-        expiryDays: 5,
+        expiryDays: 4,
       },
       {
         id: 'f3',
@@ -107,7 +187,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         imageUrl:
           'https://hips.hearstapps.com/clv.h-cdn.co/assets/15/22/1432664914-strawberry-facts1.jpg?resize=980:*',
         defaultCategory: 'fridge',
-        expiryDays: 5,
+        expiryDays: 3,
       },
       {
         id: 'f4',
@@ -121,9 +201,9 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 'f5',
         name: '아보카도',
         imageUrl:
-          'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2015/09/18/11/37/avocados-945418_1280.jpg',
         defaultCategory: 'fridge',
-        expiryDays: 5,
+        expiryDays: 3,
       },
       {
         id: 'f6',
@@ -133,39 +213,111 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         defaultCategory: 'fridge',
         expiryDays: 14,
       },
+      {
+        id: 'f7',
+        name: '포도',
+        imageUrl:
+          'https://m.health.chosun.com/site/data/img_dir/2022/09/06/2022090602057_0.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 10,
+      },
+      {
+        id: 'f8',
+        name: '샤인머스캣',
+        imageUrl:
+          'https://cdn.wip-news.com/news/photo/202208/14578_17567_373.png',
+        defaultCategory: 'fridge',
+        expiryDays: 15,
+      },
+      {
+        id: 'f9',
+        name: '자두',
+        imageUrl:
+          'https://kormedi.com/wp-content/uploads/2023/07/ck-pc003052084-l-700x555.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 7,
+      },
+      {
+        id: 'f10',
+        name: '참외',
+        imageUrl:
+          'https://cdn.pixabay.com/photo/2021/02/10/16/48/melon-6002760_1280.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 7,
+      },
+      {
+        id: 'f11',
+        name: '수박',
+        imageUrl:
+          'https://images.unsplash.com/photo-1563114773-84221bd62daa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'fridge',
+        expiryDays: 12,
+      },
+      {
+        id: 'f12',
+        name: '멜론',
+        imageUrl:
+          'https://cdn.pixabay.com/photo/2021/04/19/11/06/melon-6191136_1280.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 7,
+      },
+      {
+        id: 'f13',
+        name: '키위',
+        imageUrl:
+          'https://images.unsplash.com/photo-1585059895524-72359e06133a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'fridge',
+        expiryDays: 14,
+      },
     ],
     meat: [
       {
         id: 'm1',
+        name: '닭가슴살',
+        imageUrl:
+          'https://shop.hansalim.or.kr/shopping/is/itm/060103025/060103025_1_568.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 2, 
+      },
+      {
+        id: 'm2',
+        name: '닭다리살',
+        imageUrl:
+          'https://image.8dogam.com/resized/product/asset/v1/upload/11d85542cefc428cb59febba0f84705e.jpg?type=big&res=2x&ext=webp',
+        defaultCategory: 'fridge',
+        expiryDays: 2,  
+      },
+      {
+        id: 'm3',
         name: '닭고기',
         imageUrl:
-          'https://images.unsplash.com/photo-1587593810167-a84920ea0781?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://i.namu.wiki/i/vgOkRMrwe7DXDYArHY8zDx6DBq1SE30znAYaji7tcI3w3ey63WV6YZqLpIovaK3eq2PaI_PjjOsDNK_x3DPe4w.webp',
+        defaultCategory: 'fridge',
+        expiryDays: 2, 
+      },
+      {
+        id: 'm4',
+        name: '소고기',
+        imageUrl:
+          'https://semie.cooking/image/contents/bs/dr/qezbtwtm/132406696dbxb.jpg',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
       {
-        id: 'm2',
-        name: '소고기',
-        imageUrl:
-          'https://images.unsplash.com/photo-1603048297172-66cdad6d4e5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        defaultCategory: 'freezer',
-        expiryDays: 180,
-      },
-      {
-        id: 'm3',
+        id: 'm5',
         name: '돼지고기',
         imageUrl:
-          'https://images.unsplash.com/photo-1602470521006-6b8b0f9e0f36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        defaultCategory: 'freezer',
-        expiryDays: 120,
+          'https://semie.cooking/image/contents/xf/ir/aqrotyfb/147716010bjva.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 3, 
       },
       {
-        id: 'm4',
+        id: 'm6',
         name: '양고기',
         imageUrl:
-          'https://images.unsplash.com/photo-1608500218890-c4f9062d6bc7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://liosystem.com/file_data/ckeditor/images/01(4).png',
         defaultCategory: 'freezer',
-        expiryDays: 120,
+        expiryDays: 120, 
       },
     ],
     seafood: [
@@ -173,7 +325,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 's1',
         name: '연어',
         imageUrl:
-          'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.travie.com/news/photo/first/201406/img_17112_1.jpg',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
@@ -181,7 +333,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 's2',
         name: '새우',
         imageUrl:
-          'https://images.unsplash.com/photo-1565680018160-64b74276baba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://cdn.pixabay.com/photo/2021/12/25/10/00/seafood-6892765_1280.jpg',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
@@ -189,7 +341,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 's3',
         name: '오징어',
         imageUrl:
-          'https://images.unsplash.com/photo-1612392062631-94dd858cba88?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+          'https://t1.daumcdn.net/cfile/tistory/997846395C877FB61D',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
@@ -197,10 +349,58 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 's4',
         name: '게',
         imageUrl:
-          'https://images.unsplash.com/photo-1550747545-c896b5f89ff7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-        defaultCategory: 'freezer',
-        expiryDays: 60,
+          'https://cdn.news.hidoc.co.kr/news/photo/201610/11967_26572_0259.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 1,
       },
+      {
+        id: 's5',
+        name: '굴',
+        imageUrl:
+          'https://img.khan.co.kr/news/2024/04/07/l_2024040501000039800015021.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 7,
+      },
+      {
+        id: 's6',
+        name: '조개',
+        imageUrl:
+          'https://src.hidoc.co.kr/image/lib/2023/1/18/1674031118952_0.png',
+        defaultCategory: 'fridge',
+        expiryDays: 3,
+      },
+      {
+        id: 's7',
+        name: '고등어',
+        imageUrl:
+          'https://cdn.clipkit.co/tenants/1336/item_images/images/000/002/525/original/e61638c7-d43a-4327-9992-6703d6774c91.jpg?1707276770',
+        defaultCategory: 'fridge',
+        expiryDays: 3,
+      },
+      {
+        id: 's8',
+        name: '조기',
+        imageUrl:
+          'https://lh6.googleusercontent.com/proxy/b0ory3hutLyjo4evQaMwnnTllUzD74rd3kQUGs3fDeawfKyXz5fSP4VXzyp_TF4guZWQRPyXAqpyacSJaoj9hYe0_Jb_uvkzd9qpeQ',
+        defaultCategory: 'fridge',
+        expiryDays: 2,
+      },
+      {
+        id: 's9',
+        name: '전복',
+        imageUrl:
+          'https://i.namu.wiki/i/_sqroekGlAEae_82MHjewNN07YyIiyPnY_rzx49T83KA_yJQ7nOcQY7vaGZEgo5fNX9Hm_ffC-opsvF6rJzMSQ.webp',
+        defaultCategory: 'fridge',
+        expiryDays: 2,
+      },
+      {
+        id: 's10',
+        name: '미역줄기',
+        imageUrl:
+          'https://wooltariusa.com/cdn/shop/files/0-1_f9091c38-2bac-4f0b-9ce0-e5d707a64135.jpg?v=1688538412',
+        defaultCategory: 'fridge',
+        expiryDays: 5,
+      }
     ],
   }
   // Check if an item is already in the fridge and not finished
@@ -311,15 +511,17 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         </button>
       </div>
       {/* Grid of items */}
-      <div className="grid grid-cols-3 gap-4 overflow-y-auto flex-1">
+      <div className="grid grid-cols-3 gap-4 overflow-y-auto flex-1 max-h-[400px]">
         {categories[activeCategory].map((item) => {
           const itemAdded = isItemAdded(item.name, item.defaultCategory)
           return (
             <div
-              key={item.id}
-              className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow ${itemAdded ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}`}
-              onClick={() => !itemAdded && handleItemClick(item)}
-            >
+          key={item.id}
+          className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow ${
+            itemAdded ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
+          }`}
+          onClick={() => !itemAdded && handleItemClick(item)}
+        >
               <div className="h-24 overflow-hidden">
                 <img
                   src={item.imageUrl}
