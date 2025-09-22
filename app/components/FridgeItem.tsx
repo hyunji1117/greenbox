@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useFridge } from '../context/FridgeContext'
-import { CheckIcon, MessageCircle, MinusIcon, PlusIcon } from 'lucide-react'
+import { CircleCheckBig, MessageCircleIcon, MinusIcon, PlusIcon, Trash2 } from 'lucide-react'
 interface FridgeItemProps {
   item: {
     id: string
@@ -66,6 +66,11 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       return `${Math.floor(diffInSeconds / 3600)}시간 전`
     return `${Math.floor(diffInSeconds / 86400)}일 전`
   }
+  // 현재로서는 markAsFinished와 동일한 동작을 사용합니다.
+  // 추후 애플리케이션에서 "버림"과 "다 먹음"을 다르게 추적 예정.
+  const handleTrashItem = () => {
+    markAsFinished(item.id)
+  }
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-indigo-500 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start">
@@ -101,25 +106,32 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             </div>
           </div>
         </div>
-        <div className="flex space-x-2">
-          <button
+        <div className="flex relative top-6 -right-2 space-x-2">
+        <button
             onClick={() => setShowComments(!showComments)}
-            className="px-3 pt-4 text-gray-500 rounded-full relative"
+            className="p-2 text-[#6B7280] hover:bg-gray-100 rounded-full relative"
             title="댓글"
           >
-            <MessageCircle size={20} />
+            <MessageCircleIcon size={20} />
             {item.comments.length > 0 && (
-              <span className="absolute top-2.5 right-1.5 bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+              <span className="absolute top-0.5 right-0.5 bg-red-400 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
                 {item.comments.length}
               </span>
             )}
           </button>
           <button
             onClick={() => markAsFinished(item.id)}
-            className="px-3 pt-4 text-gray-500 rounded-full"
+            className="p-2 text-[#6B7280] hover:bg-gray-100 rounded-full"
             title="다 먹음"
           >
-            <CheckIcon size={20} />
+            <CircleCheckBig size={20} />
+          </button>
+          <button
+            onClick={handleTrashItem}
+            className="p-2 text-[#6B7280] hover:bg-gray-100 rounded-full"
+            title="버림"
+          >
+            <Trash2 size={20} />
           </button>
         </div>
       </div>
