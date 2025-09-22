@@ -1,19 +1,27 @@
 import React, { useState } from 'react'
-import {
-  useFridge,
-  FridgeItem as FridgeItemType,
-} from '@/app/context/FridgeContext'
-import { MessageCircle, Check } from 'lucide-react'
-
+import { useFridge } from '../context/FridgeContext'
+import { CheckIcon, MessageCircle, MinusIcon, PlusIcon } from 'lucide-react'
 interface FridgeItemProps {
-  item: FridgeItemType
+  item: {
+    id: string
+    name: string
+    category: 'fridge' | 'freezer' | 'pantry'
+    quantity: number
+    addedBy: string
+    addedAt: Date
+    comments: Array<{
+      id: string
+      text: string
+      author: string
+      createdAt: Date
+    }>
+    finished: boolean
+  }
 }
-
 const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
-  const { markAsFinished, addComment } = useFridge()
+  const { markAsFinished, addComment, updateItem } = useFridge()
   const [showComments, setShowComments] = useState(false)
   const [newComment, setNewComment] = useState('')
-  
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault()
     if (newComment.trim()) {
@@ -21,7 +29,18 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       setNewComment('')
     }
   }
-  
+  const incrementQuantity = () => {
+    updateItem(item.id, {
+      quantity: item.quantity + 1,
+    })
+  }
+  const decrementQuantity = () => {
+    if (item.quantity > 1) {
+      updateItem(item.id, {
+        quantity: item.quantity - 1,
+      })
+    }
+  }
   const getFamilyMemberName = (member: string): string => {
     switch (member) {
       case 'mom':
@@ -36,31 +55,56 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
         return member
     }
   }
-  
   const getRelativeTimeString = (date: Date): string => {
     const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
+    const diffInSeconds = Math.floor(
+      (now.getTime() - new Date(date).getTime()) / 1000,
+    )
     if (diffInSeconds < 60) return '방금 전'
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}분 전`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}시간 전`
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}시간 전`
     return `${Math.floor(diffInSeconds / 86400)}일 전`
   }
-  
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-indigo-500 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold">{item.name}</h3>
-          <p className="text-sm text-gray-500">
-            {getFamilyMemberName(item.addedBy)}가{' '}
-            {getRelativeTimeString(item.addedAt)} 추가
-          </p>
+        <div className="flex items-center relative">
+        <div className="absolute -top-6 -left-5 bg-white text-gray-600 border border-[#9E9E9E] rounded-full w-6 h-6 flex items-center justify-center font-medium text-sm">
+          {item.quantity}
+        </div>
+          <div>
+            <h3 className="text-lg font-semibold">{item.name}</h3>
+            <div className="flex items-center">
+              <p className="text-sm text-gray-500 mr-3">
+                {getFamilyMemberName(item.addedBy)}가{' '}
+                {getRelativeTimeString(item.addedAt)} 추가
+              </p>
+              <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden">
+                <button
+                  onClick={decrementQuantity}
+                  className="px-2 py-1 text-[#6B7280] hover:bg-gray-200 transition-colors"
+                  disabled={item.quantity <= 1}
+                >
+                  <MinusIcon size={16} />
+                </button>
+                <span className="px-3 py-1 font-medium text-sm text-[#6B7280]">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={incrementQuantity}
+                  className="px-2 py-1 text-[#6B7280] hover:bg-gray-200 transition-colors"
+                >
+                  <PlusIcon size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex space-x-2">
           <button
             onClick={() => setShowComments(!showComments)}
-            className="px-3 pt-4 text-gray-500  rounded-full relative"
+            className="px-3 pt-4 text-gray-500 rounded-full relative"
             title="댓글"
           >
             <MessageCircle size={20} />
@@ -75,11 +119,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             className="px-3 pt-4 text-gray-500 rounded-full"
             title="다 먹음"
           >
-            <Check size={20} />
+            <CheckIcon size={20} />
           </button>
         </div>
       </div>
-      
       {showComments && (
         <div className="mt-4">
           <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
@@ -121,5 +164,4 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
     </div>
   )
 }
-
 export default FridgeItem
