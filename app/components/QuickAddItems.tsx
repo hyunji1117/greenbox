@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { useFridge } from '../context/FridgeContext'
+import React, { useEffect, useState, useRef } from 'react';
+import { useFridge } from '@/app/context/FridgeContext';
 import {
   LeafIcon,
   AppleIcon,
@@ -9,27 +9,30 @@ import {
   XIcon,
   CheckIcon,
   MinusIcon,
-} from 'lucide-react'
+} from 'lucide-react';
+import AddItemForm from '@/app/components/AddItemForm';
+import Image from 'next/image';
 interface QuickAddItemProps {
-  onClose: () => void
+  onClose: () => void;
 }
 interface CategoryItem {
-  id: string
-  name: string
-  imageUrl: string
-  defaultCategory: 'fridge' | 'freezer' | 'pantry'
-  expiryDays: number
+  id: string;
+  name: string;
+  imageUrl: string;
+  defaultCategory: 'fridge' | 'freezer' | 'pantry';
+  expiryDays: number;
 }
 const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
-  const { addItem, currentUser, items } = useFridge()
-  const modalRef = useRef<HTMLDivElement>(null)
+  const { addItem, currentUser, items } = useFridge();
+  const modalRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<
     'vegetables' | 'fruits' | 'meat' | 'seafood'
-  >('vegetables')
-  const [selectedItem, setSelectedItem] = useState<CategoryItem | null>(null)
-  const [quantity, setQuantity] = useState(1)
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+  >('vegetables');
+  const [selectedItem, setSelectedItem] = useState<CategoryItem | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
   const categories: Record<
     'vegetables' | 'fruits' | 'meat' | 'seafood',
     CategoryItem[]
@@ -277,7 +280,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         imageUrl:
           'https://shop.hansalim.or.kr/shopping/is/itm/060103025/060103025_1_568.jpg',
         defaultCategory: 'fridge',
-        expiryDays: 2, 
+        expiryDays: 2,
       },
       {
         id: 'm2',
@@ -285,7 +288,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         imageUrl:
           'https://image.8dogam.com/resized/product/asset/v1/upload/11d85542cefc428cb59febba0f84705e.jpg?type=big&res=2x&ext=webp',
         defaultCategory: 'fridge',
-        expiryDays: 2,  
+        expiryDays: 2,
       },
       {
         id: 'm3',
@@ -293,13 +296,13 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         imageUrl:
           'https://i.namu.wiki/i/vgOkRMrwe7DXDYArHY8zDx6DBq1SE30znAYaji7tcI3w3ey63WV6YZqLpIovaK3eq2PaI_PjjOsDNK_x3DPe4w.webp',
         defaultCategory: 'fridge',
-        expiryDays: 2, 
+        expiryDays: 2,
       },
       {
         id: 'm4',
         name: '소고기',
         imageUrl:
-          'https://semie.cooking/image/contents/bs/dr/qezbtwtm/132406696dbxb.jpg',
+          'https://i.namu.wiki/i/XNIoYoEhSxNaURniAp8AcRrb4pbli_mmxtYBbbZXa4GqHuim2BYql5YTW1p7hjdcIq1kMzM7xZBW3u2sL_BFGw.webp',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
@@ -307,17 +310,17 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         id: 'm5',
         name: '돼지고기',
         imageUrl:
-          'https://semie.cooking/image/contents/xf/ir/aqrotyfb/147716010bjva.jpg',
+          'https://i.namu.wiki/i/VBcDkoPXajYoNcRUcVHQdfvB-Npe16B_s3ULp71MXsw2qcyVgvbZjQtQOFXKcZBn36hB1O07LSPkLYEKRtP5FA.webp',
         defaultCategory: 'fridge',
-        expiryDays: 3, 
+        expiryDays: 3,
       },
       {
         id: 'm6',
         name: '양고기',
         imageUrl:
-          'https://liosystem.com/file_data/ckeditor/images/01(4).png',
+          'https://i.namu.wiki/i/rMS0tkV-UJEGKcLRCMEf0upSVNzKhku1cZ2tK_LMm3093ujw2Mr1Qq1OUiVMsmXR8dpKKLG9vLgz5KFqiGrY7iCAFgVqMasel_X5DSBt7fXJ21VbULW-4pxin37u6kNe7k8vPsykIADD2A52g30Big.webp',
         defaultCategory: 'freezer',
-        expiryDays: 120, 
+        expiryDays: 120,
       },
     ],
     seafood: [
@@ -340,8 +343,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       {
         id: 's3',
         name: '오징어',
-        imageUrl:
-          'https://t1.daumcdn.net/cfile/tistory/997846395C877FB61D',
+        imageUrl: 'https://t1.daumcdn.net/cfile/tistory/997846395C877FB61D',
         defaultCategory: 'freezer',
         expiryDays: 90,
       },
@@ -400,24 +402,24 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           'https://wooltariusa.com/cdn/shop/files/0-1_f9091c38-2bac-4f0b-9ce0-e5d707a64135.jpg?v=1688538412',
         defaultCategory: 'fridge',
         expiryDays: 5,
-      }
+      },
     ],
-  }
+  };
   // Check if an item is already in the fridge and not finished
   const isItemAdded = (itemName: string, category: string) => {
     return items.some(
-      (item) =>
+      item =>
         item.name === itemName && item.category === category && !item.finished,
-    )
-  }
+    );
+  };
   const handleItemClick = (item: CategoryItem) => {
     // Only allow selection if the item is not already added or is marked as finished
     if (!isItemAdded(item.name, item.defaultCategory)) {
-      setSelectedItem(item)
+      setSelectedItem(item);
       // Reset quantity to 1 when selecting a new item
-      setQuantity(1)
+      setQuantity(1);
     }
-  }
+  };
   const handleAddItem = () => {
     if (selectedItem) {
       // Check if the item is already in the fridge and not finished
@@ -429,27 +431,27 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           quantity: quantity,
           addedBy: currentUser,
           finished: false,
-        })
-        setToastMessage(`${selectedItem.name}(이)가 추가되었습니다!`)
-        setShowToast(true)
+        });
+        setToastMessage(`${selectedItem.name}(이)가 추가되었습니다!`);
+        setShowToast(true);
         setTimeout(() => {
-          setShowToast(false)
-        }, 3000)
+          setShowToast(false);
+        }, 3000);
         // Reset selection after adding
-        setSelectedItem(null)
+        setSelectedItem(null);
         // Reset quantity to 1 after adding an item
-        setQuantity(1)
+        setQuantity(1);
       }
     }
-  }
+  };
   const incrementQuantity = () => {
-    setQuantity((prev) => prev + 1)
-  }
+    setQuantity(prev => prev + 1);
+  };
   const decrementQuantity = () => {
     if (quantity > 1) {
-      setQuantity((prev) => prev - 1)
+      setQuantity(prev => prev - 1);
     }
-  }
+  };
   // Handle click outside to close the modal
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -457,128 +459,159 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         modalRef.current &&
         !modalRef.current.contains(event.target as Node)
       ) {
-        onClose()
+        onClose();
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
+    };
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [onClose])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
   return (
-    <div className="h-full flex flex-col" ref={modalRef}>
-      {/* Toast notification */}
-      {showToast && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-out">
-          {toastMessage}
+    <>
+      {/* AddItemForm 모달 */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <AddItemForm
+            onClose={() => setShowAddForm(false)}
+            initialCategory={
+              activeCategory === 'vegetables' || activeCategory === 'fruits'
+                ? 'fridge'
+                : activeCategory === 'meat'
+                  ? 'fridge'
+                  : 'freezer'
+            }
+          />
         </div>
       )}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">자주 사용하는 식재료</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          <XIcon size={24} />
-        </button>
-      </div>
-      {/* Category tabs */}
-      <div className="flex space-x-2 mb-6">
-        <button
-          onClick={() => setActiveCategory('vegetables')}
-          className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center space-x-2 ${activeCategory === 'vegetables' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          <LeafIcon size={18} />
-          <span className="font-medium">채소</span>
-        </button>
-        <button
-          onClick={() => setActiveCategory('fruits')}
-          className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center space-x-2 ${activeCategory === 'fruits' ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          <AppleIcon size={18} />
-          <span className="font-medium">과일</span>
-        </button>
-        <button
-          onClick={() => setActiveCategory('meat')}
-          className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center space-x-2 ${activeCategory === 'meat' ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          <BeefIcon size={18} />
-          <span className="font-medium">고기</span>
-        </button>
-        <button
-          onClick={() => setActiveCategory('seafood')}
-          className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center space-x-2 ${activeCategory === 'seafood' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          <FishIcon size={18} />
-          <span className="font-medium">해산물</span>
-        </button>
-      </div>
-      {/* Grid of items */}
-      <div className="grid grid-cols-3 gap-4 overflow-y-auto flex-1 max-h-[400px]">
-        {categories[activeCategory].map((item) => {
-          const itemAdded = isItemAdded(item.name, item.defaultCategory)
-          return (
-            <div
-          key={item.id}
-          className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow ${
-            itemAdded ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
-          }`}
-          onClick={() => !itemAdded && handleItemClick(item)}
-        >
-              <div className="h-24 overflow-hidden">
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-2 text-center">
-                <h3 className="font-medium text-sm">{item.name}</h3>
-                <div
-                  className={`text-xs mt-1 flex items-center justify-center ${itemAdded ? 'text-green-500' : 'text-gray-500'}`}
-                >
-                  {itemAdded ? (
-                    <CheckIcon size={12} className="mr-1" />
-                  ) : (
-                    <PlusIcon size={12} className="mr-1" />
-                  )}
-                  <span>{itemAdded ? '추가됨' : '추가하기'}</span>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      {selectedItem && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-medium">{selectedItem.name} 추가하기</h3>
-              <p className="text-sm text-gray-500">수량을 선택하세요</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={decrementQuantity}
-                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
-                disabled={quantity <= 1}
-              >
-                <MinusIcon size={16} />
-              </button>
-              <span className="w-8 text-center font-medium">{quantity}</span>
-              <button
-                onClick={incrementQuantity}
-                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
-              >
-                <PlusIcon size={16} />
-              </button>
-            </div>
+      <div className="flex h-full flex-col" ref={modalRef}>
+        {/* Toast notification */}
+        {showToast && (
+          <div className="animate-fade-in-out fixed top-4 right-4 z-50 rounded-lg bg-green-500 px-4 py-2 text-white shadow-lg">
+            {toastMessage}
           </div>
+        )}
+        <div className="mb-4 flex items-center">
+          <h2 className="text-xl font-bold">자주 사용하는 식재료</h2>
           <button
-            onClick={handleAddItem}
-            className="w-full mt-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            onClick={() => setShowAddForm(true)}
+            className="ml-4 flex max-w-[200px] items-center justify-center rounded-lg bg-[#6B46C1] px-2 py-1 text-white transition-colors hover:bg-[#603fad]"
           >
-            추가하기
+            <PlusIcon size={20} />
+            <span className="font-medium">직접 추가</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="ml-auto text-gray-500 hover:text-gray-700"
+          >
+            <XIcon size={24} />
           </button>
         </div>
-      )}
-    </div>
-  )
-}
-export default QuickAddItems
+        {/* Category tabs */}
+        <div className="mb-6 flex space-x-2">
+          <button
+            onClick={() => setActiveCategory('vegetables')}
+            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            <LeafIcon size={18} />
+            <span className="font-medium">채소</span>
+          </button>
+          <button
+            onClick={() => setActiveCategory('fruits')}
+            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'fruits' ? 'border border-red-300 bg-red-100 text-red-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            <AppleIcon size={18} />
+            <span className="font-medium">과일</span>
+          </button>
+          <button
+            onClick={() => setActiveCategory('meat')}
+            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'meat' ? 'border border-orange-300 bg-orange-100 text-orange-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            <BeefIcon size={18} />
+            <span className="font-medium">고기</span>
+          </button>
+          <button
+            onClick={() => setActiveCategory('seafood')}
+            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            <FishIcon size={18} />
+            <span className="font-medium">해산물</span>
+          </button>
+        </div>
+        {/* Grid of items */}
+        <div className="grid max-h-[400px] flex-1 grid-cols-3 gap-4 overflow-y-auto">
+          {categories[activeCategory].map(item => {
+            const itemAdded = isItemAdded(item.name, item.defaultCategory);
+            return (
+              <div
+                key={item.id}
+                className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow ${
+                  itemAdded
+                    ? 'cursor-not-allowed opacity-70'
+                    : 'cursor-pointer hover:shadow-md'
+                }`}
+                onClick={() => !itemAdded && handleItemClick(item)}
+              >
+                <div className="relative h-24 overflow-hidden">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="h-full w-full object-cover"
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                </div>
+                <div className="p-2 text-center">
+                  <h3 className="text-sm font-medium">{item.name}</h3>
+                  <div
+                    className={`mt-1 flex items-center justify-center text-xs ${itemAdded ? 'text-green-500' : 'text-gray-500'}`}
+                  >
+                    {itemAdded ? (
+                      <CheckIcon size={12} className="mr-1" />
+                    ) : (
+                      <PlusIcon size={12} className="mr-1" />
+                    )}
+                    <span>{itemAdded ? '추가됨' : '추가하기'}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {selectedItem && (
+          <div className="mt-4 rounded-lg bg-gray-50 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">{selectedItem.name} 추가하기</h3>
+                <p className="text-sm text-gray-500">수량을 선택하세요</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={decrementQuantity}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200"
+                  disabled={quantity <= 1}
+                >
+                  <MinusIcon size={16} />
+                </button>
+                <span className="w-8 text-center font-medium">{quantity}</span>
+                <button
+                  onClick={incrementQuantity}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200"
+                >
+                  <PlusIcon size={16} />
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={handleAddItem}
+              className="mt-3 w-full rounded-lg bg-indigo-600 py-2 text-white hover:bg-indigo-700"
+            >
+              추가하기
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+export default QuickAddItems;
