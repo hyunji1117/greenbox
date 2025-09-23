@@ -29,7 +29,7 @@ const FridgeBoard: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowQuickAdd(true)}
-            className="flex items-center space-x-1 rounded-lg bg-[#6B46C1] px-3 py-1 text-white transition-colors hover:bg-[#603fad]"
+            className="flex items-center space-x-1 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-sm text-white transition-colors hover:bg-[#603fad]"
           >
             <Plus size={18} />
             <span>식재료 추가</span>
@@ -39,24 +39,24 @@ const FridgeBoard: React.FC = () => {
       <div className="mb-6 flex space-x-4">
         <button
           onClick={() => setActiveCategory('fridge')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl px-1 ${activeCategory === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
         >
-          <RefrigeratorIcon size={20} />
+          <RefrigeratorIcon size={18} />
           <span className="font-medium">냉장실</span>
         </button>
         <button
           onClick={() => setActiveCategory('freezer')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl px-1 ${activeCategory === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
         >
-          <SnowflakeIcon size={20} />
+          <SnowflakeIcon size={18} />
           <span className="font-medium">냉동실</span>
         </button>
         <button
           onClick={() => setActiveCategory('pantry')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl px-1 ${activeCategory === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
         >
-          <PackageIcon size={20} />
-          <span className="font-medium">식료품 저장고</span>
+          <PackageIcon size={18} />
+          <span className="font-medium">펜트리</span>
         </button>
       </div>
       <div className="flex items-center justify-between">
@@ -107,7 +107,7 @@ const FridgeBoard: React.FC = () => {
       )}
       {showQuickAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-5 max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white p-6">
+          <div className="mx-5 max-h-[80vh] w-full max-w-xl rounded-lg bg-white p-5">
             <QuickAddItems onClose={() => setShowQuickAdd(false)} />
           </div>
         </div>
