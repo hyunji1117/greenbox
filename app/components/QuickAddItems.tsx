@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
-  LeafyGreen,
+  LeafyGreenIcon,
   AppleIcon,
   BeefIcon,
   FishIcon,
@@ -452,28 +452,35 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       setQuantity(prev => prev - 1);
     }
   };
-  // Handle click outside to close the modal
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         modalRef.current &&
         !modalRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        if (!showAddForm) {
+          onClose();
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [onClose]);
+  }, [onClose, showAddForm]);
+  const handleDirectAddClick = () => {
+    setShowAddForm(true);
+  };
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+  };
   return (
     <>
       {/* AddItemForm 모달 */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <AddItemForm
-            onClose={() => setShowAddForm(false)}
+            onClose={handleCloseAddForm}
             initialCategory={
               activeCategory === 'vegetables' || activeCategory === 'fruits'
                 ? 'fridge'
@@ -494,7 +501,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         <div className="mb-4 flex items-center">
           <h2 className="text-md font-bold">자주 사용하는 식재료</h2>
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={handleDirectAddClick}
             className="ml-4 flex max-w-[200px] items-center justify-center space-x-0.5 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white transition-colors hover:bg-[#603fad]"
           >
             <PlusIcon size={15} />
@@ -513,7 +520,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             onClick={() => setActiveCategory('vegetables')}
             className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <LeafyGreen size={15} />
+            <LeafyGreenIcon size={15} />
             <span className="text-sm">채소</span>
           </button>
           <button
@@ -545,11 +552,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             return (
               <div
                 key={item.id}
-                className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow ${
-                  itemAdded
-                    ? 'cursor-not-allowed opacity-70'
-                    : 'cursor-pointer hover:shadow-md'
-                }`}
+                className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow ${itemAdded ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:shadow-md'}`}
                 onClick={() => !itemAdded && handleItemClick(item)}
               >
                 <div className="relative h-15 overflow-hidden">
@@ -581,7 +584,6 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         {selectedItem && (
           <div className="mt-4 rounded-lg bg-gray-50 p-3">
             <div className="ml-1 flex items-center justify-between">
-              {/* <div className="flex w-full items-center justify-between rounded-lg bg-gray-50 p-4 shadow-lg"> */}
               <div>
                 <h3 className="mb-1 text-sm">{selectedItem.name} 추가하기</h3>
                 <p className="text-xs text-gray-500">수량을 선택하세요</p>

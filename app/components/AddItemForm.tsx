@@ -1,20 +1,17 @@
-// app/components/AddItemForm.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
   RefrigeratorIcon,
   SnowflakeIcon,
-  Package2,
+  Package2Icon,
   MinusIcon,
   PlusIcon,
   CalendarIcon,
 } from 'lucide-react';
-
 interface AddItemFormProps {
   onClose: () => void;
   initialCategory?: 'fridge' | 'freezer' | 'pantry';
 }
-
 const AddItemForm: React.FC<AddItemFormProps> = ({
   onClose,
   initialCategory = 'fridge',
@@ -29,6 +26,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
 
   // 폼 외부 클릭 감지
+  const isFormValid = name.trim() !== '' && expiryDate !== '';
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (formRef.current && !formRef.current.contains(event.target as Node)) {
@@ -44,12 +42,12 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onClose]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Only proceed if the form is valid
+    if (!isFormValid) return;
     const finalQuantity =
       typeof quantity === 'string' || quantity < 1 ? 1 : quantity;
-
     if (name.trim()) {
       addItem({
         name,
@@ -62,7 +60,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       onClose();
     }
   };
-
   const handleQuantityChange = (value: number) => {
     const currentQty = typeof quantity === 'string' ? 1 : quantity;
     const newValue = currentQty + value;
@@ -70,13 +67,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       setQuantity(newValue);
     }
   };
-
   const handleQuantityInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value;
 
-    // 숫자만 입력 가능하도록 처리
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
       setQuantity(numValue);
@@ -91,7 +86,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-
   return (
     <form
       ref={formRef}
@@ -99,13 +93,12 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       className="w-full max-w-md rounded-xl bg-white p-5 shadow-lg"
     >
       <h2 className="mb-2 text-lg font-semibold">식재료 추가</h2>
-
       <div className="mb-4">
         <label
           htmlFor="name"
           className="mb-1 block text-sm font-medium text-gray-700"
         >
-          식재료 이름
+          식재료 이름<span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -118,7 +111,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           autoFocus
         />
       </div>
-
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           카테고리
@@ -127,11 +119,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('fridge')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${
-              category === 'fridge'
-                ? 'border border-blue-300 bg-blue-100 text-blue-700'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <RefrigeratorIcon size={15} />
             <span>냉장실</span>
@@ -139,11 +127,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('freezer')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${
-              category === 'freezer'
-                ? 'border border-blue-300 bg-blue-100 text-blue-700'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <SnowflakeIcon size={15} />
             <span>냉동실</span>
@@ -151,24 +135,19 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('pantry')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${
-              category === 'pantry'
-                ? 'border border-blue-300 bg-blue-100 text-blue-700'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <Package2 size={15} />
+            <Package2Icon size={15} />
             <span>펜트리</span>
           </button>
         </div>
       </div>
-
       <div className="mb-6">
         <label
           htmlFor="expiryDate"
           className="mb-1 block text-sm font-medium text-gray-700"
         >
-          유효기간
+          유효기간<span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
@@ -178,6 +157,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
             onChange={e => setExpiryDate(e.target.value)}
             min={getTodayDate()}
             className="w-full rounded-xl border border-gray-300 px-3 py-2 pl-10 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            required
           />
           <CalendarIcon
             size={18}
@@ -185,7 +165,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           />
         </div>
         <p className="mt-1 text-xs text-gray-500">
-          선택사항: 유효기간을 설정하면 만료 알림을 받을 수 있습니다
+          <span className="text-red-500">필수항목:</span> 유효기간을 설정하면
+          만료 알림을 받을 수 있습니다
         </p>
       </div>
       <div className="flex items-center justify-end">
@@ -223,7 +204,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
         </button>
         <button
           type="submit"
-          className="h-[30px] space-x-1 rounded-xl bg-[#6B46C1] px-4 text-sm text-white transition-colors hover:bg-[#603fad]"
+          disabled={!isFormValid}
+          className={`h-[30px] space-x-1 rounded-xl px-4 text-sm text-white transition-colors ${isFormValid ? 'bg-[#6B46C1] hover:bg-[#603fad]' : 'cursor-not-allowed bg-gray-400'}`}
         >
           추가하기
         </button>
@@ -231,5 +213,4 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     </form>
   );
 };
-
 export default AddItemForm;
