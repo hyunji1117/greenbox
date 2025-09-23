@@ -10,6 +10,7 @@ export interface FridgeItem {
   addedAt: Date
   comments: Comment[]
   finished: boolean
+  expiryDate?: string
 }
 export interface Comment {
   id: string
