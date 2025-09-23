@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
-  LeafIcon,
+  LeafyGreen,
   AppleIcon,
   BeefIcon,
   FishIcon,
@@ -492,54 +492,54 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           </div>
         )}
         <div className="mb-4 flex items-center">
-          <h2 className="text-xl font-bold">자주 사용하는 식재료</h2>
+          <h2 className="text-md font-bold">자주 사용하는 식재료</h2>
           <button
             onClick={() => setShowAddForm(true)}
-            className="ml-4 flex max-w-[200px] items-center justify-center rounded-lg bg-[#6B46C1] px-2 py-1 text-white transition-colors hover:bg-[#603fad]"
+            className="ml-4 flex max-w-[200px] items-center justify-center space-x-0.5 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white transition-colors hover:bg-[#603fad]"
           >
-            <PlusIcon size={20} />
+            <PlusIcon size={15} />
             <span className="font-medium">직접 추가</span>
           </button>
           <button
             onClick={onClose}
             className="ml-auto text-gray-500 hover:text-gray-700"
           >
-            <XIcon size={24} />
+            <XIcon size={20} />
           </button>
         </div>
         {/* Category tabs */}
-        <div className="mb-6 flex space-x-2">
+        <div className="mb-4 flex space-x-2">
           <button
             onClick={() => setActiveCategory('vegetables')}
-            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <LeafIcon size={18} />
-            <span className="font-medium">채소</span>
+            <LeafyGreen size={15} />
+            <span className="text-sm">채소</span>
           </button>
           <button
             onClick={() => setActiveCategory('fruits')}
-            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'fruits' ? 'border border-red-300 bg-red-100 text-red-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'fruits' ? 'border border-red-300 bg-red-100 text-red-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <AppleIcon size={18} />
-            <span className="font-medium">과일</span>
+            <AppleIcon size={15} />
+            <span className="text-sm">과일</span>
           </button>
           <button
             onClick={() => setActiveCategory('meat')}
-            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'meat' ? 'border border-orange-300 bg-orange-100 text-orange-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'meat' ? 'border border-orange-300 bg-orange-100 text-orange-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <BeefIcon size={18} />
-            <span className="font-medium">고기</span>
+            <BeefIcon size={15} />
+            <span className="text-sm">고기</span>
           </button>
           <button
             onClick={() => setActiveCategory('seafood')}
-            className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-3 py-2 ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <FishIcon size={18} />
-            <span className="font-medium">해산물</span>
+            <FishIcon size={15} />
+            <span className="text-sm">해산물</span>
           </button>
         </div>
         {/* Grid of items */}
-        <div className="grid max-h-[400px] flex-1 grid-cols-3 gap-4 overflow-y-auto">
+        <div className="grid max-h-[250px] flex-1 grid-cols-3 gap-1 overflow-y-auto">
           {categories[activeCategory].map(item => {
             const itemAdded = isItemAdded(item.name, item.defaultCategory);
             return (
@@ -552,7 +552,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                 }`}
                 onClick={() => !itemAdded && handleItemClick(item)}
               >
-                <div className="relative h-24 overflow-hidden">
+                <div className="relative h-15 overflow-hidden">
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
@@ -579,24 +579,25 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           })}
         </div>
         {selectedItem && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-4">
-            <div className="flex items-center justify-between">
+          <div className="mt-4 rounded-lg bg-gray-50 p-3">
+            <div className="ml-1 flex items-center justify-between">
+              {/* <div className="flex w-full items-center justify-between rounded-lg bg-gray-50 p-4 shadow-lg"> */}
               <div>
-                <h3 className="font-medium">{selectedItem.name} 추가하기</h3>
-                <p className="text-sm text-gray-500">수량을 선택하세요</p>
+                <h3 className="mb-1 text-sm">{selectedItem.name} 추가하기</h3>
+                <p className="text-xs text-gray-500">수량을 선택하세요</p>
               </div>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={decrementQuantity}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200"
                   disabled={quantity <= 1}
                 >
                   <MinusIcon size={16} />
                 </button>
-                <span className="w-8 text-center font-medium">{quantity}</span>
+                <span className="w-8 text-center text-sm">{quantity}</span>
                 <button
                   onClick={incrementQuantity}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200"
                 >
                   <PlusIcon size={16} />
                 </button>
@@ -604,7 +605,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             </div>
             <button
               onClick={handleAddItem}
-              className="mt-3 w-full rounded-lg bg-indigo-600 py-2 text-white hover:bg-indigo-700"
+              className="mt-2 w-full rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white transition-colors hover:bg-[#603fad]"
             >
               추가하기
             </button>
