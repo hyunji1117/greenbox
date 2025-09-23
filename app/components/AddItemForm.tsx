@@ -90,13 +90,13 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="w-full max-w-md rounded-xl bg-white p-5 shadow-lg"
+      className="mx-10 w-full max-w-md rounded-xl bg-white p-5 shadow-lg"
     >
       <h2 className="mb-2 text-lg font-semibold">식재료 추가</h2>
       <div className="mb-4">
         <label
           htmlFor="name"
-          className="mb-1 block text-sm font-medium text-gray-700"
+          className="mb-1 block rounded-xl text-sm font-medium text-gray-700"
         >
           식재료 이름<span className="text-red-500">*</span>
         </label>
@@ -156,15 +156,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
             value={expiryDate}
             onChange={e => setExpiryDate(e.target.value)}
             min={getTodayDate()}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 pl-10 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             required
           />
-          <CalendarIcon
-            size={18}
-            className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
-          />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-[gray-500]">
           <span className="text-red-500">필수항목:</span> 유효기간을 설정하면
           만료 알림을 받을 수 있습니다
         </p>
