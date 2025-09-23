@@ -10,6 +10,7 @@ import {
   XIcon,
   CheckIcon,
   MinusIcon,
+  // Check,
 } from 'lucide-react';
 import AddItemForm from '@/app/components/AddItemForm';
 import Image from 'next/image';
@@ -510,7 +511,8 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           addedBy: currentUser,
           finished: false,
         });
-        setToastMessage(`${selectedItem.name}(이)가 추가되었습니다!`);
+        // setToastMessage(`${selectedItem.name} 식재료가 추가되었습니다`);
+        setToastMessage('식재료가 추가되었습니다!');
         setShowToast(true);
         setTimeout(() => {
           setShowToast(false);
@@ -570,7 +572,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       <div className="flex h-120 flex-col" ref={modalRef}>
         {/* Toast notification */}
         {showToast && (
-          <div className="animate-fade-in-out fixed top-4 right-4 z-50 rounded-lg bg-green-500 px-4 py-2 text-white shadow-lg">
+          <div className="animate-fade-in fixed top-3 left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-3xl bg-white px-4 py-3 text-sm text-black shadow-lg">
             {toastMessage}
           </div>
         )}
@@ -615,7 +617,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           </button>
           <button
             onClick={() => setActiveCategory('seafood')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`min-w-[] space-x-0.2 flex min-h-[40px] flex-1 items-center justify-center rounded-xl px-1.5 ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <FishIcon size={15} />
             <span className="text-sm">해산물</span>
@@ -667,8 +669,13 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                   <div
                     className={`flex items-center text-sm ${itemAdded ? 'text-[#36ae0e]' : 'text-black'}`}
                   >
-                    {itemAdded ? '' : <PlusIcon size={15} className="mr-1" />}
-                    <span>{itemAdded ? '추가완료' : '추가'}</span>
+                    {itemAdded ? (
+                      // <Check size={15} className="mr-1" />
+                      ''
+                    ) : (
+                      <PlusIcon size={15} className="mr-1" />
+                    )}
+                    <span>{itemAdded ? '' : ''}</span>
                   </div>
                 </div>
               </div>
