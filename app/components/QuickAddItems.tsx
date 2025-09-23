@@ -173,106 +173,100 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       {
         id: 'f1',
         name: '사과',
-        imageUrl:
-          'https://cdn.pixabay.com/photo/2017/09/26/13/31/apple-2788616_1280.jpg',
+        imageUrl: '/fruit/fruit_apple.jpg',
         defaultCategory: 'fridge',
         expiryDays: 21,
       },
       {
         id: 'f2',
         name: '바나나',
-        imageUrl:
-          'https://cdn.pixabay.com/photo/2014/04/16/09/58/banana-325461_1280.jpg',
+        imageUrl: '/fruit/fruit_banana.jpg',
         defaultCategory: 'pantry',
         expiryDays: 4,
       },
       {
         id: 'f3',
         name: '딸기',
-        imageUrl:
-          'https://hips.hearstapps.com/clv.h-cdn.co/assets/15/22/1432664914-strawberry-facts1.jpg?resize=980:*',
+        imageUrl: '/fruit/fruit_strawberries.jpg',
         defaultCategory: 'fridge',
         expiryDays: 3,
       },
       {
         id: 'f4',
         name: '블루베리',
-        imageUrl:
-          'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        imageUrl: '/fruit/fruit_blueberry.jpg',
         defaultCategory: 'fridge',
         expiryDays: 7,
       },
       {
         id: 'f5',
         name: '아보카도',
-        imageUrl:
-          'https://cdn.pixabay.com/photo/2015/09/18/11/37/avocados-945418_1280.jpg',
+        imageUrl: '/fruit/fruit_avocado.jpg',
         defaultCategory: 'fridge',
         expiryDays: 3,
       },
       {
         id: 'f6',
         name: '오렌지',
-        imageUrl:
-          'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        imageUrl: '/fruit/fruit_orange.webp',
         defaultCategory: 'fridge',
         expiryDays: 14,
       },
       {
         id: 'f7',
         name: '포도',
-        imageUrl:
-          'https://m.health.chosun.com/site/data/img_dir/2022/09/06/2022090602057_0.jpg',
+        imageUrl: '/fruit/fruit_grape.png',
         defaultCategory: 'fridge',
         expiryDays: 10,
       },
       {
         id: 'f8',
         name: '샤인머스캣',
-        imageUrl:
-          'https://cdn.wip-news.com/news/photo/202208/14578_17567_373.png',
+        imageUrl: '/fruit/fruit_shine_muscat.png',
         defaultCategory: 'fridge',
         expiryDays: 15,
       },
       {
         id: 'f9',
         name: '자두',
-        imageUrl:
-          'https://kormedi.com/wp-content/uploads/2023/07/ck-pc003052084-l-700x555.jpg',
+        imageUrl: '/fruit/fruit_korea_plum.jpg',
         defaultCategory: 'fridge',
         expiryDays: 7,
       },
       {
         id: 'f10',
         name: '참외',
-        imageUrl:
-          'https://cdn.pixabay.com/photo/2021/02/10/16/48/melon-6002760_1280.jpg',
+        imageUrl: '/fruit/fruit_korea_melon.jpg',
         defaultCategory: 'fridge',
         expiryDays: 7,
       },
       {
         id: 'f11',
         name: '수박',
-        imageUrl:
-          'https://images.unsplash.com/photo-1563114773-84221bd62daa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        imageUrl: '/fruit/fruit_watermelon.jpg',
         defaultCategory: 'fridge',
         expiryDays: 12,
       },
       {
         id: 'f12',
         name: '멜론',
-        imageUrl:
-          'https://cdn.pixabay.com/photo/2021/04/19/11/06/melon-6191136_1280.jpg',
+        imageUrl: '/fruit/fruit_melon.jpg',
         defaultCategory: 'fridge',
         expiryDays: 7,
       },
       {
         id: 'f13',
         name: '키위',
-        imageUrl:
-          'https://images.unsplash.com/photo-1585059895524-72359e06133a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        imageUrl: '/fruit/fruit_kiwi.jpg',
         defaultCategory: 'fridge',
         expiryDays: 14,
+      },
+      {
+        id: 'f14',
+        name: '파인애플',
+        imageUrl: '/fruit/fruit_pineapple.jpg',
+        defaultCategory: 'fridge',
+        expiryDays: 6,
       },
     ],
     meat: [
@@ -416,49 +410,43 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       },
       {
         id: 'o2',
-        name: '꿀',
-        imageUrl:
-          'https://images.unsplash.com/photo-1587049352846-4a222e784d38?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '트러플 오일',
+        imageUrl: '/others/other_black_truffle_oil.jpg',
         defaultCategory: 'pantry',
         expiryDays: 1095,
       },
       {
         id: 'o3',
-        name: '땅콩버터',
-        imageUrl:
-          'https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '브리 치즈',
+        imageUrl: '/others/other_brie_cheeze.webp',
         defaultCategory: 'pantry',
         expiryDays: 180,
       },
       {
         id: 'o4',
-        name: '메이플시럽',
-        imageUrl:
-          'https://images.unsplash.com/photo-1518173184-1a832ceb45b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '토마토 소스',
+        imageUrl: '/others/other_tomato_sauce.webp',
         defaultCategory: 'pantry',
         expiryDays: 365,
       },
       {
         id: 'o5',
-        name: '아몬드',
-        imageUrl:
-          'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '모짜렐라 치즈',
+        imageUrl: '/others/other_mozzarella_cheeze.webp',
         defaultCategory: 'pantry',
         expiryDays: 270,
       },
       {
         id: 'o6',
-        name: '오트밀',
-        imageUrl:
-          'https://images.unsplash.com/photo-1517673408097-0bbc915abddf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '가염 버터',
+        imageUrl: '/others/other_salted_butter.webp',
         defaultCategory: 'pantry',
         expiryDays: 365,
       },
       {
         id: 'o7',
-        name: '코코넛오일',
-        imageUrl:
-          'https://images.unsplash.com/photo-1526947425960-945c6e72858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        name: '소주',
+        imageUrl: '/others/other_soju.jpeg',
         defaultCategory: 'pantry',
         expiryDays: 540,
       },
@@ -675,7 +663,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                     ) : (
                       <PlusIcon size={15} className="mr-1" />
                     )}
-                    <span>{itemAdded ? '' : ''}</span>
+                    <span>{itemAdded ? '저장' : ''}</span>
                   </div>
                 </div>
               </div>
