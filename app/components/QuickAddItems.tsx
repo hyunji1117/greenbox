@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
+  Milk,
   LeafyGreenIcon,
   AppleIcon,
   BeefIcon,
@@ -26,7 +27,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
   const { addItem, currentUser, items } = useFridge();
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<
-    'vegetables' | 'fruits' | 'meat' | 'seafood'
+    'vegetables' | 'fruits' | 'meat' | 'seafood' | 'others'
   >('vegetables');
   const [selectedItem, setSelectedItem] = useState<CategoryItem | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -34,7 +35,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const categories: Record<
-    'vegetables' | 'fruits' | 'meat' | 'seafood',
+    'vegetables' | 'fruits' | 'meat' | 'seafood' | 'others',
     CategoryItem[]
   > = {
     vegetables: [
@@ -404,6 +405,87 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         expiryDays: 5,
       },
     ],
+    others: [
+      {
+        id: 'o1',
+        name: '아보카도 오일',
+        imageUrl: '/others/other_avocado_oil.webp',
+        defaultCategory: 'pantry',
+        expiryDays: 730,
+      },
+      {
+        id: 'o2',
+        name: '꿀',
+        imageUrl:
+          'https://images.unsplash.com/photo-1587049352846-4a222e784d38?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 1095,
+      },
+      {
+        id: 'o3',
+        name: '땅콩버터',
+        imageUrl:
+          'https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 180,
+      },
+      {
+        id: 'o4',
+        name: '메이플시럽',
+        imageUrl:
+          'https://images.unsplash.com/photo-1518173184-1a832ceb45b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 365,
+      },
+      {
+        id: 'o5',
+        name: '아몬드',
+        imageUrl:
+          'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 270,
+      },
+      {
+        id: 'o6',
+        name: '오트밀',
+        imageUrl:
+          'https://images.unsplash.com/photo-1517673408097-0bbc915abddf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 365,
+      },
+      {
+        id: 'o7',
+        name: '코코넛오일',
+        imageUrl:
+          'https://images.unsplash.com/photo-1526947425960-945c6e72858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 540,
+      },
+      {
+        id: 'o8',
+        name: '프로틴파우더',
+        imageUrl:
+          'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 365,
+      },
+      {
+        id: 'o9',
+        name: '그래놀라',
+        imageUrl:
+          'https://images.unsplash.com/photo-1571748599854-26f3a530270f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'pantry',
+        expiryDays: 180,
+      },
+      {
+        id: 'o10',
+        name: '케첩',
+        imageUrl:
+          'https://images.unsplash.com/photo-1631897642056-97a7abff6818?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        defaultCategory: 'fridge',
+        expiryDays: 180,
+      },
+    ],
   };
   // Check if an item is already in the fridge and not finished
   const isItemAdded = (itemName: string, category: string) => {
@@ -474,7 +556,9 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           <AddItemForm
             onClose={handleCloseAddForm}
             initialCategory={
-              activeCategory === 'vegetables' || activeCategory === 'fruits'
+              activeCategory === 'vegetables' ||
+              activeCategory === 'fruits' ||
+              activeCategory === 'others'
                 ? 'fridge'
                 : activeCategory === 'meat'
                   ? 'fridge'
@@ -536,6 +620,13 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             <FishIcon size={15} />
             <span className="text-sm">해산물</span>
           </button>
+          <button
+            onClick={() => setActiveCategory('others')}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'others' ? 'border border-yellow-300 bg-yellow-100 text-yellow-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            <Milk size={15} />
+            <span className="text-sm">기타</span>
+          </button>
         </div>
         {/* Grid of items */}
         <div className="grid h-full grid-cols-3 gap-2 overflow-hidden overflow-y-auto p-1">
@@ -544,14 +635,14 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             return (
               <div
                 key={item.id}
-                className={`rounded-xs border bg-white shadow-sm transition-shadow ${
+                className={`relative rounded-xs border bg-white shadow-sm transition-shadow ${
                   itemAdded
-                    ? 'cursor-not-allowed opacity-70'
+                    ? 'cursor-not-allowed'
                     : 'cursor-pointer hover:shadow-md'
                 } ${selectedItem?.id === item.id ? 'm-[-1px] border-[2px] border-[#615FFF]' : 'border-gray-200'}`}
                 onClick={() => !itemAdded && handleItemClick(item)}
               >
-                <div className="relative h-15">
+                <div className="relative flex h-30 items-center justify-center">
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
@@ -559,18 +650,25 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                     layout="fill"
                     objectFit="cover"
                   />
+                  {itemAdded && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xs bg-black/60">
+                      <div className="flex h-17 w-17 items-center justify-center rounded-full bg-white/15">
+                        <CheckIcon
+                          size={60}
+                          className="strokeWidth={10} text-[#36ae0e]"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="p-2 text-center">
+
+                <div className="grid-row-1 flex items-center justify-between p-2">
                   <h3 className="text-sm font-medium">{item.name}</h3>
                   <div
-                    className={`mt-1 flex items-center justify-center text-xs ${itemAdded ? 'text-green-500' : 'text-gray-500'}`}
+                    className={`flex items-center text-sm ${itemAdded ? 'text-[#36ae0e]' : 'text-black'}`}
                   >
-                    {itemAdded ? (
-                      <CheckIcon size={12} className="mr-1" />
-                    ) : (
-                      <PlusIcon size={12} className="mr-1" />
-                    )}
-                    <span>{itemAdded ? '추가됨' : '추가하기'}</span>
+                    {itemAdded ? '' : <PlusIcon size={15} className="mr-1" />}
+                    <span>{itemAdded ? '추가완료' : '추가'}</span>
                   </div>
                 </div>
               </div>

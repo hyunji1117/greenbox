@@ -6,7 +6,6 @@ import {
   Package2Icon,
   MinusIcon,
   PlusIcon,
-  CalendarIcon,
 } from 'lucide-react';
 interface AddItemFormProps {
   onClose: () => void;
