@@ -446,28 +446,26 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       setQuantity(prev => prev - 1);
     }
   };
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        if (!showAddForm) {
-          onClose();
-        }
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
+    if (showAddForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
     };
-  }, [onClose, showAddForm]);
+  }, [showAddForm]);
+
   const handleDirectAddClick = () => {
     setShowAddForm(true);
   };
+
   const handleCloseAddForm = () => {
     setShowAddForm(false);
   };
+
   return (
     <>
       {/* AddItemForm 모달 */}
