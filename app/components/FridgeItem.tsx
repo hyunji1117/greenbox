@@ -85,61 +85,63 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             {item.quantity}
           </div>
           <div>
-            <h3 className="text-lg font-semibold">{item.name}</h3>
+            <h3 className="mb-2 text-lg font-semibold">{item.name}</h3>
             <div className="flex items-center">
               <p className="mr-3 text-sm text-gray-500">
                 {getFamilyMemberName(item.addedBy)}가{' '}
                 {getRelativeTimeString(item.addedAt)} 추가
               </p>
-              <div className="flex items-center overflow-hidden rounded-lg bg-gray-100">
-                <button
-                  onClick={decrementQuantity}
-                  className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
-                  disabled={item.quantity <= 1}
-                >
-                  <MinusIcon size={16} />
-                </button>
-                <span className="px-3 py-1 text-sm font-medium text-[#6B7280]">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={incrementQuantity}
-                  className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
-                >
-                  <PlusIcon size={16} />
-                </button>
-              </div>
             </div>
           </div>
         </div>
-        <div className="relative top-6 -right-2 flex space-x-2">
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="relative rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
-            title="댓글"
-          >
-            <MessageCircleIcon size={20} />
-            {item.comments.length > 0 && (
-              <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-400 text-xs text-white">
-                {item.comments.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => markAsFinished(item.id)}
-            className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
-            title="다 먹음"
-          >
-            <CircleCheckBig size={20} />
-          </button>
-          <button
-            onClick={handleTrashItem}
-            className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
-            title="버림"
-          >
-            <Trash2 size={20} />
-          </button>
-        </div>
+        <section>
+          <div className="relative -top-1 flex space-x-2">
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="relative rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              title="댓글"
+            >
+              <MessageCircleIcon size={20} />
+              {item.comments.length > 0 && (
+                <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-400 text-xs text-white">
+                  {item.comments.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => markAsFinished(item.id)}
+              className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              title="다 먹음"
+            >
+              <CircleCheckBig size={20} />
+            </button>
+            <button
+              onClick={handleTrashItem}
+              className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              title="버림"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+            <button
+              onClick={decrementQuantity}
+              className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
+              disabled={item.quantity <= 1}
+            >
+              <MinusIcon size={16} />
+            </button>
+            <span className="px-3 py-1 text-sm font-medium text-[#6B7280]">
+              {item.quantity}
+            </span>
+            <button
+              onClick={incrementQuantity}
+              className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
+            >
+              <PlusIcon size={16} />
+            </button>
+          </div>
+        </section>
       </div>
       {showComments && (
         <div className="mt-4">
