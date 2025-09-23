@@ -413,18 +413,14 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
     );
   };
   const handleItemClick = (item: CategoryItem) => {
-    // Only allow selection if the item is not already added or is marked as finished
     if (!isItemAdded(item.name, item.defaultCategory)) {
       setSelectedItem(item);
-      // Reset quantity to 1 when selecting a new item
       setQuantity(1);
     }
   };
   const handleAddItem = () => {
     if (selectedItem) {
-      // Check if the item is already in the fridge and not finished
       if (!isItemAdded(selectedItem.name, selectedItem.defaultCategory)) {
-        // Add the new item
         addItem({
           name: selectedItem.name,
           category: selectedItem.defaultCategory,
@@ -437,9 +433,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         setTimeout(() => {
           setShowToast(false);
         }, 3000);
-        // Reset selection after adding
         setSelectedItem(null);
-        // Reset quantity to 1 after adding an item
         setQuantity(1);
       }
     }
@@ -491,7 +485,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           />
         </div>
       )}
-      <div className="flex h-full flex-col" ref={modalRef}>
+      <div className="flex h-120 flex-col" ref={modalRef}>
         {/* Toast notification */}
         {showToast && (
           <div className="animate-fade-in-out fixed top-4 right-4 z-50 rounded-lg bg-green-500 px-4 py-2 text-white shadow-lg">
@@ -546,20 +540,24 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           </button>
         </div>
         {/* Grid of items */}
-        <div className="grid max-h-[250px] flex-1 grid-cols-3 gap-1 overflow-y-auto">
+        <div className="grid h-full grid-cols-3 gap-2 overflow-hidden overflow-y-auto p-1">
           {categories[activeCategory].map(item => {
             const itemAdded = isItemAdded(item.name, item.defaultCategory);
             return (
               <div
                 key={item.id}
-                className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow ${itemAdded ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:shadow-md'}`}
+                className={`rounded-xs border bg-white shadow-sm transition-shadow ${
+                  itemAdded
+                    ? 'cursor-not-allowed opacity-70'
+                    : 'cursor-pointer hover:shadow-md'
+                } ${selectedItem?.id === item.id ? 'm-[-1px] border-[2px] border-[#615FFF]' : 'border-gray-200'}`}
                 onClick={() => !itemAdded && handleItemClick(item)}
               >
-                <div className="relative h-15 overflow-hidden">
+                <div className="relative h-15">
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full overflow-hidden object-cover"
                     layout="fill"
                     objectFit="cover"
                   />
@@ -585,7 +583,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           <div className="mt-4 rounded-lg bg-gray-50 p-3">
             <div className="ml-1 flex items-center justify-between">
               <div>
-                <h3 className="mb-1 text-sm">{selectedItem.name} 추가하기</h3>
+                <h3 className="mb-1 text-sm">{selectedItem.name}</h3>
                 <p className="text-xs text-gray-500">수량을 선택하세요</p>
               </div>
               <div className="flex items-center space-x-2">
