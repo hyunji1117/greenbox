@@ -518,6 +518,16 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       setQuantity(prev => prev - 1);
     }
   };
+  const getItemQuantity = (itemName: string, category: string) => {
+    const matchingItems = items.filter(
+      item =>
+        item.name === itemName && item.category === category && !item.finished,
+    );
+    return matchingItems.reduce(
+      (total, item) => total + (item.quantity || 1),
+      0,
+    );
+  };
 
   useEffect(() => {
     if (showAddForm) {
@@ -622,6 +632,9 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         <div className="grid h-full grid-cols-3 gap-2 overflow-hidden overflow-y-auto p-1">
           {categories[activeCategory].map(item => {
             const itemAdded = isItemAdded(item.name, item.defaultCategory);
+            const itemQuantity = itemAdded
+              ? getItemQuantity(item.name, item.defaultCategory)
+              : 0;
             return (
               <div
                 key={item.id}
@@ -655,10 +668,25 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                 <div className="grid-row-1 flex items-center justify-between p-2">
                   <h3 className="text-sm font-medium">{item.name}</h3>
                   <div
-                    className={`flex items-center text-sm ${itemAdded ? 'text-[#36ae0e]' : 'text-black'}`}
+                    className={`relative flex items-center text-sm ${itemAdded ? 'text-[#36ae0e]' : 'text-black'}`}
                   >
-                    {itemAdded ? '' : <PlusIcon size={15} className="mr-1" />}
-                    <span>{itemAdded ? '저장' : ''}</span>
+                    {itemAdded ? (
+                      <>
+                        <span>저장</span>
+                        {itemQuantity > 0 && (
+                          <div className="absolute -top-2 -right-2.5 flex h-4 w-4 items-center justify-center">
+                            <span className="text-[10px] font-semibold text-[#36ae0e]">
+                              {itemQuantity}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <PlusIcon size={15} className="mr-1" />
+                        <span></span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
