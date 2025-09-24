@@ -557,7 +557,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           />
         </div>
       )}
-      <div className="flex h-120 flex-col" ref={modalRef}>
+      <div className="flex h-135 flex-col" ref={modalRef}>
         {/* Toast notification */}
         {showToast && (
           <div className="animate-fade-in fixed top-3 left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-3xl bg-white px-4 py-3 text-sm text-black shadow-lg">
@@ -657,12 +657,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                   <div
                     className={`flex items-center text-sm ${itemAdded ? 'text-[#36ae0e]' : 'text-black'}`}
                   >
-                    {itemAdded ? (
-                      // <Check size={15} className="mr-1" />
-                      ''
-                    ) : (
-                      <PlusIcon size={15} className="mr-1" />
-                    )}
+                    {itemAdded ? '' : <PlusIcon size={15} className="mr-1" />}
                     <span>{itemAdded ? '저장' : ''}</span>
                   </div>
                 </div>
