@@ -78,10 +78,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
     markAsFinished(item.id);
   };
   return (
-    <div className="rounded-lg border-l-4 border-indigo-500 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
+    <div className="rounded-xl border-l-4 border-indigo-500 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg">
       <div className="flex items-start justify-between">
         <div className="relative flex items-center">
-          <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600">
+          <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600 shadow-sm">
             {item.quantity}
           </div>
           <div>
@@ -98,7 +98,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
           <div className="relative -top-1 flex space-x-2">
             <button
               onClick={() => setShowComments(!showComments)}
-              className="relative rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              className="relative rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="댓글"
             >
               <MessageCircleIcon size={20} />
@@ -110,33 +110,33 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             </button>
             <button
               onClick={() => markAsFinished(item.id)}
-              className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="다 먹음"
             >
               <CircleCheckBig size={20} />
             </button>
             <button
               onClick={handleTrashItem}
-              className="rounded-full p-2 text-[#6B7280] hover:bg-gray-100"
+              className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="버림"
             >
               <Trash2 size={20} />
             </button>
           </div>
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+          <div className="mt-2 flex max-w-35 items-center justify-around overflow-hidden rounded-xl bg-gray-100 shadow-sm">
             <button
               onClick={decrementQuantity}
-              className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
+              className="px-2 py-0.5 text-[#6B7280] transition-colors hover:bg-gray-200"
               disabled={item.quantity <= 1}
             >
               <MinusIcon size={16} />
             </button>
-            <span className="px-3 py-1 text-sm font-medium text-[#6B7280]">
+            <span className="px-3 py-0.5 text-sm font-medium text-[#6B7280]">
               {item.quantity}
             </span>
             <button
               onClick={incrementQuantity}
-              className="px-2 py-1 text-[#6B7280] transition-colors hover:bg-gray-200"
+              className="px-2 py-0.5 text-[#6B7280] transition-colors hover:bg-gray-200"
             >
               <PlusIcon size={16} />
             </button>

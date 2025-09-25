@@ -578,7 +578,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           <h2 className="text-md font-bold">자주 사용하는 식재료</h2>
           <button
             onClick={handleDirectAddClick}
-            className="ml-4 flex max-w-[200px] items-center justify-center space-x-0.5 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white transition-colors hover:bg-[#603fad]"
+            className="ml-4 flex max-w-[200px] items-center justify-center space-x-0.5 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white shadow-sm transition-colors hover:bg-[#603fad]"
           >
             <PlusIcon size={15} />
             <span className="font-medium">직접 추가</span>
@@ -594,35 +594,35 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
         <div className="mb-4 flex space-x-2">
           <button
             onClick={() => setActiveCategory('vegetables')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm ${activeCategory === 'vegetables' ? 'border border-green-300 bg-green-100 text-green-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <LeafyGreenIcon size={15} />
             <span className="text-sm">채소</span>
           </button>
           <button
             onClick={() => setActiveCategory('fruits')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'fruits' ? 'border border-red-300 bg-red-100 text-red-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm ${activeCategory === 'fruits' ? 'border border-red-300 bg-red-100 text-red-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <AppleIcon size={15} />
             <span className="text-sm">과일</span>
           </button>
           <button
             onClick={() => setActiveCategory('meat')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'meat' ? 'border border-orange-300 bg-orange-100 text-orange-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm ${activeCategory === 'meat' ? 'border border-orange-300 bg-orange-100 text-orange-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <BeefIcon size={15} />
             <span className="text-sm">고기</span>
           </button>
           <button
             onClick={() => setActiveCategory('seafood')}
-            className={`min-w-[] space-x-0.2 flex min-h-[40px] flex-1 items-center justify-center rounded-xl px-1.5 ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`min-w-[] space-x-0.2 flex min-h-[40px] flex-1 items-center justify-center rounded-xl px-1.5 shadow-sm ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <FishIcon size={15} />
             <span className="text-sm">해산물</span>
           </button>
           <button
             onClick={() => setActiveCategory('others')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl ${activeCategory === 'others' ? 'border border-yellow-300 bg-yellow-100 text-yellow-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm ${activeCategory === 'others' ? 'border border-yellow-300 bg-yellow-100 text-yellow-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <Milk size={15} />
             <span className="text-sm">기타</span>
