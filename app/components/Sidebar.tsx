@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
   Refrigerator,
@@ -34,7 +34,7 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
     <div className="relative flex w-full justify-center">
       <button
         onClick={onClick}
-        className={`relative flex w-11 flex-col items-center p-1 transition-all duration-200 ${
+        className={`relative flex w-11 flex-col items-center p-1 shadow-sm transition-all duration-200 ${
           isActive
             ? 'z-10 rounded-xl bg-[#F3F4F6] text-[#4b2f8c]'
             : 'rounded-xl text-white hover:bg-white/10'
@@ -51,10 +51,16 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onSettingsClick: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  setActiveTab,
+  onSettingsClick,
+}) => {
   const { currentUser, setCurrentUser } = useFridge();
+  const [showUserSelect, setShowUserSelect] = useState(false);
 
   // 네비게이션 아이템 정의
   const navItems: NavItem[] = [
@@ -103,13 +109,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     },
   ];
 
+  const toggleUserSelect = () => {
+    setShowUserSelect(!showUserSelect);
+  };
+
   return (
     <div className="flex h-full w-15 flex-col items-center bg-[#4b2f8c] py-4 text-white">
       <div className="mb-4.5">
         <Link href="/">
           <Image
             src="/our-fridge_logo2.png"
-            alt="Greenbox Logo"
+            alt="Our Fridge Logo"
             width={45}
             height={45}
             className="mx-auto"
@@ -129,27 +139,32 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
       </nav>
 
       <div className="mt-auto">
-        <div className="group relative">
+        <div className="relative">
           <button
             className="rounded-full bg-white/10 p-3 transition-colors duration-200 hover:bg-white/20"
-            title="사용자 변경"
+            title="사용자 설정"
+            onClick={onSettingsClick}
           >
             <UserIcon size={24} />
           </button>
-          <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-32 -translate-x-1/2 transform rounded-md bg-[#F3F4F6] p-2 text-gray-800 opacity-0 shadow-lg transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-            <p className="mb-2 text-center text-xs font-medium">현재 사용자</p>
-            <select
-              value={currentUser as UserId}
-              onChange={e => setCurrentUser(e.target.value as UserId)}
-              className="w-full rounded border border-gray-300 p-1 text-sm"
-            >
-              {userOptions.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showUserSelect && (
+            <div className="absolute bottom-full left-1/2 mb-2 w-32 -translate-x-1/2 transform rounded-md bg-[#F3F4F6] p-2 text-gray-800 shadow-lg">
+              <p className="mb-2 text-center text-xs font-medium">
+                현재 사용자
+              </p>
+              <select
+                value={currentUser as UserId}
+                onChange={e => setCurrentUser(e.target.value as UserId)}
+                className="w-full rounded border border-gray-300 p-1 text-sm"
+              >
+                {userOptions.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
     </div>

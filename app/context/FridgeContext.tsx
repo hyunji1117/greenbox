@@ -1,67 +1,77 @@
-import React, { useState, createContext, useContext } from 'react'
+// app/context/FridgeContext.tsx
+import React, { useState, createContext, useContext } from 'react';
+
 // Types
-export type FamilyMember = 'mom' | 'dad' | 'bigKid' | 'littleKid'
+export type FamilyMember = 'mom' | 'dad' | 'bigKid' | 'littleKid';
+
 export interface FridgeItem {
-  id: string
-  name: string
-  category: 'fridge' | 'freezer' | 'pantry'
-  quantity: number
-  addedBy: FamilyMember
-  addedAt: Date
-  comments: Comment[]
-  finished: boolean
-  expiryDate?: string
+  id: string;
+  name: string;
+  category: 'fridge' | 'freezer' | 'pantry';
+  quantity: number;
+  addedBy: FamilyMember;
+  addedAt: Date;
+  comments: Comment[];
+  finished: boolean;
+  expiryDate?: string;
 }
+
 export interface Comment {
-  id: string
-  text: string
-  author: FamilyMember
-  createdAt: Date
+  id: string;
+  text: string;
+  author: FamilyMember;
+  createdAt: Date;
 }
+
 export interface Assignment {
-  id: string
-  title: string
-  assignedTo: FamilyMember
-  dueDate: Date
+  id: string;
+  title: string;
+  assignedTo: FamilyMember;
+  dueDate: Date;
 }
+
 export interface Activity {
-  id: string
-  type: 'add' | 'update' | 'finish' | 'comment' | 'assignment'
-  message: string
-  timestamp: Date
-  by: FamilyMember
-  itemId?: string
+  id: string;
+  type: 'add' | 'update' | 'finish' | 'comment' | 'assignment';
+  message: string;
+  timestamp: Date;
+  by: FamilyMember;
+  itemId?: string;
 }
+
 export interface FoodBenefit {
-  id: string
-  name: string
-  category: string
-  benefits: string[]
+  id: string;
+  name: string;
+  category: string;
+  benefits: string[];
   nutrition: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-    vitamins: string[]
-  }
-  storageTips: string
-  imageUrl?: string
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    vitamins: string[];
+  };
+  storageTips: string;
+  imageUrl?: string;
 }
+
 interface FridgeContextType {
-  items: FridgeItem[]
-  activities: Activity[]
-  assignments: Assignment[]
-  foodBenefits: FoodBenefit[]
-  currentUser: FamilyMember
-  addItem: (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => void
-  updateItem: (id: string, updates: Partial<FridgeItem>) => void
-  markAsFinished: (id: string) => void
-  addComment: (itemId: string, text: string) => void
-  addAssignment: (assignment: Omit<Assignment, 'id'>) => void
-  setCurrentUser: (user: FamilyMember) => void
-  searchFoodBenefits: (query: string) => FoodBenefit[]
+  items: FridgeItem[];
+  activities: Activity[];
+  assignments: Assignment[];
+  foodBenefits: FoodBenefit[];
+  currentUser: FamilyMember;
+  addItem: (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => void;
+  updateItem: (id: string, updates: Partial<FridgeItem>) => void;
+  markAsFinished: (id: string) => void;
+  addComment: (itemId: string, text: string) => void;
+  addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
+  setCurrentUser: (user: FamilyMember) => void;
+  searchFoodBenefits: (query: string) => FoodBenefit[];
 }
-const FridgeContext = createContext<FridgeContextType | undefined>(undefined)
+
+const FridgeContext = createContext<FridgeContextType | undefined>(undefined);
+
 // Mock data
 const initialItems: FridgeItem[] = [
   {
@@ -101,7 +111,8 @@ const initialItems: FridgeItem[] = [
     comments: [],
     finished: false,
   },
-]
+];
+
 const initialActivities: Activity[] = [
   {
     id: '1',
@@ -119,7 +130,8 @@ const initialActivities: Activity[] = [
     by: 'littleKid',
     itemId: '1',
   },
-]
+];
+
 const initialAssignments: Assignment[] = [
   {
     id: '1',
@@ -127,7 +139,8 @@ const initialAssignments: Assignment[] = [
     assignedTo: 'mom',
     dueDate: new Date(Date.now() + 604800000), // 1 week from now
   },
-]
+];
+
 const initialFoodBenefits: FoodBenefit[] = [
   {
     id: '1',
@@ -349,25 +362,28 @@ const initialFoodBenefits: FoodBenefit[] = [
     imageUrl:
       'https://www.finedininglovers.com/sites/default/files/styles/1_1_768x768/public/article_content_images/Nuts.jpg.webp?itok=YfhewMia',
   },
-]
+];
+
 export const FridgeProvider: React.FC<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }> = ({ children }) => {
-  const [items, setItems] = useState<FridgeItem[]>(initialItems)
-  const [activities, setActivities] = useState<Activity[]>(initialActivities)
+  const [items, setItems] = useState<FridgeItem[]>(initialItems);
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [assignments, setAssignments] =
-    useState<Assignment[]>(initialAssignments)
+    useState<Assignment[]>(initialAssignments);
   const [foodBenefits, setFoodBenefits] =
-    useState<FoodBenefit[]>(initialFoodBenefits)
-  const [currentUser, setCurrentUser] = useState<FamilyMember>('mom')
+    useState<FoodBenefit[]>(initialFoodBenefits);
+  const [currentUser, setCurrentUser] = useState<FamilyMember>('mom');
+
   const addItem = (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => {
     const newItem: FridgeItem = {
       ...item,
       id: Date.now().toString(),
       addedAt: new Date(),
       comments: [],
-    }
-    setItems([newItem, ...items])
+    };
+    setItems([newItem, ...items]);
+
     const newActivity: Activity = {
       id: Date.now().toString(),
       type: 'add',
@@ -375,12 +391,13 @@ export const FridgeProvider: React.FC<{
       timestamp: new Date(),
       by: currentUser,
       itemId: newItem.id,
-    }
-    setActivities([newActivity, ...activities])
-  }
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   const updateItem = (id: string, updates: Partial<FridgeItem>) => {
     setItems(
-      items.map((item) =>
+      items.map(item =>
         item.id === id
           ? {
               ...item,
@@ -388,20 +405,22 @@ export const FridgeProvider: React.FC<{
             }
           : item,
       ),
-    )
+    );
+
     const newActivity: Activity = {
       id: Date.now().toString(),
       type: 'update',
-      message: `${items.find((i) => i.id === id)?.name} 업데이트했어요`,
+      message: `${items.find(i => i.id === id)?.name} 업데이트했어요`,
       timestamp: new Date(),
       by: currentUser,
       itemId: id,
-    }
-    setActivities([newActivity, ...activities])
-  }
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   const markAsFinished = (id: string) => {
     setItems(
-      items.map((item) =>
+      items.map(item =>
         item.id === id
           ? {
               ...item,
@@ -409,8 +428,9 @@ export const FridgeProvider: React.FC<{
             }
           : item,
       ),
-    )
-    const itemName = items.find((i) => i.id === id)?.name || ''
+    );
+
+    const itemName = items.find(i => i.id === id)?.name || '';
     const newActivity: Activity = {
       id: Date.now().toString(),
       type: 'finish',
@@ -418,18 +438,20 @@ export const FridgeProvider: React.FC<{
       timestamp: new Date(),
       by: currentUser,
       itemId: id,
-    }
-    setActivities([newActivity, ...activities])
-  }
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   const addComment = (itemId: string, text: string) => {
     const newComment: Comment = {
       id: Date.now().toString(),
       text,
       author: currentUser,
       createdAt: new Date(),
-    }
+    };
+
     setItems(
-      items.map((item) =>
+      items.map(item =>
         item.id === itemId
           ? {
               ...item,
@@ -437,8 +459,9 @@ export const FridgeProvider: React.FC<{
             }
           : item,
       ),
-    )
-    const itemName = items.find((i) => i.id === itemId)?.name || ''
+    );
+
+    const itemName = items.find(i => i.id === itemId)?.name || '';
     const newActivity: Activity = {
       id: Date.now().toString(),
       type: 'comment',
@@ -446,50 +469,56 @@ export const FridgeProvider: React.FC<{
       timestamp: new Date(),
       by: currentUser,
       itemId,
-    }
-    setActivities([newActivity, ...activities])
-  }
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   const addAssignment = (assignment: Omit<Assignment, 'id'>) => {
     const newAssignment: Assignment = {
       ...assignment,
       id: Date.now().toString(),
-    }
-    setAssignments([...assignments, newAssignment])
+    };
+    setAssignments([...assignments, newAssignment]);
+
     const newActivity: Activity = {
       id: Date.now().toString(),
       type: 'assignment',
       message: `새로운 담당: ${assignment.title} → ${getFamilyMemberName(assignment.assignedTo)}`,
       timestamp: new Date(),
       by: currentUser,
-    }
-    setActivities([newActivity, ...activities])
-  }
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   const searchFoodBenefits = (query: string): FoodBenefit[] => {
-    if (!query.trim()) return foodBenefits
-    const lowercaseQuery = query.toLowerCase()
+    if (!query.trim()) return foodBenefits;
+
+    const lowercaseQuery = query.toLowerCase();
     return foodBenefits.filter(
-      (food) =>
+      food =>
         food.name.toLowerCase().includes(lowercaseQuery) ||
         food.category.toLowerCase().includes(lowercaseQuery) ||
-        food.benefits.some((benefit) =>
+        food.benefits.some(benefit =>
           benefit.toLowerCase().includes(lowercaseQuery),
         ),
-    )
-  }
+    );
+  };
+
   const getFamilyMemberName = (member: FamilyMember): string => {
     switch (member) {
       case 'mom':
-        return '먐무'
+        return '먐무';
       case 'dad':
-        return '빙빵'
+        return '빙빵';
       case 'bigKid':
-        return '낭농'
+        return '낭농';
       case 'littleKid':
-        return '떡자'
+        return '떡자';
       default:
-        return member
+        return member;
     }
-  }
+  };
+
   return (
     <FridgeContext.Provider
       value={{
@@ -509,12 +538,13 @@ export const FridgeProvider: React.FC<{
     >
       {children}
     </FridgeContext.Provider>
-  )
-}
+  );
+};
+
 export const useFridge = () => {
-  const context = useContext(FridgeContext)
+  const context = useContext(FridgeContext);
   if (context === undefined) {
-    throw new Error('useFridge must be used within a FridgeProvider')
+    throw new Error('useFridge must be used within a FridgeProvider');
   }
-  return context
-}
+  return context;
+};
