@@ -615,7 +615,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           </button>
           <button
             onClick={() => setActiveCategory('seafood')}
-            className={`min-w-[] space-x-0.2 flex min-h-[40px] flex-1 items-center justify-center rounded-xl px-1.5 shadow-sm ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`min-w-[] flex min-h-[40px] flex-1 items-center justify-center space-x-0.5 rounded-xl px-1.5 shadow-sm ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <FishIcon size={15} />
             <span className="text-sm">해산물</span>

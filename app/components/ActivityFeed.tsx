@@ -74,7 +74,7 @@ const ActivityFeed: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto">
         {activities.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 py-12 text-center">
+          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center">
             <p className="text-gray-500">활동 내역이 없습니다.</p>
           </div>
         ) : (

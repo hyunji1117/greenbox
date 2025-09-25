@@ -80,7 +80,7 @@ const FridgeBoard: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto rounded-xl">
         {filteredItems.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 py-12 text-center">
+          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center">
             <p className="text-gray-500">
               아이템이 없습니다. 새 아이템을 추가해보세요!
             </p>

@@ -142,10 +142,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
         </div>
       </div>
       <div className="mb-6">
-        <label
-          htmlFor="expiryDate"
-          className="mb-1 block text-sm font-medium text-gray-700"
-        >
+        <label htmlFor="expiryDate" className="mb-1 block text-sm font-medium">
           유효기간<span className="text-red-500">*</span>
         </label>
         <div className="relative">

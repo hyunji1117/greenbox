@@ -66,7 +66,7 @@ const FoodBenefitsBoard: React.FC = () => {
       </form>
       <div className="flex-1 overflow-y-auto">
         {filteredFoods.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 py-12 text-center">
+          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center">
             <p className="text-gray-500">검색 결과가 없습니다.</p>
           </div>
         ) : selectedFood ? (
