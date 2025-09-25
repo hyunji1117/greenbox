@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
       'cdn.clipkit.co',
       'lh6.googleusercontent.com',
       'wooltariusa.com',
+      'i.pravatar.cc',
+      'www.finedininglovers.com',
+      'hips.hearstapps.com',
     ],
   },
 };

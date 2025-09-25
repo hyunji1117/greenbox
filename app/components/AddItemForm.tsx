@@ -104,7 +104,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           id="name"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           placeholder="예: 시금치, 계란, 오이 등"
           required
           autoFocus
@@ -155,7 +155,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
             value={expiryDate}
             onChange={e => setExpiryDate(e.target.value)}
             min={getTodayDate()}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             required
           />
         </div>
