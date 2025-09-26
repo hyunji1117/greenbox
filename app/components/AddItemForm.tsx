@@ -104,7 +104,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           id="name"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           placeholder="예: 시금치, 계란, 오이 등"
           required
           autoFocus
@@ -118,7 +118,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('fridge')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm transition-colors ${category === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <RefrigeratorIcon size={15} />
             <span>냉장실</span>
@@ -126,7 +126,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('freezer')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm transition-colors ${category === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <SnowflakeIcon size={15} />
             <span>냉동실</span>
@@ -134,7 +134,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => setCategory('pantry')}
-            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl transition-colors ${category === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`flex min-h-[40px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm transition-colors ${category === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <Package2Icon size={15} />
             <span>펜트리</span>
@@ -152,7 +152,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
             value={expiryDate}
             onChange={e => setExpiryDate(e.target.value)}
             min={getTodayDate()}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             required
           />
         </div>
@@ -166,7 +166,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => handleQuantityChange(-1)}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 transition-colors hover:bg-gray-300"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 shadow-sm transition-colors hover:bg-gray-300"
             disabled={quantity <= 1}
           >
             <MinusIcon size={16} />
@@ -180,7 +180,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <button
             type="button"
             onClick={() => handleQuantityChange(1)}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 transition-colors hover:bg-gray-300"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 shadow-sm transition-colors hover:bg-gray-300"
           >
             <PlusIcon size={16} />
           </button>
@@ -190,14 +190,14 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="h-[30px] rounded-xl border border-gray-300 px-4 text-gray-700 transition-colors hover:bg-gray-50"
+          className="h-[30px] rounded-xl border border-gray-300 px-4 text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={!isFormValid}
-          className={`h-[30px] space-x-1 rounded-xl px-4 text-sm text-white transition-colors ${isFormValid ? 'bg-[#6B46C1] hover:bg-[#603fad]' : 'cursor-not-allowed bg-gray-400'}`}
+          className={`h-[30px] space-x-1 rounded-xl px-4 text-sm text-white shadow-sm transition-colors ${isFormValid ? 'bg-[#6B46C1] hover:bg-[#603fad]' : 'cursor-not-allowed bg-gray-400'}`}
         >
           추가하기
         </button>

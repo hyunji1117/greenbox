@@ -684,7 +684,6 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                     ) : (
                       <>
                         <PlusIcon size={15} className="mr-1" />
-                        <span></span>
                       </>
                     )}
                   </div>
@@ -694,7 +693,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           })}
         </div>
         {selectedItem && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-3">
+          <div className="mt-4 rounded-xl bg-gray-50 p-3 shadow-sm">
             <div className="ml-1 flex items-center justify-between">
               <div>
                 <h3 className="mb-1 text-sm">{selectedItem.name}</h3>
@@ -703,7 +702,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={decrementQuantity}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 shadow-sm"
                   disabled={quantity <= 1}
                 >
                   <MinusIcon size={16} />
@@ -711,7 +710,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                 <span className="w-8 text-center text-sm">{quantity}</span>
                 <button
                   onClick={incrementQuantity}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 shadow-sm"
                 >
                   <PlusIcon size={16} />
                 </button>
@@ -719,7 +718,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             </div>
             <button
               onClick={handleAddItem}
-              className="mt-2 w-full rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white transition-colors hover:bg-[#603fad]"
+              className="mt-2 w-full rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white shadow-sm transition-colors hover:bg-[#603fad]"
             >
               추가하기
             </button>
