@@ -44,12 +44,12 @@ const FoodBenefitsBoard: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="식재료 이름 또는 효능 검색..."
-              className="rounded-r-0 w-full rounded-l-xl border border-gray-200 px-3 py-2 pl-9 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="rounded-r-0 w-full rounded-l-xl border border-gray-200 px-3 py-2 pl-9 text-[#636465] shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
           <button
             type="submit"
-            className="flex rounded-r-xl bg-[#6B46C1] px-4 py-2 text-white hover:bg-[#4b2f8c]"
+            className="flex rounded-r-xl bg-[#6B46C1] px-4 py-2 text-white shadow-sm hover:bg-[#4b2f8c]"
           >
             검색
           </button>
@@ -64,13 +64,13 @@ const FoodBenefitsBoard: React.FC = () => {
           </button>
         )}
       </form>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto rounded-xl">
         {filteredFoods.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 py-12 text-center">
+          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center shadow-sm">
             <p className="text-gray-500">검색 결과가 없습니다.</p>
           </div>
         ) : selectedFood ? (
-          <div className="rounded-xl bg-white p-6 shadow-md">
+          <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-bold">{selectedFood.name}</h2>
@@ -80,13 +80,13 @@ const FoodBenefitsBoard: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedFood(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="rounded-xl border-1 border-gray-200 px-1 text-sm text-gray-400 shadow-sm hover:border-gray-300 hover:text-gray-500"
               >
-                ← 목록으로 돌아가기
+                목록으로 돌아가기
               </button>
             </div>
             {selectedFood.imageUrl && (
-              <div className="mb-6">
+              <div className="mb-6 rounded-xl shadow-sm">
                 <Image
                   src={selectedFood.imageUrl}
                   alt={selectedFood.name}
@@ -108,7 +108,7 @@ const FoodBenefitsBoard: React.FC = () => {
             </div>
             <div className="mb-6">
               <h3 className="mb-2 text-lg font-semibold">영양 정보</h3>
-              <div className="rounded-lg bg-gray-50 p-4">
+              <div className="rounded-lg bg-gray-50 p-4 shadow-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">칼로리</p>
@@ -150,7 +150,7 @@ const FoodBenefitsBoard: React.FC = () => {
             </div>
             <div>
               <h3 className="mb-2 text-lg font-semibold">보관 팁</h3>
-              <p className="rounded-xl border-l-4 border-yellow-400 bg-yellow-50 p-4 text-gray-700">
+              <p className="rounded-xl border-l-4 border-yellow-400 bg-yellow-50 p-4 text-gray-700 shadow-sm">
                 {selectedFood.storageTips}
               </p>
             </div>
