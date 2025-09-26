@@ -55,7 +55,7 @@ export default function Page() {
 
   return (
     <FridgeProvider>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-white">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
