@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import { PlusIcon, ChevronDown } from 'lucide-react';
+
 const AssignmentBoard: React.FC = () => {
   const { assignments, addAssignment } = useFridge();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -24,6 +25,7 @@ const AssignmentBoard: React.FC = () => {
       setShowAddForm(false);
     }
   };
+
   const formatDate = (date: Date): string => {
     return new Date(date).toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -31,6 +33,7 @@ const AssignmentBoard: React.FC = () => {
       day: 'numeric',
     });
   };
+
   const getFamilyMemberName = (member: string): string => {
     switch (member) {
       case 'mom':
@@ -45,6 +48,7 @@ const AssignmentBoard: React.FC = () => {
         return member;
     }
   };
+
   return (
     <div className="flex h-full flex-col">
       <div className="mb-6 flex items-center justify-between">
@@ -57,6 +61,7 @@ const AssignmentBoard: React.FC = () => {
           <span>담당자 추가</span>
         </button>
       </div>
+
       {assignments.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <p className="text-gray-500">지정된 담당자가 없습니다.</p>
@@ -66,11 +71,11 @@ const AssignmentBoard: React.FC = () => {
           {assignments.map(assignment => (
             <div
               key={assignment.id}
-              className="rounded-xl border-l-4 border-green-500 bg-white p-5 shadow-md"
+              className="rounded-xl border-l-4 border-green-500 bg-white p-5 shadow-sm"
             >
               <h3 className="text-lg font-semibold">{assignment.title}</h3>
               <div className="mt-2 flex items-center">
-                <span className="inline-block rounded bg-green-100 px-2 py-1 text-sm font-medium text-green-800">
+                <span className="inline-block rounded-xl bg-green-100 px-2 py-1 text-sm font-medium text-green-800 shadow-sm">
                   {getFamilyMemberName(assignment.assignedTo)}
                 </span>
                 <span className="ml-3 text-sm text-gray-500">
@@ -81,9 +86,16 @@ const AssignmentBoard: React.FC = () => {
           ))}
         </div>
       )}
+
       {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowAddForm(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-md rounded-lg bg-white p-6"
+            onClick={e => e.stopPropagation()}
+          >
             <h2 className="mb-4 text-xl font-bold">새 담당자 지정</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -175,4 +187,5 @@ const AssignmentBoard: React.FC = () => {
     </div>
   );
 };
+
 export default AssignmentBoard;
