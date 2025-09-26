@@ -78,16 +78,22 @@ const FridgeBoard: React.FC = () => {
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto rounded-xl">
+      <div className="mt-4 flex-1 overflow-y-auto rounded-xl shadow-md">
         {filteredItems.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center">
+          <div className="rounded-xl bg-gray-50 py-12 text-center">
             <p className="text-gray-500">
-              아이템이 없습니다. 새 아이템을 추가해보세요!
+              식재료가 없어요.
+              <br />
+              <button className="mr-1.5 inline-flex items-center space-x-1 rounded-xl bg-[#6B46C1] p-1 pr-1.5 text-xs text-white shadow-sm transition-colors hover:bg-[#603fad]">
+                <Plus size={13} />
+                <span>식재료 추가</span>
+              </button>
+              로 식재료를 추가해보세요!
             </p>
           </div>
         ) : (
           <div
-            className={`grid ${viewMode === 'grid' ? 'mt-4 grid-cols-1 md:grid-cols-2' : 'mt-4 grid-cols-1'} gap-4`}
+            className={`grid ${viewMode === 'grid' ? 'mt-4 grid-cols-1 shadow-sm md:grid-cols-2' : 'mt-4 grid-cols-1 shadow-sm'} gap-4`}
           >
             {filteredItems.map(item => (
               <FridgeItem key={item.id} item={item} />
