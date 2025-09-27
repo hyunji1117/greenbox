@@ -74,18 +74,18 @@ const ActivityFeed: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto">
         {activities.length === 0 ? (
-          <div className="rounded-xl bg-gray-50 py-12 text-center">
+          <div className="mt-4 rounded-xl bg-gray-50 py-12 text-center shadow-sm">
             <p className="text-gray-500">활동 내역이 없습니다.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 rounded-xl">
             {activities.map(activity => (
               <div
                 key={activity.id}
-                className={`rounded-xl border-l-4 p-4 ${activity.type === 'add' ? 'border-green-500' : activity.type === 'update' ? 'border-blue-500' : activity.type === 'finish' ? 'border-purple-500' : activity.type === 'comment' ? 'border-orange-500' : 'border-indigo-500'} ${getActivityBackground(activity.type)}`}
+                className={`rounded-xl border-l-4 p-4 shadow-sm ${activity.type === 'add' ? 'border-green-500 shadow-sm' : activity.type === 'update' ? 'border-blue-500 shadow-sm' : activity.type === 'finish' ? 'border-purple-500 shadow-sm' : activity.type === 'comment' ? 'border-orange-500 shadow-sm' : 'border-indigo-500 shadow-sm'} ${getActivityBackground(activity.type)}`}
               >
                 <div className="flex items-center">
-                  <div className="mr-3 rounded-full bg-white p-2">
+                  <div className="mr-3 rounded-full bg-white p-2 shadow-sm">
                     {getActivityIcon(activity.type)}
                   </div>
                   <div>
