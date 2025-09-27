@@ -1582,13 +1582,6 @@ const FridgeBoard: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Toast Notification */}
-      <Toast
-        message={toastMessage}
-        isVisible={showToast}
-        onClose={hideToast}
-        duration={3000} // 3초 후 자동으로 사라짐
-      />
     </div>
   );
 };
