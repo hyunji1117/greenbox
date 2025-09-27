@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   images: {
     domains: [
+      'images.remotePatterns',
       'images.unsplash.com',
       'cdn.pixabay.com',
       'image.8dogam.com',
