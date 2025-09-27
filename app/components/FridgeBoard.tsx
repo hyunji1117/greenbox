@@ -1,9 +1,6 @@
-import React, { useEffect, useState, Component, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Plus,
-  RefrigeratorIcon,
-  SnowflakeIcon,
-  PackageIcon,
   ListIcon,
   GridIcon,
   XIcon,
@@ -29,8 +26,61 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import Image from 'next/image';
+
+// Type definitions
+interface FridgeItem {
+  id: number;
+  name: string;
+  category: string;
+  imageUrl: string;
+  expiryDate: Date;
+  purchaseCount: number;
+  purchaseDate: Date;
+}
+
+interface ShoppingListItem {
+  id: number;
+  name: string;
+  quantity: number;
+  completed: boolean;
+}
+
+interface FavoriteItem {
+  id: number;
+  name: string;
+  items: Array<{
+    id: number;
+    name: string;
+    quantity: number;
+  }>;
+}
+
+interface UserProfile {
+  gender: string;
+  age: string;
+  allergies: string[];
+  activityLevel: string;
+  sleepTime: string;
+}
+
+interface HealthStats {
+  nutrientScore: number;
+  balanceRating: number;
+  healthImprovement: number;
+  consumptionEfficiency: number;
+}
+
+interface ConsumptionData {
+  week: string;
+  채소: number;
+  과일: number;
+  고기: number;
+  해산물: number;
+  기타: number;
+}
+
 // Mock data for demonstration
-const mockItems = [
+const mockItems: FridgeItem[] = [
   {
     id: 1,
     name: '시금치',
@@ -39,7 +89,7 @@ const mockItems = [
       'https://images.unsplash.com/photo-1576045057995-568f588f82fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
     expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
     purchaseCount: 12,
-    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
   {
     id: 2,
@@ -49,7 +99,7 @@ const mockItems = [
       'https://cdn.pixabay.com/photo/2015/03/14/13/59/vegetables-673181_1280.jpg',
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     purchaseCount: 8,
-    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
   {
     id: 3,
@@ -59,27 +109,25 @@ const mockItems = [
       'https://cdn.pixabay.com/photo/2016/08/03/01/09/carrot-1565597_1280.jpg',
     expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     purchaseCount: 15,
-    purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
   },
   {
     id: 4,
     name: '사과',
     category: 'fruits',
-    imageUrl:
-      'https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    imageUrl: '/fruit/fruit_apple.jpg',
     expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
     purchaseCount: 20,
-    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
   {
     id: 5,
     name: '바나나',
     category: 'fruits',
-    imageUrl:
-      'https://images.unsplash.com/photo-1528825871115-3581a5387919?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    imageUrl: '/fruit/fruit_banana.jpg',
     expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
     purchaseCount: 25,
-    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
   {
     id: 6,
@@ -89,7 +137,7 @@ const mockItems = [
       'https://shop.hansalim.or.kr/shopping/is/itm/060103025/060103025_1_568.jpg',
     expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     purchaseCount: 18,
-    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
   {
     id: 7,
@@ -99,7 +147,7 @@ const mockItems = [
       'https://cdn.pixabay.com/photo/2016/03/05/19/02/beef-1238262_1280.jpg',
     expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
     purchaseCount: 10,
-    purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+    purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
   },
   {
     id: 8,
@@ -109,7 +157,7 @@ const mockItems = [
       'https://cdn.pixabay.com/photo/2016/03/05/19/24/salmon-1238248_1280.jpg',
     expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     purchaseCount: 7,
-    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
   {
     id: 9,
@@ -119,7 +167,7 @@ const mockItems = [
       'https://cdn.pixabay.com/photo/2015/04/09/13/38/shrimp-715010_1280.jpg',
     expiryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
     purchaseCount: 14,
-    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
   {
     id: 10,
@@ -129,21 +177,21 @@ const mockItems = [
       'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
     expiryDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
     purchaseCount: 16,
-    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
   {
     id: 11,
     name: '오렌지',
     category: 'fruits',
-    imageUrl:
-      'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab12?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    imageUrl: '/fruit/fruit_orange.webp',
     expiryDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
     purchaseCount: 22,
-    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
 ];
+
 // Mock consumption data
-const consumptionData = [
+const consumptionData: ConsumptionData[] = [
   {
     week: '1주차',
     채소: 12,
@@ -177,22 +225,34 @@ const consumptionData = [
     기타: 5,
   },
 ];
+
 // User profile options
-const genderOptions = ['여성', '남성', '기타'];
-const ageOptions = ['20대 미만', '20대', '30대', '40대', '50대 이상'];
-const allergyOptions = ['없음', '견과류', '갑각류', '유제품', '글루텐'];
-const activityOptions = ['낮음', '중간', '높음'];
-const sleepOptions = ['6시간 미만', '6-7시간', '7-8시간', '8시간 이상'];
+const genderOptions: string[] = ['여성', '남성', '기타'];
+const ageOptions: string[] = ['20대 미만', '20대', '30대', '40대', '50대 이상'];
+const allergyOptions: string[] = [
+  '없음',
+  '견과류',
+  '갑각류',
+  '유제품',
+  '글루텐',
+];
+const activityOptions: string[] = ['낮음', '중간', '높음'];
+const sleepOptions: string[] = [
+  '6시간 미만',
+  '6-7시간',
+  '7-8시간',
+  '8시간 이상',
+];
+
 // Health stats based on profile
-const getHealthStats = profile => {
-  // This would be calculated based on real data in a production app
-  const stats = {
+const getHealthStats = (profile: UserProfile): HealthStats => {
+  const stats: HealthStats = {
     nutrientScore: 83,
     balanceRating: 4.8,
     healthImprovement: 52,
     consumptionEfficiency: 4,
   };
-  // Adjust stats based on profile
+
   if (profile.gender === '여성') {
     stats.nutrientScore += 2;
   }
@@ -218,45 +278,62 @@ const getHealthStats = profile => {
   }
   return stats;
 };
-const FridgeBoard = () => {
+
+const FridgeBoard: React.FC = () => {
   // State management
-  const [activeCategory, setActiveCategory] = useState('vegetables');
+  const [activeCategory, setActiveCategory] = useState<string>('vegetables');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showShoppingList, setShowShoppingList] = useState(false);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [showFavoriteNameInput, setShowFavoriteNameInput] = useState(false);
-  const [favoriteName, setFavoriteName] = useState('');
+  const [showShoppingList, setShowShoppingList] = useState<boolean>(false);
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+  const [showFavorites, setShowFavorites] = useState<boolean>(false);
+  const [showFavoriteNameInput, setShowFavoriteNameInput] =
+    useState<boolean>(false);
+  const [favoriteName, setFavoriteName] = useState<string>('');
   const [showNotificationTooltip, setShowNotificationTooltip] = useState<
     number | null
   >(null);
-  const [showSettingsTooltip, setShowSettingsTooltip] = useState(false);
+  const [showSettingsTooltip, setShowSettingsTooltip] =
+    useState<boolean>(false);
   const [sortOption, setSortOption] = useState<string>('most-purchased');
-  const [showSortOptions, setShowSortOptions] = useState(false);
-  const [filteredItems, setFilteredItems] = useState(mockItems);
-  const [filteredSectionItems, setFilteredSectionItems] = useState([]);
-  // Get most purchased items across all categories
-  const [topPurchasedItems, setTopPurchasedItems] = useState([]);
+  const [showSortOptions, setShowSortOptions] = useState<boolean>(false);
+  const [filteredItems, setFilteredItems] = useState<FridgeItem[]>(mockItems);
+  const [filteredSectionItems, setFilteredSectionItems] = useState<
+    FridgeItem[]
+  >([]);
+  const [topPurchasedItems, setTopPurchasedItems] = useState<FridgeItem[]>([]);
+
   // User profile state
-  const [userProfile, setUserProfile] = useState({
+  const [userProfile, setUserProfile] = useState<UserProfile>({
     gender: '-- 선택 --',
     age: '-- 선택 --',
     allergies: [],
     activityLevel: '-- 선택 --',
     sleepTime: '-- 선택 --',
   });
-  // Temporary profile for editing
-  const [tempProfile, setTempProfile] = useState({
+
+  const [tempProfile, setTempProfile] = useState<UserProfile>({
     ...userProfile,
   });
+
   // Dropdown states
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [showAllergyDropdown, setShowAllergyDropdown] = useState(false);
+  const [showAllergyDropdown, setShowAllergyDropdown] =
+    useState<boolean>(false);
+
   // Health stats
-  const [healthStats, setHealthStats] = useState(getHealthStats(userProfile));
+  const [healthStats, setHealthStats] = useState<HealthStats>(
+    getHealthStats(userProfile),
+  );
+
   // Flag to indicate unsaved changes
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+
+  // Shopping list state
+  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
+
+  // Favorites state
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -274,7 +351,7 @@ const FridgeBoard = () => {
   }, []);
 
   // Toggle dropdown
-  const toggleDropdown = (dropdownName: string) => {
+  const toggleDropdown = (dropdownName: string): void => {
     if (dropdownName === 'allergy') {
       setShowAllergyDropdown(!showAllergyDropdown);
       setActiveDropdown(null);
@@ -285,7 +362,7 @@ const FridgeBoard = () => {
   };
 
   // Check if dropdown should be enabled
-  const isDropdownEnabled = (dropdownName: string) => {
+  const isDropdownEnabled = (dropdownName: string): boolean => {
     switch (dropdownName) {
       case 'gender':
         return true;
@@ -311,47 +388,33 @@ const FridgeBoard = () => {
         return false;
     }
   };
+
   // Update health stats when profile changes
   useEffect(() => {
     setHealthStats(getHealthStats(userProfile));
   }, [userProfile]);
+
   // Initialize tempProfile when userProfile changes
   useEffect(() => {
     setTempProfile({
       ...userProfile,
     });
   }, [userProfile]);
-  // Shopping list state
-  const [shoppingList, setShoppingList] = useState<
-    Array<{
-      id: number;
-      name: string;
-      quantity: number;
-      completed: boolean;
-    }>
-  >([]);
-  // Favorites state
-  const [favorites, setFavorites] = useState<
-    Array<{
-      id: number;
-      name: string;
-      items: Array<{
-        id: number;
-        name: string;
-        quantity: number;
-      }>;
-    }>
-  >([]);
+
   // Update temp profile
-  const updateTempProfile = (field, value) => {
+  const updateTempProfile = (
+    field: keyof UserProfile,
+    value: string | string[],
+  ): void => {
     setTempProfile(prev => ({
       ...prev,
       [field]: value,
     }));
     setHasUnsavedChanges(true);
   };
+
   // Update temp allergies
-  const toggleTempAllergy = allergy => {
+  const toggleTempAllergy = (allergy: string): void => {
     setTempProfile(prev => {
       const allergies = prev.allergies.includes(allergy)
         ? prev.allergies.filter(a => a !== allergy)
@@ -363,20 +426,23 @@ const FridgeBoard = () => {
     });
     setHasUnsavedChanges(true);
   };
+
   // Apply changes to profile and update health stats
-  const applyProfileChanges = () => {
+  const applyProfileChanges = (): void => {
     setUserProfile({
       ...tempProfile,
     });
     setHealthStats(getHealthStats(tempProfile));
     setHasUnsavedChanges(false);
   };
+
   // Filter items based on active category only (for main grid)
   useEffect(() => {
     const items = mockItems.filter(item => item.category === activeCategory);
     setFilteredItems(items);
   }, [activeCategory]);
-  // Filter items for the filter section based on sort option (across all categories)
+
+  // Filter items for the filter section based on sort option
   useEffect(() => {
     let items = [...mockItems];
     switch (sortOption) {
@@ -397,25 +463,27 @@ const FridgeBoard = () => {
         );
         break;
     }
-    setFilteredSectionItems(items.slice(0, 6)); // Show top 6 items based on filter
+    setFilteredSectionItems(items.slice(0, 6));
   }, [sortOption]);
+
   // Get most purchased items across all categories
   useEffect(() => {
     const allItemsSorted = [...mockItems].sort(
       (a, b) => b.purchaseCount - a.purchaseCount,
     );
-    setTopPurchasedItems(allItemsSorted.slice(0, 6)); // Get top 6 most purchased items
+    setTopPurchasedItems(allItemsSorted.slice(0, 6));
   }, []);
+
   // Toggle shopping list panel
-  const toggleShoppingList = () => {
+  const toggleShoppingList = (): void => {
     setShowShoppingList(!showShoppingList);
     setShowFavorites(false);
   };
+
   // Add item to shopping list
-  const addToShoppingList = (name: string) => {
+  const addToShoppingList = (name: string): void => {
     const existingItem = shoppingList.find(item => item.name === name);
     if (existingItem) {
-      // Increment quantity if item already exists
       setShoppingList(
         shoppingList.map(item =>
           item.name === name
@@ -427,7 +495,6 @@ const FridgeBoard = () => {
         ),
       );
     } else {
-      // Add new item
       setShoppingList([
         ...shoppingList,
         {
@@ -439,8 +506,9 @@ const FridgeBoard = () => {
       ]);
     }
   };
+
   // Toggle item completion status
-  const toggleItemCompletion = (id: number) => {
+  const toggleItemCompletion = (id: number): void => {
     setShoppingList(
       shoppingList.map(item =>
         item.id === id
@@ -452,8 +520,9 @@ const FridgeBoard = () => {
       ),
     );
   };
+
   // Update item quantity
-  const updateItemQuantity = (id: number, change: number) => {
+  const updateItemQuantity = (id: number, change: number): void => {
     setShoppingList(
       shoppingList.map(item =>
         item.id === id
@@ -465,20 +534,24 @@ const FridgeBoard = () => {
       ),
     );
   };
+
   // Delete item from shopping list
-  const deleteItem = (id: number) => {
+  const deleteItem = (id: number): void => {
     setShoppingList(shoppingList.filter(item => item.id !== id));
   };
+
   // Clear completed items
-  const clearCompletedItems = () => {
+  const clearCompletedItems = (): void => {
     setShoppingList(shoppingList.filter(item => !item.completed));
   };
+
   // Clear all items
-  const clearAllItems = () => {
+  const clearAllItems = (): void => {
     setShoppingList([]);
   };
+
   // Save shopping list as favorite
-  const saveAsFavorite = () => {
+  const saveAsFavorite = (): void => {
     if (favoriteName.trim() === '') return;
     setFavorites([
       ...favorites,
@@ -495,8 +568,9 @@ const FridgeBoard = () => {
     setFavoriteName('');
     setShowFavoriteNameInput(false);
   };
+
   // Load favorite list
-  const loadFavorite = (favoriteId: number) => {
+  const loadFavorite = (favoriteId: number): void => {
     const favorite = favorites.find(fav => fav.id === favoriteId);
     if (favorite) {
       setShoppingList(
@@ -508,39 +582,46 @@ const FridgeBoard = () => {
       setShowFavorites(false);
     }
   };
+
   // Handle direct add
-  const handleDirectAdd = () => {
+  const handleDirectAdd = (): void => {
     setShowAddForm(true);
   };
+
   // Add direct item
-  const addDirectItem = (name: string) => {
+  const addDirectItem = (name: string): void => {
     addToShoppingList(name);
     setShowAddForm(false);
   };
+
   // Toggle notification tooltip
-  const toggleNotificationTooltip = (itemId: number | null) => {
+  const toggleNotificationTooltip = (itemId: number | null): void => {
     setShowNotificationTooltip(
       itemId === showNotificationTooltip ? null : itemId,
     );
   };
+
   // Toggle sort options
-  const toggleSortOptions = () => {
+  const toggleSortOptions = (): void => {
     setShowSortOptions(!showSortOptions);
   };
+
   // Apply sort option
-  const applySortOption = (option: string) => {
+  const applySortOption = (option: string): void => {
     setSortOption(option);
     setShowSortOptions(false);
   };
+
   // Format expiry date
-  const formatExpiryDate = (date: Date) => {
+  const formatExpiryDate = (date: Date): string => {
     const today = new Date();
     const diffTime = date.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? `${diffDays}일 남음` : '오늘 만료';
   };
+
   // Get notification color based on expiry date
-  const getExpiryStatusColor = (expiryDate: Date) => {
+  const getExpiryStatusColor = (expiryDate: Date): string => {
     const today = new Date();
     const diffTime = expiryDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -548,58 +629,47 @@ const FridgeBoard = () => {
     if (diffDays <= 4) return 'text-yellow-500';
     return 'text-green-500';
   };
-  // Update user profile
-  const updateUserProfile = (field, value) => {
-    setUserProfile(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-  // Update user allergies
-  const toggleAllergy = allergy => {
-    setUserProfile(prev => {
-      const allergies = prev.allergies.includes(allergy)
-        ? prev.allergies.filter(a => a !== allergy)
-        : [...prev.allergies, allergy];
-      return {
-        ...prev,
-        allergies,
-      };
-    });
-  };
+
   // Get dietary recommendations
-  const getDietaryRecommendations = () => {
+  const getDietaryRecommendations = (): string[] => {
     const { gender, age, allergies, activityLevel, sleepTime } = userProfile;
-    let recommendations = [];
+    const recommendations: string[] = [];
+
     if (activityLevel === '높음') {
       recommendations.push('단백질이 풍부한 고기와 생선을 충분히 섭취하세요.');
     } else if (activityLevel === '낮음') {
       recommendations.push('가벼운 채소와 과일 위주의 식단을 유지하세요.');
     }
+
     if (sleepTime === '6시간 미만') {
       recommendations.push(
         '수면에 도움이 되는 바나나, 체리, 키위 등의 과일을 저녁에 섭취해보세요.',
       );
     }
+
     if (age === '50대 이상') {
       recommendations.push(
         '칼슘이 풍부한 식품과 항산화 성분이 풍부한 과일을 섭취하세요.',
       );
     }
+
     if (allergies.includes('견과류')) {
       recommendations.push(
         '견과류 대신 아보카도, 올리브 오일 등으로 건강한 지방을 섭취하세요.',
       );
     }
+
     if (allergies.includes('갑각류')) {
       recommendations.push(
         '갑각류 대신 두부, 콩류 등의 식물성 단백질을 섭취하세요.',
       );
     }
+
     return recommendations.length > 0
       ? recommendations
       : ['균형 잡힌 식단을 유지하고 신선한 채소와 과일을 충분히 섭취하세요.'];
   };
+
   return (
     <div className="relative flex h-full flex-col bg-white p-0 md:p-0">
       <div className="mb-4 flex items-center justify-between md:mb-6">
@@ -627,6 +697,7 @@ const FridgeBoard = () => {
           </button>
         </div>
       </div>
+
       <div className="flex items-center justify-between">
         <div className="mt-3 text-sm text-gray-500">
           총 {mockItems.filter(item => item.category === activeCategory).length}
@@ -647,7 +718,8 @@ const FridgeBoard = () => {
           </button>
         </div>
       </div>
-      {/* Category tabs - improved for mobile */}
+
+      {/* Category tabs */}
       <div className="mt-4 mb-4 flex overflow-x-auto pb-1">
         <div className="flex min-w-full space-x-2">
           <button
@@ -676,8 +748,8 @@ const FridgeBoard = () => {
           </button>
         </div>
       </div>
-      {/* Items grid with responsive behavior */}
-      {/* For larger screens, use grid layout */}
+
+      {/* Items grid - desktop */}
       <div
         className={`hidden md:grid ${viewMode === 'grid' ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-4`}
       >
@@ -739,7 +811,8 @@ const FridgeBoard = () => {
           </div>
         ))}
       </div>
-      {/* For mobile screens, use horizontal scrollable layout */}
+
+      {/* Items grid - mobile */}
       <div className="overflow-x-auto pb-4 md:hidden">
         <div
           className="flex space-x-4"
@@ -787,6 +860,7 @@ const FridgeBoard = () => {
           ))}
         </div>
       </div>
+
       {/* Filter options */}
       <div className="mb-4 md:mb-6">
         <div className="mb-3 flex items-center justify-between">
@@ -839,7 +913,8 @@ const FridgeBoard = () => {
             )}
           </div>
         </div>
-        {/* Filtered Items Board - Enhanced for better scrolling on small screens */}
+
+        {/* Filtered Items Board */}
         <div className="mb-2 rounded-xl border border-gray-200 bg-gray-50 px-4 pt-4 pb-1 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-700">
@@ -889,7 +964,8 @@ const FridgeBoard = () => {
           </div>
         </div>
       </div>
-      {/* Consumption Statistics - Improved for mobile */}
+
+      {/* Consumption Statistics */}
       <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:mb-8 md:p-4">
         <h2 className="mb-3 text-lg font-semibold md:mb-4">
           식재료 소비 현황 (주간)
@@ -928,12 +1004,14 @@ const FridgeBoard = () => {
           </ResponsiveContainer>
         </div>
       </div>
-      {/* Health Analysis - Profile Selection - Improved for mobile */}
+
+      {/* Health Analysis */}
       <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:p-4">
         <h2 className="mb-3 text-lg font-semibold md:mb-4">
           건강 분석 및 추천
         </h2>
-        {/* Profile Selection Dropdowns - Improved for mobile */}
+
+        {/* Profile Selection Dropdowns */}
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mb-6 md:grid-cols-3 md:gap-4">
           {/* Gender Dropdown */}
           <div className="dropdown-container relative">
@@ -983,6 +1061,7 @@ const FridgeBoard = () => {
               </div>
             )}
           </div>
+
           {/* Age Dropdown */}
           <div className="dropdown-container relative">
             <label className="mb-1 block text-sm font-medium text-gray-600">
@@ -1029,6 +1108,7 @@ const FridgeBoard = () => {
               </div>
             )}
           </div>
+
           {/* Allergies Dropdown */}
           <div className="dropdown-container relative">
             <label className="mb-1 block text-sm font-medium text-gray-600">
@@ -1076,6 +1156,7 @@ const FridgeBoard = () => {
               </div>
             )}
           </div>
+
           {/* Activity Level Dropdown */}
           <div className="dropdown-container relative">
             <label className="mb-1 block text-sm font-medium text-gray-600">
@@ -1126,6 +1207,7 @@ const FridgeBoard = () => {
               </div>
             )}
           </div>
+
           {/* Sleep Time Dropdown */}
           <div className="dropdown-container relative">
             <label className="mb-1 block text-sm font-medium text-gray-600">
@@ -1175,6 +1257,7 @@ const FridgeBoard = () => {
             )}
           </div>
         </div>
+
         {/* Apply Button */}
         <div className="mb-4 flex justify-end md:mb-6">
           <button
@@ -1185,11 +1268,12 @@ const FridgeBoard = () => {
             적용하기
           </button>
         </div>
-        {/* Health Stats Cards - Improved for mobile */}
+
+        {/* Health Stats Cards */}
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mb-6 md:gap-4">
           <div className="rounded-xl bg-[#796AFF] p-4 text-[#28272C] shadow-sm md:p-5">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="rounded-2xl border-1 border-[#28272c] px-3.5 py-1 text-sm font-medium">
+              <h3 className="rounded-2xl border border-[#28272c] px-3.5 py-1 text-sm font-medium">
                 영양소 점수
               </h3>
               <button className="bg-opacity-20 rounded-full bg-white p-1">
@@ -1202,7 +1286,7 @@ const FridgeBoard = () => {
           </div>
           <div className="rounded-xl bg-[#F8A5A5] p-4 text-gray-900 shadow-sm md:p-5">
             <div className="flex items-center justify-between">
-              <h3 className="rounded-2xl border-1 border-[#28272c] px-3.5 py-1 text-sm font-medium">
+              <h3 className="rounded-2xl border border-[#28272c] px-3.5 py-1 text-sm font-medium">
                 균형 점수
               </h3>
               <button className="bg-opacity-20 rounded-full bg-white p-1">
@@ -1210,7 +1294,7 @@ const FridgeBoard = () => {
               </button>
             </div>
             <div className="relative flex items-center justify-center">
-              <div className="border-gradient-purple flex h-32 w-32 items-center justify-center rounded-full border-3">
+              <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-gray-900">
                 <div className="text-5xl font-light">
                   {healthStats.balanceRating}
                   <span className="text-2xl text-[#28272c]">*</span>
@@ -1220,7 +1304,7 @@ const FridgeBoard = () => {
           </div>
           <div className="rounded-xl bg-[#64DBAE] p-4 text-gray-900 shadow-sm md:p-5">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="rounded-2xl border-1 border-[#28272c] px-3.5 py-1 text-sm font-medium">
+              <h3 className="rounded-2xl border border-[#28272c] px-3.5 py-1 text-sm font-medium">
                 건강 개선도
               </h3>
               <button className="bg-opacity-20 rounded-full bg-white p-1">
@@ -1233,7 +1317,7 @@ const FridgeBoard = () => {
           </div>
           <div className="rounded-xl bg-[#DBD7D1] p-4 text-gray-900 shadow-sm md:p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="rounded-2xl border-1 border-[#28272c] px-3.5 py-1 text-sm font-medium">
+              <h3 className="rounded-2xl border border-[#28272c] px-3.5 py-1 text-sm font-medium">
                 소비 효율성
               </h3>
               <button className="bg-opacity-5 rounded-full bg-white p-1 text-[#121212]">
@@ -1253,6 +1337,7 @@ const FridgeBoard = () => {
             </div>
           </div>
         </div>
+
         {/* Recommendations */}
         <div className="mt-4">
           <h3 className="text-md mb-3 flex items-center font-medium">
@@ -1269,7 +1354,8 @@ const FridgeBoard = () => {
           </ul>
         </div>
       </div>
-      {/* Shopping List Side Panel - Improved for mobile */}
+
+      {/* Shopping List Side Panel */}
       <div
         className={`fixed top-0 right-0 z-50 h-full w-full transform bg-white shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
       >
@@ -1283,6 +1369,7 @@ const FridgeBoard = () => {
               <XIcon size={24} />
             </button>
           </div>
+
           {/* Tab navigation */}
           <div className="mb-4 flex border-b">
             <button
@@ -1299,6 +1386,7 @@ const FridgeBoard = () => {
               즐겨찾기
             </button>
           </div>
+
           {!showFavorites ? (
             <>
               {/* Shopping list */}
@@ -1361,6 +1449,7 @@ const FridgeBoard = () => {
                   </ul>
                 )}
               </div>
+
               {/* Action buttons */}
               <div className="mt-4 space-y-2">
                 <div className="flex space-x-2">
@@ -1425,7 +1514,8 @@ const FridgeBoard = () => {
           )}
         </div>
       </div>
-      {/* Favorite Name Input Modal - Improved for mobile */}
+
+      {/* Favorite Name Input Modal */}
       {showFavoriteNameInput && (
         <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
           <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
@@ -1459,7 +1549,8 @@ const FridgeBoard = () => {
           </div>
         </div>
       )}
-      {/* Add Item Form Modal - Improved for mobile */}
+
+      {/* Add Item Form Modal */}
       {showAddForm && (
         <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
           <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
@@ -1474,25 +1565,28 @@ const FridgeBoard = () => {
     </div>
   );
 };
-// AddItemForm Component - Improved for mobile
-const AddItemForm = ({
-  onAdd,
-  onCancel,
-}: {
+
+// AddItemForm Component
+interface AddItemFormProps {
   onAdd: (name: string) => void;
   onCancel: () => void;
-}) => {
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const handleSubmit = (e: React.FormEvent) => {
+}
+
+const AddItemForm: React.FC<AddItemFormProps> = ({ onAdd, onCancel }) => {
+  const [name, setName] = useState<string>('');
+  const [quantity, setQuantity] = useState<number>(1);
+
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     if (name.trim()) {
       onAdd(name);
     }
   };
-  const handleQuantityChange = (change: number) => {
+
+  const handleQuantityChange = (change: number): void => {
     setQuantity(Math.max(1, quantity + change));
   };
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="mb-4">
@@ -1555,4 +1649,5 @@ const AddItemForm = ({
     </form>
   );
 };
+
 export default FridgeBoard;
