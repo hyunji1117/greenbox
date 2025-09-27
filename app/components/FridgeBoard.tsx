@@ -300,6 +300,7 @@ const FridgeBoard: React.FC = () => {
   const [filteredSectionItems, setFilteredSectionItems] = useState<
     FridgeItem[]
   >([]);
+  // 쇼핑 리스트 내 식재료 체크 후 저장하면 실구매로 간주하고 구매 1회 체크 관련 상태
   const [topPurchasedItems, setTopPurchasedItems] = useState<FridgeItem[]>([]);
 
   // User profile state
@@ -693,7 +694,7 @@ const FridgeBoard: React.FC = () => {
             className="flex items-center space-x-1 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-sm text-white shadow-sm transition-colors hover:bg-[#603fad]"
           >
             <Plus size={18} />
-            <span>마트가서 살 것</span>
+            <span>쇼핑 리스트</span>
           </button>
         </div>
       </div>
@@ -749,7 +750,7 @@ const FridgeBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* Items grid - desktop */}
+      {/* 식재료 리스트 스크롤 (데스크탑) */}
       <div
         className={`hidden md:grid ${viewMode === 'grid' ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-4`}
       >
@@ -812,7 +813,7 @@ const FridgeBoard: React.FC = () => {
         ))}
       </div>
 
-      {/* Items grid - mobile */}
+      {/* 식재료 리스트 스크롤 (모바일) */}
       <div className="overflow-x-auto pb-4 md:hidden">
         <div
           className="flex space-x-4"
@@ -820,48 +821,67 @@ const FridgeBoard: React.FC = () => {
             minWidth: 'min-content',
           }}
         >
-          {filteredItems.map(item => (
-            <div
-              key={item.id}
-              className="w-[180px] flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div className="relative h-32">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="h-full w-full object-cover"
-                  width={180}
-                  height={128}
-                />
-                <div
-                  className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-                >
-                  {formatExpiryDate(item.expiryDate)}
+          {filteredItems.map(item => {
+            const isInList = shoppingList.some(
+              listItem => listItem.name === item.name,
+            );
+
+            return (
+              <div
+                key={item.id}
+                className={`w-[180px] flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md ${
+                  isInList ? 'cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                onClick={() => !isInList && addToShoppingList(item.name)}
+              >
+                <div className="relative h-32">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="h-full w-full object-cover"
+                    width={180}
+                    height={128}
+                  />
+                  {/* 검은색 오버레이 */}
+                  {isInList && <div className="absolute inset-0 bg-black/50" />}
+                  <div
+                    className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
+                  >
+                    {formatExpiryDate(item.expiryDate)}
+                  </div>
+                  {/* 체크 아이콘 표시 */}
+                  {isInList && (
+                    <div className="absolute top-2 left-2 rounded-full bg-green-400 p-1">
+                      <Check size={16} className="text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-3">
+                  <h3 className={'text-sm font-medium'}>{item.name}</h3>
+                  <div className="flex items-center space-x-1">
+                    <div
+                      className={`p-1 ${isInList ? 'text-green-400' : 'text-[#6B46C1]'}`}
+                    >
+                      {isInList ? <Check size={18} /> : <Plus size={18} />}
+                    </div>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        toggleNotificationTooltip(item.id);
+                      }}
+                      className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
+                    >
+                      <BellIcon size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3">
-                <h3 className="text-sm font-medium">{item.name}</h3>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => addToShoppingList(item.name)}
-                    className="p-1 text-[#6B46C1] hover:text-[#603fad]"
-                  >
-                    <Plus size={18} />
-                  </button>
-                  <button
-                    onClick={() => toggleNotificationTooltip(item.id)}
-                    className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
-                  >
-                    <BellIcon size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Filter options */}
+      {/* 필터 */}
       <div className="mb-4 md:mb-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">식재료 필터</h2>
@@ -1562,6 +1582,13 @@ const FridgeBoard: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={hideToast}
+        duration={3000} // 3초 후 자동으로 사라짐
+      />
     </div>
   );
 };
