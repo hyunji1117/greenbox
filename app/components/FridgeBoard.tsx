@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Plus,
   ListIcon,
@@ -26,6 +26,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import Image from 'next/image';
+import Toast from '@/app/components/Toast'; // 경로는 프로젝트 구조에 맞게 조정
 
 // Type definitions
 interface FridgeItem {
@@ -300,8 +301,12 @@ const FridgeBoard: React.FC = () => {
   const [filteredSectionItems, setFilteredSectionItems] = useState<
     FridgeItem[]
   >([]);
-  // 쇼핑 리스트 내 식재료 체크 후 저장하면 실구매로 간주하고 구매 1회 체크 관련 상태
   const [topPurchasedItems, setTopPurchasedItems] = useState<FridgeItem[]>([]);
+
+  // Toast 관련 state
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // User profile state
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -334,6 +339,30 @@ const FridgeBoard: React.FC = () => {
 
   // Favorites state
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+
+  // Toast를 표시하는 함수
+  const showToastNotification = useCallback((message: string): void => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToastMessage(message);
+    setShowToast(true);
+
+    toastTimerRef.current = setTimeout(() => {
+      setShowToast(false);
+      toastTimerRef.current = null;
+    }, 3000);
+  }, []);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   // Click outside handler
   useEffect(() => {
@@ -481,12 +510,20 @@ const FridgeBoard: React.FC = () => {
     setShowFavorites(false);
   };
 
-  // Add item to shopping list
+  // Add item to shopping list (타입 체크 포함)
   const addToShoppingList = (name: string): void => {
-    const existingItem = shoppingList.find(item => item.name === name);
+    if (!name || typeof name !== 'string') {
+      console.error('Invalid item name');
+      return;
+    }
+
+    const existingItem: ShoppingListItem | undefined = shoppingList.find(
+      (item: ShoppingListItem) => item.name === name,
+    );
+
     if (existingItem) {
-      setShoppingList(
-        shoppingList.map(item =>
+      setShoppingList((prevList: ShoppingListItem[]) =>
+        prevList.map((item: ShoppingListItem) =>
           item.name === name
             ? {
                 ...item,
@@ -495,23 +532,33 @@ const FridgeBoard: React.FC = () => {
             : item,
         ),
       );
+      showToastNotification(`${name}의 수량이 증가했어요!`);
     } else {
-      setShoppingList([
-        ...shoppingList,
-        {
-          id: Date.now(),
-          name,
-          quantity: 1,
-          completed: false,
-        },
-      ]);
+      const newItem: ShoppingListItem = {
+        id: Date.now(),
+        name,
+        quantity: 1,
+        completed: false,
+      };
+
+      setShoppingList((prevList: ShoppingListItem[]) => [...prevList, newItem]);
+      showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
     }
   };
 
   // Toggle item completion status
   const toggleItemCompletion = (id: number): void => {
-    setShoppingList(
-      shoppingList.map(item =>
+    if (typeof id !== 'number') {
+      console.error('Invalid item ID');
+      return;
+    }
+
+    const item: ShoppingListItem | undefined = shoppingList.find(
+      (item: ShoppingListItem) => item.id === id,
+    );
+
+    setShoppingList((prevList: ShoppingListItem[]) =>
+      prevList.map((item: ShoppingListItem) =>
         item.id === id
           ? {
               ...item,
@@ -520,12 +567,24 @@ const FridgeBoard: React.FC = () => {
           : item,
       ),
     );
+
+    if (item) {
+      const message: string = !item.completed
+        ? `'${item.name}'이(가) 완료되었어요`
+        : `'${item.name}'이(가) 완료 해제되었어요`;
+      showToastNotification(message);
+    }
   };
 
   // Update item quantity
   const updateItemQuantity = (id: number, change: number): void => {
-    setShoppingList(
-      shoppingList.map(item =>
+    if (typeof id !== 'number' || typeof change !== 'number') {
+      console.error('Invalid parameters');
+      return;
+    }
+
+    setShoppingList((prevList: ShoppingListItem[]) =>
+      prevList.map((item: ShoppingListItem) =>
         item.id === id
           ? {
               ...item,
@@ -538,49 +597,107 @@ const FridgeBoard: React.FC = () => {
 
   // Delete item from shopping list
   const deleteItem = (id: number): void => {
-    setShoppingList(shoppingList.filter(item => item.id !== id));
+    if (typeof id !== 'number') {
+      console.error('Invalid item ID');
+      return;
+    }
+
+    const itemToDelete: ShoppingListItem | undefined = shoppingList.find(
+      (item: ShoppingListItem) => item.id === id,
+    );
+
+    if (!itemToDelete) {
+      console.warn('Item not found');
+      return;
+    }
+
+    setShoppingList((prevList: ShoppingListItem[]) =>
+      prevList.filter((item: ShoppingListItem) => item.id !== id),
+    );
+    showToastNotification(`'${itemToDelete.name}'이(가) 삭제되었어요`);
   };
 
   // Clear completed items
   const clearCompletedItems = (): void => {
-    setShoppingList(shoppingList.filter(item => !item.completed));
+    const completedItems: ShoppingListItem[] = shoppingList.filter(
+      (item: ShoppingListItem) => item.completed,
+    );
+    const completedCount: number = completedItems.length;
+
+    if (completedCount === 0) {
+      showToastNotification('완료된 항목이 없습니다');
+      return;
+    }
+
+    setShoppingList((prevList: ShoppingListItem[]) =>
+      prevList.filter((item: ShoppingListItem) => !item.completed),
+    );
+    showToastNotification(`${completedCount}개 항목이 완료되었어요!`);
   };
 
   // Clear all items
   const clearAllItems = (): void => {
+    const itemCount: number = shoppingList.length;
+
+    if (itemCount === 0) {
+      showToastNotification('삭제할 항목이 없습니다');
+      return;
+    }
+
     setShoppingList([]);
+    showToastNotification(`${itemCount}개 항목이 모두 삭제되었어요!`);
   };
 
   // Save shopping list as favorite
   const saveAsFavorite = (): void => {
-    if (favoriteName.trim() === '') return;
-    setFavorites([
-      ...favorites,
-      {
-        id: Date.now(),
-        name: favoriteName,
-        items: shoppingList.map(({ id, name, quantity }) => ({
-          id,
-          name,
-          quantity,
-        })),
-      },
+    const trimmedName: string = favoriteName.trim();
+
+    if (!trimmedName) {
+      console.warn('Favorite name is empty');
+      return;
+    }
+
+    const newFavorite: FavoriteItem = {
+      id: Date.now(),
+      name: trimmedName,
+      items: shoppingList.map(({ id, name, quantity }) => ({
+        id,
+        name,
+        quantity,
+      })),
+    };
+
+    setFavorites((prevFavorites: FavoriteItem[]) => [
+      ...prevFavorites,
+      newFavorite,
     ]);
     setFavoriteName('');
     setShowFavoriteNameInput(false);
+    showToastNotification(`'${trimmedName}' 즐겨찾기가 저장되었어요!`);
   };
 
   // Load favorite list
   const loadFavorite = (favoriteId: number): void => {
-    const favorite = favorites.find(fav => fav.id === favoriteId);
+    if (typeof favoriteId !== 'number') {
+      console.error('Invalid favorite ID');
+      return;
+    }
+
+    const favorite: FavoriteItem | undefined = favorites.find(
+      (fav: FavoriteItem) => fav.id === favoriteId,
+    );
+
     if (favorite) {
-      setShoppingList(
-        favorite.items.map(item => ({
+      const newShoppingList: ShoppingListItem[] = favorite.items.map(
+        (item): ShoppingListItem => ({
           ...item,
           completed: false,
-        })),
+        }),
       );
+
+      setShoppingList(newShoppingList);
       setShowFavorites(false);
+      showToastNotification(`'${favorite.name}' 목록을 불러왔어요!`);
     }
   };
 
@@ -591,6 +708,11 @@ const FridgeBoard: React.FC = () => {
 
   // Add direct item
   const addDirectItem = (name: string): void => {
+    if (!name || typeof name !== 'string') {
+      console.error('Invalid item name');
+      return;
+    }
+
     addToShoppingList(name);
     setShowAddForm(false);
   };
@@ -1582,6 +1704,7 @@ const FridgeBoard: React.FC = () => {
           </div>
         </div>
       )}
+      <Toast message={toastMessage} isVisible={showToast} />
     </div>
   );
 };
