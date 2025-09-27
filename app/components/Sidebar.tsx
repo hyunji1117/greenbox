@@ -141,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="mt-auto">
         <div className="relative">
           <button
-            className="rounded-full bg-white/10 p-3 transition-colors duration-200 hover:bg-white/20"
+            className="max-h-11 max-w-11 rounded-full bg-white/10 p-3 shadow-sm transition-colors duration-200 hover:bg-white/20"
             title="사용자 설정"
             onClick={onSettingsClick}
           >

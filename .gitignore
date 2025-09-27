@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 .history
+git_status_backup.txt
+*.backup.txt
 
 # debug
 npm-debug.log*
