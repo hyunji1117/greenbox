@@ -1023,6 +1023,7 @@ const FridgeBoard: React.FC = () => {
             const isInList = shoppingList.some(
               listItem => listItem.name === item.name,
             );
+            const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
 
             return (
               <div
@@ -1042,18 +1043,28 @@ const FridgeBoard: React.FC = () => {
                   />
                   {/* 검은색 오버레이 */}
                   {isInList && <div className="absolute inset-0 bg-black/50" />}
+
                   <div
                     className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
                   >
                     {formatExpiryDate(item.expiryDate)}
                   </div>
+
                   {/* 체크 아이콘 표시 */}
                   {isInList && (
                     <div className="absolute top-2 left-2 rounded-full bg-green-400 p-1">
                       <Check size={16} className="text-white" />
                     </div>
                   )}
+
+                  {/* 구매 횟수 표시 추가 */}
+                  {purchaseCount > 0 && (
+                    <div className="absolute bottom-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                      구매 {purchaseCount}회
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex items-center justify-between p-3">
                   <h3 className={'text-sm font-medium'}>{item.name}</h3>
                   <div className="flex items-center space-x-1">
