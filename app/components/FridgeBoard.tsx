@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
+import PurchaseStats from '@/app/components/PurchaseStats';
 import {
   Plus,
   ListIcon,
@@ -355,6 +357,87 @@ const FridgeBoard: React.FC = () => {
     }, 3000);
   }, []);
 
+  // useEffect 추가하여 storage 초기화
+  useEffect(() => {
+    purchaseStorage.init().catch(console.error);
+  }, []);
+
+  // clearCompletedItems 함수 수정
+  const clearCompletedItems = async (): Promise<void> => {
+    const completedItems: ShoppingListItem[] = shoppingList.filter(
+      (item: ShoppingListItem) => item.completed,
+    );
+    const completedCount: number = completedItems.length;
+
+    if (completedCount === 0) {
+      showToastNotification('완료된 항목이 없습니다');
+      return;
+    }
+
+    // 구매 기록 저장
+    try {
+      await purchaseStorage.recordPurchase(
+        completedItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+        })),
+      );
+
+      // 구매 횟수 업데이트를 위해 다시 로드
+      const counts = new Map<string, number>();
+      for (const item of completedItems) {
+        const count = await purchaseStorage.getPurchaseCount(item.name);
+        if (count > 0) {
+          counts.set(item.name, count);
+        }
+      }
+
+      // 기존 카운트와 병합
+      setItemPurchaseCounts(prev => {
+        const newCounts = new Map(prev);
+        counts.forEach((value, key) => {
+          newCounts.set(key, value);
+        });
+        return newCounts;
+      });
+
+      // 기존 쇼핑리스트 클리어 로직
+      setShoppingList((prevList: ShoppingListItem[]) =>
+        prevList.filter((item: ShoppingListItem) => !item.completed),
+      );
+
+      showToastNotification(
+        `${completedCount}개 항목이 완료되었고 구매 기록이 저장되었습니다!`,
+      );
+    } catch (error) {
+      console.error('Failed to save purchase history:', error);
+      showToastNotification('구매 기록 저장 중 오류가 발생했습니다');
+    }
+  };
+
+  // 구매 횟수 표시를 위한 state 추가
+  const [itemPurchaseCounts, setItemPurchaseCounts] = useState<
+    Map<string, number>
+  >(new Map());
+
+  // 구매 횟수 로드
+  useEffect(() => {
+    const loadPurchaseCounts = async () => {
+      const counts = new Map<string, number>();
+
+      for (const item of mockItems) {
+        const count = await purchaseStorage.getPurchaseCount(item.name);
+        if (count > 0) {
+          counts.set(item.name, count);
+        }
+      }
+
+      setItemPurchaseCounts(counts);
+    };
+
+    loadPurchaseCounts();
+  }, []);
+
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
     return () => {
@@ -617,24 +700,6 @@ const FridgeBoard: React.FC = () => {
     showToastNotification(`'${itemToDelete.name}'이(가) 삭제되었어요`);
   };
 
-  // Clear completed items
-  const clearCompletedItems = (): void => {
-    const completedItems: ShoppingListItem[] = shoppingList.filter(
-      (item: ShoppingListItem) => item.completed,
-    );
-    const completedCount: number = completedItems.length;
-
-    if (completedCount === 0) {
-      showToastNotification('완료된 항목이 없습니다');
-      return;
-    }
-
-    setShoppingList((prevList: ShoppingListItem[]) =>
-      prevList.filter((item: ShoppingListItem) => !item.completed),
-    );
-    showToastNotification(`${completedCount}개 항목이 완료되었어요!`);
-  };
-
   // Clear all items
   const clearAllItems = (): void => {
     const itemCount: number = shoppingList.length;
@@ -876,63 +941,74 @@ const FridgeBoard: React.FC = () => {
       <div
         className={`hidden md:grid ${viewMode === 'grid' ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-4`}
       >
-        {filteredItems.map(item => (
-          <div
-            key={item.id}
-            className="overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="relative h-32">
-              <Image
-                src={item.imageUrl}
-                alt={item.name}
-                className="h-full w-full object-cover"
-                width={400}
-                height={200}
-              />
-              <div
-                className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-              >
-                {formatExpiryDate(item.expiryDate)}
+        {filteredItems.map(item => {
+          const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
+
+          return (
+            <div
+              key={item.id}
+              className="overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="relative h-32">
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                  width={400}
+                  height={200}
+                />
+                <div
+                  className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
+                >
+                  {formatExpiryDate(item.expiryDate)}
+                </div>
+
+                {/* 구매 횟수 표시 추가 */}
+                {purchaseCount > 0 && (
+                  <div className="absolute bottom-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                    구매 {purchaseCount}회
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-3">
+                <h3 className="text-sm font-medium">{item.name}</h3>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => addToShoppingList(item.name)}
+                    className="p-1 text-[#6B46C1] hover:text-[#603fad]"
+                  >
+                    <Plus size={18} />
+                  </button>
+                  <button
+                    onClick={() => toggleNotificationTooltip(item.id)}
+                    className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
+                  >
+                    <BellIcon size={18} />
+                    {showNotificationTooltip === item.id && (
+                      <div className="absolute right-0 bottom-full z-10 mb-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
+                        <p className="mb-1 font-medium">유효기간 알림 설정</p>
+                        <p>이 식재료의 유효기간 만료 전에 알림을 받습니다:</p>
+                        <ul className="mt-1 space-y-1">
+                          <li className="flex items-center">
+                            <Check size={12} className="mr-1 text-green-500" />
+                            유효기간 80% 전 알림
+                          </li>
+                          <li className="flex items-center">
+                            <Check size={12} className="mr-1 text-green-500" />
+                            유효기간 40% 전 알림
+                          </li>
+                        </ul>
+                        <p className="mt-2 text-gray-500">
+                          자세한 설정은 설정 아이콘을 클릭하세요
+                        </p>
+                      </div>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3">
-              <h3 className="text-sm font-medium">{item.name}</h3>
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => addToShoppingList(item.name)}
-                  className="p-1 text-[#6B46C1] hover:text-[#603fad]"
-                >
-                  <Plus size={18} />
-                </button>
-                <button
-                  onClick={() => toggleNotificationTooltip(item.id)}
-                  className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
-                >
-                  <BellIcon size={18} />
-                  {showNotificationTooltip === item.id && (
-                    <div className="absolute right-0 bottom-full z-10 mb-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
-                      <p className="mb-1 font-medium">유효기간 알림 설정</p>
-                      <p>이 식재료의 유효기간 만료 전에 알림을 받습니다:</p>
-                      <ul className="mt-1 space-y-1">
-                        <li className="flex items-center">
-                          <Check size={12} className="mr-1 text-green-500" />
-                          유효기간 80% 전 알림
-                        </li>
-                        <li className="flex items-center">
-                          <Check size={12} className="mr-1 text-green-500" />
-                          유효기간 40% 전 알림
-                        </li>
-                      </ul>
-                      <p className="mt-2 text-gray-500">
-                        자세한 설정은 설정 아이콘을 클릭하세요
-                      </p>
-                    </div>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 식재료 리스트 스크롤 (모바일) */}
@@ -1106,6 +1182,7 @@ const FridgeBoard: React.FC = () => {
           </div>
         </div>
       </div>
+      <PurchaseStats />
 
       {/* Consumption Statistics */}
       <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:mb-8 md:p-4">
