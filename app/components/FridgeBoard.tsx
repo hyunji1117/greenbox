@@ -1,3 +1,4 @@
+// app/components/FridgeBoard.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import PurchaseStats from '@/app/components/PurchaseStats';
@@ -13,9 +14,11 @@ import {
   PlusIcon,
   BellIcon,
   CogIcon,
-  ListFilterIcon,
+  // ListFilterIcon,
   InfoIcon,
   ChevronDownIcon,
+  ClipboardCheck,
+  ClipboardPlus,
 } from 'lucide-react';
 import {
   BarChart,
@@ -29,6 +32,7 @@ import {
 } from 'recharts';
 import Image from 'next/image';
 import Toast from '@/app/components/Toast'; // 경로는 프로젝트 구조에 맞게 조정
+import AddItemForm from '@/app/components/AddItemForm';
 
 // Type definitions
 interface FridgeItem {
@@ -1265,29 +1269,8 @@ const FridgeBoard: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="mt-3 text-sm text-gray-500">
-          총 {mockItems.filter(item => item.category === activeCategory).length}
-          개 아이템
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`rounded-xl p-1.5 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-          >
-            <GridIcon size={18} />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`rounded-xl p-1.5 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-          >
-            <ListIcon size={18} />
-          </button>
-        </div>
-      </div>
-
       {/* Category tabs */}
-      <div className="mt-4 mb-4 flex overflow-x-auto pb-1">
+      <div className="mt-2 mb-2 flex overflow-x-auto">
         <div className="flex min-w-full space-x-2">
           <button
             onClick={() => setActiveCategory('vegetables')}
@@ -1312,6 +1295,27 @@ const FridgeBoard: React.FC = () => {
             className={`flex min-h-[40px] min-w-[80px] flex-1 items-center justify-center space-x-1 rounded-xl shadow-sm ${activeCategory === 'seafood' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
             <span className="text-sm">해산물</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-2 flex items-center justify-between">
+        <div className="mt-4 text-sm text-gray-500">
+          총 {mockItems.filter(item => item.category === activeCategory).length}
+          개 아이템
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`rounded-xl p-1 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+          >
+            <GridIcon size={18} />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`rounded-xl p-1 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+          >
+            <ListIcon size={18} />
           </button>
         </div>
       </div>
@@ -1353,14 +1357,8 @@ const FridgeBoard: React.FC = () => {
                 <h3 className="text-sm font-medium">{item.name}</h3>
                 <div className="flex items-center space-x-1">
                   <button
-                    onClick={() => addToShoppingList(item.name)}
-                    className="p-1 text-[#6B46C1] hover:text-[#603fad]"
-                  >
-                    <Plus size={18} />
-                  </button>
-                  <button
                     onClick={() => toggleNotificationTooltip(item.id)}
-                    className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
+                    className="relative mt-1 mr-1 p-1 text-[#6B46C1]"
                   >
                     <BellIcon size={18} />
                     {showNotificationTooltip === item.id && (
@@ -1423,44 +1421,43 @@ const FridgeBoard: React.FC = () => {
                   {/* 검은색 오버레이 */}
                   {isInList && <div className="absolute inset-0 bg-black/50" />}
 
-                  <div
-                    className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-                  >
-                    {formatExpiryDate(item.expiryDate)}
-                  </div>
-
-                  {/* 체크 아이콘 표시 */}
-                  {isInList && (
-                    <div className="absolute top-2 left-2 rounded-full bg-green-400 p-1">
-                      <Check size={16} className="text-white" />
-                    </div>
-                  )}
-
                   {/* 구매 횟수 표시 추가 */}
                   {purchaseCount > 0 && (
-                    <div className="absolute bottom-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                    <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
                       구매 {purchaseCount}회
                     </div>
                   )}
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      toggleNotificationTooltip(item.id);
+                    }}
+                    className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad]"
+                  >
+                    <BellIcon size={18} />
+                  </button>
+
+                  {/* <button
+                    onClick={() => addToShoppingList(item.name)}
+                    className={`absolute right-13 bottom-5 flex h-19 w-19 items-center justify-center rounded-full bg-white/80 text-[#6B46C1] shadow-md transition-all ${isInList ? 'text-[#6B46C1]' : 'text-[#6B46C1]'}`}
+                  >
+                    {isInList ? (
+                      <ClipboardCheck size={35} strokeWidth={2} />
+                    ) : (
+                      <ClipboardPlus size={29} strokeWidth={2} />
+                    )}
+                  </button> */}
                 </div>
 
                 <div className="flex items-center justify-between p-3">
                   <h3 className={'text-sm font-medium'}>{item.name}</h3>
                   <div className="flex items-center space-x-1">
                     <div
-                      className={`p-1 ${isInList ? 'text-green-400' : 'text-[#6B46C1]'}`}
+                      className={`relative rounded-full text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
                     >
-                      {isInList ? <Check size={18} /> : <Plus size={18} />}
+                      {formatExpiryDate(item.expiryDate)}
                     </div>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleNotificationTooltip(item.id);
-                      }}
-                      className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
-                    >
-                      <BellIcon size={18} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -2060,7 +2057,7 @@ const FridgeBoard: React.FC = () => {
         <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
           <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
             <h3 className="mb-3 text-lg font-medium">직접 추가</h3>
-            <AddItemForm
+            <LocalAddItemForm
               onAdd={addDirectItem}
               onCancel={() => setShowAddForm(false)}
             />
@@ -2078,7 +2075,7 @@ interface AddItemFormProps {
   onCancel: () => void;
 }
 
-const AddItemForm: React.FC<AddItemFormProps> = ({ onAdd, onCancel }) => {
+const LocalAddItemForm: React.FC<AddItemFormProps> = ({ onAdd, onCancel }) => {
   const [name, setName] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
 
