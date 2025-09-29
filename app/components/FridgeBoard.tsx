@@ -687,6 +687,7 @@ const FridgeBoard: React.FC = () => {
     FridgeItem[]
   >([]);
   const [topPurchasedItems, setTopPurchasedItems] = useState<FridgeItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Toast 관련 state
   const [toastMessage, setToastMessage] = useState<string>('');
@@ -1241,6 +1242,15 @@ const FridgeBoard: React.FC = () => {
       : ['균형 잡힌 식단을 유지하고 신선한 채소와 과일을 충분히 섭취하세요.'];
   };
 
+  // 쇼핑 리스트 아이템 수 계산
+  useEffect(() => {
+    const count = shoppingList.reduce(
+      (total, item) => total + item.quantity,
+      0,
+    );
+    setTotalItems(count);
+  }, [shoppingList]);
+
   return (
     <div className="relative flex h-full flex-col bg-white p-0 md:p-0">
       <div className="mb-4 flex items-center justify-between md:mb-6">
@@ -1265,6 +1275,11 @@ const FridgeBoard: React.FC = () => {
           >
             <Plus size={18} />
             <span>쇼핑 리스트</span>
+            {totalItems > 0 && (
+              <div className="absolute -top-1 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                {totalItems}
+              </div>
+            )}
           </button>
         </div>
       </div>
@@ -1405,9 +1420,9 @@ const FridgeBoard: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className={`w-[180px] flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md ${
-                  isInList ? 'cursor-not-allowed' : 'cursor-pointer'
-                }`}
+                className={
+                  'w-[180px] flex-shrink-0 cursor-pointer overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md'
+                }
                 onClick={() => !isInList && addToShoppingList(item.name)}
               >
                 <div className="relative h-32">
@@ -1419,7 +1434,7 @@ const FridgeBoard: React.FC = () => {
                     height={128}
                   />
                   {/* 검은색 오버레이 */}
-                  {isInList && <div className="absolute inset-0 bg-black/50" />}
+                  {/* {isInList && <div className="absolute inset-0 bg-black/50" />} */}
 
                   {/* 구매 횟수 표시 추가 */}
                   {purchaseCount > 0 && (
@@ -1869,6 +1884,11 @@ const FridgeBoard: React.FC = () => {
               className="p-1 text-gray-500 hover:text-gray-700"
             >
               <XIcon size={24} />
+              {totalItems > 0 && (
+                <div className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                  {totalItems}
+                </div>
+              )}
             </button>
           </div>
 
