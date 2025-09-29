@@ -1,4 +1,7 @@
+// app/components/FridgeBoard.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
+import PurchaseStats from '@/app/components/PurchaseStats';
 import {
   Plus,
   ListIcon,
@@ -11,9 +14,11 @@ import {
   PlusIcon,
   BellIcon,
   CogIcon,
-  ListFilterIcon,
+  // ListFilterIcon,
   InfoIcon,
   ChevronDownIcon,
+  ClipboardCheck,
+  ClipboardPlus,
 } from 'lucide-react';
 import {
   BarChart,
@@ -27,6 +32,7 @@ import {
 } from 'recharts';
 import Image from 'next/image';
 import Toast from '@/app/components/Toast'; // 경로는 프로젝트 구조에 맞게 조정
+import AddItemForm from '@/app/components/AddItemForm';
 
 // Type definitions
 interface FridgeItem {
@@ -82,12 +88,12 @@ interface ConsumptionData {
 
 // Mock data for demonstration
 const mockItems: FridgeItem[] = [
+  // Vegetables
   {
     id: 1,
     name: '시금치',
     category: 'vegetables',
-    imageUrl:
-      'https://images.unsplash.com/photo-1576045057995-568f588f82fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    imageUrl: '/vege/vege_spinach.jpg',
     expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
     purchaseCount: 12,
     purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
@@ -96,9 +102,8 @@ const mockItems: FridgeItem[] = [
     id: 2,
     name: '브로콜리',
     category: 'vegetables',
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2015/03/14/13/59/vegetables-673181_1280.jpg',
-    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    imageUrl: '/vege/vege_broccoli.jpg',
+    expiryDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
     purchaseCount: 8,
     purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
@@ -106,23 +111,141 @@ const mockItems: FridgeItem[] = [
     id: 3,
     name: '당근',
     category: 'vegetables',
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2016/08/03/01/09/carrot-1565597_1280.jpg',
-    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    imageUrl: '/vege/vege_carrot.jpg',
+    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     purchaseCount: 15,
     purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
   },
   {
     id: 4,
+    name: '양파',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_onion.jpg',
+    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    purchaseCount: 10,
+    purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 5,
+    name: '감자',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_potato.jpg',
+    expiryDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+    purchaseCount: 20,
+    purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 6,
+    name: '오이',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_cucumber.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 6,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 7,
+    name: '토마토',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_tomato.jpg',
+    expiryDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+    purchaseCount: 16,
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 8,
+    name: '애호박',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_squash.jpg',
+    expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+    purchaseCount: 4,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 9,
+    name: '얼갈이',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_ulgali.jpg',
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 10,
+    name: '배추',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_korean_cabbage.webp',
+    expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    purchaseCount: 3,
+    purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 11,
+    name: '양배추',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_cabbage.jpg',
+    expiryDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+    purchaseCount: 2,
+    purchaseDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 12,
+    name: '꽈리고추',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_chili peppers.webp',
+    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    purchaseCount: 15,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 13,
+    name: '느타리버섯',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_oyster_mushrooms.jpg',
+    expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+    purchaseCount: 5,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 14,
+    name: '팽이버섯',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_enoki_mushrooms.jpg',
+    expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+    purchaseCount: 7,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 15,
+    name: '검은 콩',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_black_beans.jpg',
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    purchaseCount: 2,
+    purchaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 16,
+    name: '밤',
+    category: 'vegetables',
+    imageUrl: '/vege/vege_bam.jpg',
+    expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    purchaseCount: 10,
+    purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+  },
+
+  // Fruits
+  {
+    id: 17,
     name: '사과',
     category: 'fruits',
     imageUrl: '/fruit/fruit_apple.jpg',
-    expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    expiryDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
     purchaseCount: 20,
     purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 5,
+    id: 18,
     name: '바나나',
     category: 'fruits',
     imageUrl: '/fruit/fruit_banana.jpg',
@@ -131,63 +254,325 @@ const mockItems: FridgeItem[] = [
     purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 6,
-    name: '닭가슴살',
-    category: 'meat',
-    imageUrl:
-      'https://shop.hansalim.or.kr/shopping/is/itm/060103025/060103025_1_568.jpg',
+    id: 19,
+    name: '딸기',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_strawberries.jpg',
     expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     purchaseCount: 18,
     purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 7,
+    id: 20,
+    name: '블루베리',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_blueberry.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 12,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 21,
+    name: '아보카도',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_avocado.jpg',
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 22,
+    name: '오렌지',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_orange.jpg',
+    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    purchaseCount: 22,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 23,
+    name: '포도',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_grape.jpg',
+    expiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    purchaseCount: 15,
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 24,
+    name: '샤인머스캣',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_shine_muscat.png',
+    expiryDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+    purchaseCount: 5,
+    purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 25,
+    name: '자두',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_korea_plum.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 10,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 26,
+    name: '참외',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_korea_melon.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 27,
+    name: '수박',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_watermelon.jpg',
+    expiryDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+    purchaseCount: 3,
+    purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 28,
+    name: '멜론',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_melon.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 4,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 29,
+    name: '키위',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_kiwi.jpg',
+    expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    purchaseCount: 14,
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 30,
+    name: '파인애플',
+    category: 'fruits',
+    imageUrl: '/fruit/fruit_pineapple.jpg',
+    expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+    purchaseCount: 2,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+
+  // Meat
+  {
+    id: 31,
+    name: '닭가슴살',
+    category: 'meat',
+    imageUrl: '/meat/meat_chicken_breast.jpg',
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    purchaseCount: 18,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 32,
+    name: '닭다리살',
+    category: 'meat',
+    imageUrl: '/meat/meat_chicken_leg.webp',
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    purchaseCount: 12,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 33,
+    name: '닭고기',
+    category: 'meat',
+    imageUrl: '/meat/meat_chicken.jpg',
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    purchaseCount: 15,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 34,
     name: '소고기',
     category: 'meat',
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2016/03/05/19/02/beef-1238262_1280.jpg',
-    expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+    imageUrl: '/meat/meat_beef.jpg',
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
     purchaseCount: 10,
     purchaseDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 8,
-    name: '연어',
-    category: 'seafood',
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2016/03/05/19/24/salmon-1238248_1280.jpg',
-    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    purchaseCount: 7,
-    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 9,
-    name: '새우',
-    category: 'seafood',
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2015/04/09/13/38/shrimp-715010_1280.jpg',
-    expiryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+    id: 35,
+    name: '돼지고기',
+    category: 'meat',
+    imageUrl: '/meat/meat_pork.jpg',
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     purchaseCount: 14,
     purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 10,
-    name: '토마토',
-    category: 'vegetables',
-    imageUrl:
-      'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    expiryDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
-    purchaseCount: 16,
+    id: 36,
+    name: '양고기',
+    category: 'meat',
+    imageUrl: '/meat/meat_lamb.jpg',
+    expiryDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000),
+    purchaseCount: 3,
+    purchaseDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+  },
+
+  // Seafood
+  {
+    id: 37,
+    name: '연어',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_salmon.jpg',
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    purchaseCount: 7,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 38,
+    name: '새우',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_shrimp.jpg',
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    purchaseCount: 14,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 39,
+    name: '오징어',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_calamari.jpg',
+    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
     purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
   {
-    id: 11,
-    name: '오렌지',
-    category: 'fruits',
-    imageUrl: '/fruit/fruit_orange.webp',
-    expiryDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-    purchaseCount: 22,
+    id: 40,
+    name: '게',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_crab.jpg',
+    expiryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+    purchaseCount: 2,
+    purchaseDate: new Date(Date.now()),
+  },
+  {
+    id: 41,
+    name: '굴',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_oyster.jpg',
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    purchaseCount: 10,
     purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 42,
+    name: '조개',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_seashell.jpg',
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    purchaseCount: 12,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 43,
+    name: '고등어',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_mackerel.jpg',
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    purchaseCount: 6,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 44,
+    name: '조기',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_croaker.jpg',
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    purchaseCount: 4,
+    purchaseDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 45,
+    name: '전복',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_abalone.jpg',
+    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    purchaseCount: 3,
+    purchaseDate: new Date(Date.now()),
+  },
+  {
+    id: 46,
+    name: '미역줄기',
+    category: 'seafood',
+    imageUrl: '/seafood/seafood_seaweed_stem.webp',
+    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
+    purchaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+
+  // Others
+  {
+    id: 47,
+    name: '아보카도 오일',
+    category: 'others',
+    imageUrl: '/others/other_avocado_oil.webp',
+    expiryDate: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000),
+    purchaseCount: 2,
+    purchaseDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 48,
+    name: '트러플 오일',
+    category: 'others',
+    imageUrl: '/others/other_black_truffle_oil.jpg',
+    expiryDate: new Date(Date.now() + 1095 * 24 * 60 * 60 * 1000),
+    purchaseCount: 1,
+    purchaseDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 49,
+    name: '브리 치즈',
+    category: 'others',
+    imageUrl: '/others/other_brie_cheeze.webp',
+    expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+    purchaseCount: 3,
+    purchaseDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 50,
+    name: '토마토 소스',
+    category: 'others',
+    imageUrl: '/others/other_tomato_sauce.webp',
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    purchaseCount: 5,
+    purchaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 51,
+    name: '모짜렐라 치즈',
+    category: 'others',
+    imageUrl: '/others/other_mozzarella_cheeze.webp',
+    expiryDate: new Date(Date.now() + 270 * 24 * 60 * 60 * 1000),
+    purchaseCount: 4,
+    purchaseDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 52,
+    name: '가염 버터',
+    category: 'others',
+    imageUrl: '/others/other_salted_butter.webp',
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    purchaseCount: 8,
+    purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 53,
+    name: '소주',
+    category: 'others',
+    imageUrl: '/others/other_soju.jpeg',
+    expiryDate: new Date(Date.now() + 540 * 24 * 60 * 60 * 1000),
+    purchaseCount: 12,
+    purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
 ];
 
@@ -353,6 +738,87 @@ const FridgeBoard: React.FC = () => {
       setShowToast(false);
       toastTimerRef.current = null;
     }, 3000);
+  }, []);
+
+  // useEffect 추가하여 storage 초기화
+  useEffect(() => {
+    purchaseStorage.init().catch(console.error);
+  }, []);
+
+  // clearCompletedItems 함수 수정
+  const clearCompletedItems = async (): Promise<void> => {
+    const completedItems: ShoppingListItem[] = shoppingList.filter(
+      (item: ShoppingListItem) => item.completed,
+    );
+    const completedCount: number = completedItems.length;
+
+    if (completedCount === 0) {
+      showToastNotification('완료된 항목이 없습니다');
+      return;
+    }
+
+    // 구매 기록 저장
+    try {
+      await purchaseStorage.recordPurchase(
+        completedItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+        })),
+      );
+
+      // 구매 횟수 업데이트를 위해 다시 로드
+      const counts = new Map<string, number>();
+      for (const item of completedItems) {
+        const count = await purchaseStorage.getPurchaseCount(item.name);
+        if (count > 0) {
+          counts.set(item.name, count);
+        }
+      }
+
+      // 기존 카운트와 병합
+      setItemPurchaseCounts(prev => {
+        const newCounts = new Map(prev);
+        counts.forEach((value, key) => {
+          newCounts.set(key, value);
+        });
+        return newCounts;
+      });
+
+      // 기존 쇼핑리스트 클리어 로직
+      setShoppingList((prevList: ShoppingListItem[]) =>
+        prevList.filter((item: ShoppingListItem) => !item.completed),
+      );
+
+      showToastNotification(
+        `${completedCount}개 항목이 완료되었고 구매 기록이 저장되었습니다!`,
+      );
+    } catch (error) {
+      console.error('Failed to save purchase history:', error);
+      showToastNotification('구매 기록 저장 중 오류가 발생했습니다');
+    }
+  };
+
+  // 구매 횟수 표시를 위한 state 추가
+  const [itemPurchaseCounts, setItemPurchaseCounts] = useState<
+    Map<string, number>
+  >(new Map());
+
+  // 구매 횟수 로드
+  useEffect(() => {
+    const loadPurchaseCounts = async () => {
+      const counts = new Map<string, number>();
+
+      for (const item of mockItems) {
+        const count = await purchaseStorage.getPurchaseCount(item.name);
+        if (count > 0) {
+          counts.set(item.name, count);
+        }
+      }
+
+      setItemPurchaseCounts(counts);
+    };
+
+    loadPurchaseCounts();
   }, []);
 
   // 컴포넌트 언마운트 시 타이머 정리
@@ -617,24 +1083,6 @@ const FridgeBoard: React.FC = () => {
     showToastNotification(`'${itemToDelete.name}'이(가) 삭제되었어요`);
   };
 
-  // Clear completed items
-  const clearCompletedItems = (): void => {
-    const completedItems: ShoppingListItem[] = shoppingList.filter(
-      (item: ShoppingListItem) => item.completed,
-    );
-    const completedCount: number = completedItems.length;
-
-    if (completedCount === 0) {
-      showToastNotification('완료된 항목이 없습니다');
-      return;
-    }
-
-    setShoppingList((prevList: ShoppingListItem[]) =>
-      prevList.filter((item: ShoppingListItem) => !item.completed),
-    );
-    showToastNotification(`${completedCount}개 항목이 완료되었어요!`);
-  };
-
   // Clear all items
   const clearAllItems = (): void => {
     const itemCount: number = shoppingList.length;
@@ -821,29 +1269,8 @@ const FridgeBoard: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="mt-3 text-sm text-gray-500">
-          총 {mockItems.filter(item => item.category === activeCategory).length}
-          개 아이템
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`rounded-xl p-1.5 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-          >
-            <GridIcon size={18} />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`rounded-xl p-1.5 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-          >
-            <ListIcon size={18} />
-          </button>
-        </div>
-      </div>
-
       {/* Category tabs */}
-      <div className="mt-4 mb-4 flex overflow-x-auto pb-1">
+      <div className="mt-2 mb-2 flex overflow-x-auto">
         <div className="flex min-w-full space-x-2">
           <button
             onClick={() => setActiveCategory('vegetables')}
@@ -872,67 +1299,93 @@ const FridgeBoard: React.FC = () => {
         </div>
       </div>
 
+      <div className="mb-2 flex items-center justify-between">
+        <div className="mt-4 text-sm text-gray-500">
+          총 {mockItems.filter(item => item.category === activeCategory).length}
+          개 아이템
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`rounded-xl p-1 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+          >
+            <GridIcon size={18} />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`rounded-xl p-1 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+          >
+            <ListIcon size={18} />
+          </button>
+        </div>
+      </div>
+
       {/* 식재료 리스트 스크롤 (데스크탑) */}
       <div
         className={`hidden md:grid ${viewMode === 'grid' ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-4`}
       >
-        {filteredItems.map(item => (
-          <div
-            key={item.id}
-            className="overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="relative h-32">
-              <Image
-                src={item.imageUrl}
-                alt={item.name}
-                className="h-full w-full object-cover"
-                width={400}
-                height={200}
-              />
-              <div
-                className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-              >
-                {formatExpiryDate(item.expiryDate)}
+        {filteredItems.map(item => {
+          const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
+
+          return (
+            <div
+              key={item.id}
+              className="overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="relative h-32">
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                  width={400}
+                  height={200}
+                />
+                <div
+                  className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
+                >
+                  {formatExpiryDate(item.expiryDate)}
+                </div>
+
+                {/* 구매 횟수 표시 추가 */}
+                {purchaseCount > 0 && (
+                  <div className="absolute bottom-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                    구매 {purchaseCount}회
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-3">
+                <h3 className="text-sm font-medium">{item.name}</h3>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => toggleNotificationTooltip(item.id)}
+                    className="relative mt-1 mr-1 p-1 text-[#6B46C1]"
+                  >
+                    <BellIcon size={18} />
+                    {showNotificationTooltip === item.id && (
+                      <div className="absolute right-0 bottom-full z-10 mb-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
+                        <p className="mb-1 font-medium">유효기간 알림 설정</p>
+                        <p>이 식재료의 유효기간 만료 전에 알림을 받습니다:</p>
+                        <ul className="mt-1 space-y-1">
+                          <li className="flex items-center">
+                            <Check size={12} className="mr-1 text-green-500" />
+                            유효기간 80% 전 알림
+                          </li>
+                          <li className="flex items-center">
+                            <Check size={12} className="mr-1 text-green-500" />
+                            유효기간 40% 전 알림
+                          </li>
+                        </ul>
+                        <p className="mt-2 text-gray-500">
+                          자세한 설정은 설정 아이콘을 클릭하세요
+                        </p>
+                      </div>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3">
-              <h3 className="text-sm font-medium">{item.name}</h3>
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => addToShoppingList(item.name)}
-                  className="p-1 text-[#6B46C1] hover:text-[#603fad]"
-                >
-                  <Plus size={18} />
-                </button>
-                <button
-                  onClick={() => toggleNotificationTooltip(item.id)}
-                  className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
-                >
-                  <BellIcon size={18} />
-                  {showNotificationTooltip === item.id && (
-                    <div className="absolute right-0 bottom-full z-10 mb-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
-                      <p className="mb-1 font-medium">유효기간 알림 설정</p>
-                      <p>이 식재료의 유효기간 만료 전에 알림을 받습니다:</p>
-                      <ul className="mt-1 space-y-1">
-                        <li className="flex items-center">
-                          <Check size={12} className="mr-1 text-green-500" />
-                          유효기간 80% 전 알림
-                        </li>
-                        <li className="flex items-center">
-                          <Check size={12} className="mr-1 text-green-500" />
-                          유효기간 40% 전 알림
-                        </li>
-                      </ul>
-                      <p className="mt-2 text-gray-500">
-                        자세한 설정은 설정 아이콘을 클릭하세요
-                      </p>
-                    </div>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 식재료 리스트 스크롤 (모바일) */}
@@ -947,6 +1400,7 @@ const FridgeBoard: React.FC = () => {
             const isInList = shoppingList.some(
               listItem => listItem.name === item.name,
             );
+            const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
 
             return (
               <div
@@ -966,35 +1420,44 @@ const FridgeBoard: React.FC = () => {
                   />
                   {/* 검은색 오버레이 */}
                   {isInList && <div className="absolute inset-0 bg-black/50" />}
-                  <div
-                    className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-                  >
-                    {formatExpiryDate(item.expiryDate)}
-                  </div>
-                  {/* 체크 아이콘 표시 */}
-                  {isInList && (
-                    <div className="absolute top-2 left-2 rounded-full bg-green-400 p-1">
-                      <Check size={16} className="text-white" />
+
+                  {/* 구매 횟수 표시 추가 */}
+                  {purchaseCount > 0 && (
+                    <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
+                      구매 {purchaseCount}회
                     </div>
                   )}
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      toggleNotificationTooltip(item.id);
+                    }}
+                    className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad]"
+                  >
+                    <BellIcon size={18} />
+                  </button>
+
+                  {/* <button
+                    onClick={() => addToShoppingList(item.name)}
+                    className={`absolute right-13 bottom-5 flex h-19 w-19 items-center justify-center rounded-full bg-white/80 text-[#6B46C1] shadow-md transition-all ${isInList ? 'text-[#6B46C1]' : 'text-[#6B46C1]'}`}
+                  >
+                    {isInList ? (
+                      <ClipboardCheck size={35} strokeWidth={2} />
+                    ) : (
+                      <ClipboardPlus size={29} strokeWidth={2} />
+                    )}
+                  </button> */}
                 </div>
+
                 <div className="flex items-center justify-between p-3">
                   <h3 className={'text-sm font-medium'}>{item.name}</h3>
                   <div className="flex items-center space-x-1">
                     <div
-                      className={`p-1 ${isInList ? 'text-green-400' : 'text-[#6B46C1]'}`}
+                      className={`relative rounded-full text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
                     >
-                      {isInList ? <Check size={18} /> : <Plus size={18} />}
+                      {formatExpiryDate(item.expiryDate)}
                     </div>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleNotificationTooltip(item.id);
-                      }}
-                      className="relative p-1 text-[#6B46C1] hover:text-[#603fad]"
-                    >
-                      <BellIcon size={18} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1002,110 +1465,7 @@ const FridgeBoard: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* 필터 */}
-      <div className="mb-4 md:mb-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">식재료 필터</h2>
-          <div className="relative">
-            <button
-              onClick={toggleSortOptions}
-              className="flex items-center space-x-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm hover:bg-gray-200"
-            >
-              <ListFilterIcon size={16} />
-              <span>필터</span>
-            </button>
-            {showSortOptions && (
-              <div className="absolute top-full right-0 z-10 mt-1 w-48 rounded-md border bg-white shadow-md">
-                <ul>
-                  <li>
-                    <button
-                      onClick={() => applySortOption('most-purchased')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOption === 'most-purchased' ? 'bg-gray-100 font-medium' : ''}`}
-                    >
-                      가장 많이 구매한 순
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => applySortOption('least-purchased')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOption === 'least-purchased' ? 'bg-gray-100 font-medium' : ''}`}
-                    >
-                      가장 적게 구매한 순
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => applySortOption('purchase-date')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOption === 'purchase-date' ? 'bg-gray-100 font-medium' : ''}`}
-                    >
-                      먼저 산 순서 순
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => applySortOption('expiry-date')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOption === 'expiry-date' ? 'bg-gray-100 font-medium' : ''}`}
-                    >
-                      유효기간 만료 순
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Filtered Items Board */}
-        <div className="mb-2 rounded-xl border border-gray-200 bg-gray-50 px-4 pt-4 pb-1 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-700">
-              {sortOption === 'most-purchased' && '가장 많이 구매한 식재료'}
-              {sortOption === 'least-purchased' && '가장 적게 구매한 식재료'}
-              {sortOption === 'purchase-date' && '최근에 구매한 식재료'}
-              {sortOption === 'expiry-date' && '유효기간 임박한 식재료'}
-            </h3>
-            <span className="text-xs text-gray-500">전체 카테고리</span>
-          </div>
-          <div className="-mx-4 overflow-x-auto px-4">
-            <div
-              className="flex space-x-4 pb-2"
-              style={{
-                minWidth: 'min-content',
-              }}
-            >
-              {filteredSectionItems.map(item => (
-                <div key={item.id} className="w-24 flex-shrink-0">
-                  <div className="relative mb-2 h-24 w-24 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                      width={96}
-                      height={96}
-                    />
-                    {sortOption === 'most-purchased' && (
-                      <div className="absolute right-0 bottom-0 rounded-tl-md bg-[#6B46C1] px-1.5 py-0.5 text-xs text-white">
-                        {item.purchaseCount}회
-                      </div>
-                    )}
-                    {sortOption === 'expiry-date' && (
-                      <div
-                        className={`absolute right-0 bottom-0 ${getExpiryStatusColor(item.expiryDate)} rounded-tl-md bg-white px-1.5 py-0.5 text-xs`}
-                      >
-                        {formatExpiryDate(item.expiryDate)}
-                      </div>
-                    )}
-                  </div>
-                  <p className="truncate text-center text-xs font-medium">
-                    {item.name}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PurchaseStats />
 
       {/* Consumption Statistics */}
       <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:mb-8 md:p-4">
@@ -1697,7 +2057,7 @@ const FridgeBoard: React.FC = () => {
         <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
           <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
             <h3 className="mb-3 text-lg font-medium">직접 추가</h3>
-            <AddItemForm
+            <LocalAddItemForm
               onAdd={addDirectItem}
               onCancel={() => setShowAddForm(false)}
             />
@@ -1715,7 +2075,7 @@ interface AddItemFormProps {
   onCancel: () => void;
 }
 
-const AddItemForm: React.FC<AddItemFormProps> = ({ onAdd, onCancel }) => {
+const LocalAddItemForm: React.FC<AddItemFormProps> = ({ onAdd, onCancel }) => {
   const [name, setName] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
 
