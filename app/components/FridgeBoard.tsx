@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import PurchaseStats from '@/app/components/PurchaseStats';
+import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
 import {
   Plus,
   ListIcon,
@@ -14,11 +15,8 @@ import {
   PlusIcon,
   BellIcon,
   CogIcon,
-  // ListFilterIcon,
   InfoIcon,
   ChevronDownIcon,
-  ClipboardCheck,
-  ClipboardPlus,
 } from 'lucide-react';
 import {
   BarChart,
@@ -687,11 +685,13 @@ const FridgeBoard: React.FC = () => {
     FridgeItem[]
   >([]);
   const [topPurchasedItems, setTopPurchasedItems] = useState<FridgeItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   // Toast 관련 state
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToast, setShowToast] = useState<boolean>(false);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showBottomSheet, setShowBottomSheet] = useState<boolean>(false);
 
   // User profile state
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -739,6 +739,8 @@ const FridgeBoard: React.FC = () => {
       toastTimerRef.current = null;
     }, 3000);
   }, []);
+
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // useEffect 추가하여 storage 초기화
   useEffect(() => {
@@ -1241,6 +1243,15 @@ const FridgeBoard: React.FC = () => {
       : ['균형 잡힌 식단을 유지하고 신선한 채소와 과일을 충분히 섭취하세요.'];
   };
 
+  // 쇼핑 리스트 아이템 수 계산
+  useEffect(() => {
+    const count = shoppingList.reduce(
+      (total, item) => total + item.quantity,
+      0,
+    );
+    setTotalItems(count);
+  }, [shoppingList]);
+
   return (
     <div className="relative flex h-full flex-col bg-white p-0 md:p-0">
       <div className="mb-4 flex items-center justify-between md:mb-6">
@@ -1265,6 +1276,11 @@ const FridgeBoard: React.FC = () => {
           >
             <Plus size={18} />
             <span>쇼핑 리스트</span>
+            {totalItems > 0 && (
+              <div className="absolute -top-1 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                {totalItems}
+              </div>
+            )}
           </button>
         </div>
       </div>
@@ -1320,76 +1336,8 @@ const FridgeBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* 식재료 리스트 스크롤 (데스크탑) */}
-      <div
-        className={`hidden md:grid ${viewMode === 'grid' ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-4`}
-      >
-        {filteredItems.map(item => {
-          const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
-
-          return (
-            <div
-              key={item.id}
-              className="overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div className="relative h-32">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="h-full w-full object-cover"
-                  width={400}
-                  height={200}
-                />
-                <div
-                  className={`absolute top-2 right-2 rounded-full px-2 py-1 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)} bg-opacity-90 bg-white`}
-                >
-                  {formatExpiryDate(item.expiryDate)}
-                </div>
-
-                {/* 구매 횟수 표시 추가 */}
-                {purchaseCount > 0 && (
-                  <div className="absolute bottom-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
-                    구매 {purchaseCount}회
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between p-3">
-                <h3 className="text-sm font-medium">{item.name}</h3>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => toggleNotificationTooltip(item.id)}
-                    className="relative mt-1 mr-1 p-1 text-[#6B46C1]"
-                  >
-                    <BellIcon size={18} />
-                    {showNotificationTooltip === item.id && (
-                      <div className="absolute right-0 bottom-full z-10 mb-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
-                        <p className="mb-1 font-medium">유효기간 알림 설정</p>
-                        <p>이 식재료의 유효기간 만료 전에 알림을 받습니다:</p>
-                        <ul className="mt-1 space-y-1">
-                          <li className="flex items-center">
-                            <Check size={12} className="mr-1 text-green-500" />
-                            유효기간 80% 전 알림
-                          </li>
-                          <li className="flex items-center">
-                            <Check size={12} className="mr-1 text-green-500" />
-                            유효기간 40% 전 알림
-                          </li>
-                        </ul>
-                        <p className="mt-2 text-gray-500">
-                          자세한 설정은 설정 아이콘을 클릭하세요
-                        </p>
-                      </div>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 식재료 리스트 스크롤 (모바일) */}
-      <div className="overflow-x-auto pb-4 md:hidden">
+      {/* 식재료 리스트 스크롤 (데스크탑, 모바일) */}
+      <div className="overflow-x-auto pb-4">
         <div
           className="flex space-x-4"
           style={{
@@ -1397,67 +1345,86 @@ const FridgeBoard: React.FC = () => {
           }}
         >
           {filteredItems.map(item => {
-            const isInList = shoppingList.some(
+            const listItem = shoppingList.find(
               listItem => listItem.name === item.name,
             );
             const purchaseCount = itemPurchaseCounts.get(item.name) || 0;
 
+            const toggleBottomSheet = (itemId: number) => {
+              setSelectedItemId(itemId);
+              setShowBottomSheet(!showBottomSheet);
+            };
+
             return (
               <div
                 key={item.id}
-                className={`w-[180px] flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-shadow hover:shadow-md ${
-                  isInList ? 'cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                onClick={() => !isInList && addToShoppingList(item.name)}
+                className={
+                  'w-[180px] flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md'
+                }
               >
-                <div className="relative h-32">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="h-full w-full object-cover"
-                    width={180}
-                    height={128}
-                  />
-                  {/* 검은색 오버레이 */}
-                  {isInList && <div className="absolute inset-0 bg-black/50" />}
+                <div className="relative">
+                  <div
+                    className="relative h-32 cursor-pointer"
+                    onClick={() => addToShoppingList(item.name)}
+                  >
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                      width={180}
+                      height={128}
+                    />
 
-                  {/* 구매 횟수 표시 추가 */}
-                  {purchaseCount > 0 && (
-                    <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
-                      구매 {purchaseCount}회
-                    </div>
-                  )}
+                    {/* 구매 횟수 표시 추가 */}
+                    {purchaseCount > 0 && (
+                      <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
+                        구매 {purchaseCount}회
+                      </div>
+                    )}
 
+                    {/* 쇼핑리스트에 추가되었을 때 Plus 아이콘과 숫자 표시 */}
+                    {listItem && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <div className="flex items-center space-x-0">
+                          <Plus
+                            size={35}
+                            className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                            strokeWidth={2}
+                          />
+                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                            {listItem.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      toggleNotificationTooltip(item.id);
-                    }}
-                    className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad]"
+                    onClick={() => toggleBottomSheet(1)}
+                    // className="absolute -top-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad]"
+                    className={`absolute -top-1 -right-1 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad] ${
+                      showNotificationTooltip === item.id
+                        ? 'overflow-visible'
+                        : 'overflow-hidden'
+                    }`}
                   >
                     <BellIcon size={18} />
                   </button>
 
-                  {/* <button
-                    onClick={() => addToShoppingList(item.name)}
-                    className={`absolute right-13 bottom-5 flex h-19 w-19 items-center justify-center rounded-full bg-white/80 text-[#6B46C1] shadow-md transition-all ${isInList ? 'text-[#6B46C1]' : 'text-[#6B46C1]'}`}
-                  >
-                    {isInList ? (
-                      <ClipboardCheck size={35} strokeWidth={2} />
-                    ) : (
-                      <ClipboardPlus size={29} strokeWidth={2} />
-                    )}
-                  </button> */}
-                </div>
-
-                <div className="flex items-center justify-between p-3">
-                  <h3 className={'text-sm font-medium'}>{item.name}</h3>
-                  <div className="flex items-center space-x-1">
-                    <div
-                      className={`relative rounded-full text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
-                    >
-                      {formatExpiryDate(item.expiryDate)}
+                  <div className="flex items-center justify-between p-3">
+                    <h3 className={'text-sm font-medium'}>{item.name}</h3>
+                    <div className="flex items-center space-x-1">
+                      <div
+                        className={`relative rounded-full text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
+                      >
+                        {formatExpiryDate(item.expiryDate)}
+                      </div>
                     </div>
+                    <ExpiryDateSetting
+                      isOpen={showBottomSheet}
+                      onClose={() => setShowBottomSheet(false)}
+                      itemId={selectedItemId}
+                      itemName="식재료 이름"
+                    />
                   </div>
                 </div>
               </div>
@@ -1869,6 +1836,11 @@ const FridgeBoard: React.FC = () => {
               className="p-1 text-gray-500 hover:text-gray-700"
             >
               <XIcon size={24} />
+              {totalItems > 0 && (
+                <div className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                  {totalItems}
+                </div>
+              )}
             </button>
           </div>
 
