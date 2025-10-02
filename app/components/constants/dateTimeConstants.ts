@@ -82,7 +82,7 @@ export const generateMinutes = (): string[] => {
  */
 export const styles = {
   // 스크롤 컨테이너
-  scrollContainer: 'h-48 overflow-y-auto rounded-lg bg-gray-50',
+  scrollContainer: 'h-40 overflow-y-auto rounded-lg bg-gray-50',
 
   /**
    * 선택 가능한 아이템 스타일
@@ -91,7 +91,7 @@ export const styles = {
    */
   selectableItem: (isSelected: boolean): string =>
     `
-    cursor-pointer px-4 py-3 text-center text-2xl transition-colors
+    cursor-pointer px-4 py-3 text-center text-md transition-colors
     ${isSelected ? 'bg-gray-200 font-semibold' : 'text-gray-400 hover:bg-gray-100'}
   `.trim(),
 
@@ -112,7 +112,7 @@ export const styles = {
 
   // 섹션 헤더
   sectionHeader:
-    'sticky top-0 bg-gray-200 py-2 text-center text-sm font-medium',
+    'sticky top-0 bg-[#d2c7ec] py-2 text-center text-black text-sm font-medium',
 } as const;
 
 // ==========================================

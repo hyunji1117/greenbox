@@ -69,15 +69,19 @@ const NotificationTimeSetting: React.FC<NotificationTimeSettingProps> = ({
 
   return (
     <div className="mb-8">
-      <h3 className="mb-3 text-center text-xl font-medium">알림 시간 설정</h3>
+      <h3 className="text-md mb-3 border-t-1 border-gray-300 pt-3 text-start font-medium">
+        알림 시간 설정
+      </h3>
       <div className="flex justify-center">
         <button
           onClick={toggleTimePicker}
-          className="cursor-pointer rounded-full border-2 border-[#9ACA3C] px-8 py-3 transition-colors hover:bg-gray-50"
+          className="cursor-pointer rounded-2xl border-2 border-[#6B46C1] px-1 py-1 text-sm shadow-sm transition-colors hover:border-[#603fad]"
           aria-label={`알림 시간 ${notificationTime} - 클릭하여 변경`}
           aria-expanded={showTimePicker}
+          // 시간 선택 UI와 의미가 연결되고 있음을 명시
+          aria-controls="time-picker-ui"
         >
-          <h4 className="text-center text-2xl text-[#9ACA3C]">
+          <h4 className="border-[#6B46C1] px-4 py-1 text-center text-[#6B46C1]">
             알림 시간: {notificationTime}
           </h4>
         </button>
@@ -136,7 +140,7 @@ const NotificationTimeSetting: React.FC<NotificationTimeSettingProps> = ({
           <div className="mt-4 flex justify-center">
             <button
               onClick={toggleTimePicker}
-              className="rounded-full bg-[#9ACA3C] px-6 py-2 text-white transition-colors hover:bg-[#89BA2C]"
+              className="cursor-pointer rounded-xl bg-[#6B46C1] px-4 py-1 text-sm text-white shadow-sm transition-colors hover:bg-[#603fad]"
               aria-label="시간 선택 완료"
             >
               시간 선택 완료
