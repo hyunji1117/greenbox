@@ -585,7 +585,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
           </button>
           <button
             onClick={onClose}
-            className="ml-auto text-gray-500 hover:text-gray-700"
+            className="ml-auto text-gray-500 hover:text-gray-600"
           >
             <XIcon size={20} />
           </button>
