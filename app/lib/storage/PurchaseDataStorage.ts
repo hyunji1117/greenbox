@@ -470,4 +470,5 @@ class PurchaseDataStorage {
 // ==========================================
 
 // 하나의 인스턴스만 생성되어 앱 전체에서 공유
-export default new PurchaseDataStorage();
+const purchaseDataStorage = new PurchaseDataStorage();
+export default purchaseDataStorage;
