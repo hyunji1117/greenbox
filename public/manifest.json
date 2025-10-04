@@ -10,13 +10,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/our-fridge_logo2.png",
+      "src": "/our-fridge_logo2_192_bgwhite.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/our-fridge_logo2.png",
+      "src": "/our-fridge_logo2_512_bgwhite.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
