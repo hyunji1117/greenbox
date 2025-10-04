@@ -24,6 +24,13 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#4b2f8c" />
         <link rel="apple-touch-icon" href="/our-fridge_logo2_192_bgwhite.png" />
+
+        {/* PWA 메타 태그 */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Greenbox" />
       </head>
       <body className={inter.className}>{children}</body>
     </html>
