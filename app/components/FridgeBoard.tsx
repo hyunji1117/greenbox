@@ -2215,7 +2215,7 @@ import {
   mockItems,
   consumptionData,
   type FridgeItem,
-  type ConsumptionData,
+  // type ConsumptionData,
 } from '@/app/data/mockItems';
 
 // ==========================================
@@ -3072,18 +3072,18 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
   healthStats,
   hasUnsavedChanges,
   activeDropdown,
-  showAllergyDropdown,
+  // showAllergyDropdown,
   isDropdownEnabled,
   toggleDropdown,
   updateTempProfile,
-  toggleTempAllergy,
+  // toggleTempAllergy,
   applyProfileChanges,
   getDietaryRecommendations,
   genderOptions,
-  ageOptions,
-  allergyOptions,
-  activityOptions,
-  sleepOptions,
+  // ageOptions,
+  // allergyOptions,
+  // activityOptions,
+  // sleepOptions,
 }) => (
   <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:p-4">
     <h2 className="mb-3 text-lg font-semibold md:mb-4">건강 분석 및 추천</h2>
