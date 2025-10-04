@@ -118,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="mb-4.5">
         <Link href="/">
           <Image
-            src="/our-fridge_logo2.png"
+            src="/our-fridge_logo2_white.png"
             alt="Our Fridge Logo"
             width={45}
             height={45}
