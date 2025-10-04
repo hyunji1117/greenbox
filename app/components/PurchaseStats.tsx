@@ -1,7 +1,7 @@
 // app/components/PurchaseStats.tsx
 import React, { useEffect, useState } from 'react';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
-import { TrendingUp, ListFilterIcon, ChevronDownIcon } from 'lucide-react';
+import { TrendingUp, ListFilterIcon } from 'lucide-react';
 import Image from 'next/image';
 // mockData 파일에서 itemImageMap import
 import { itemImageMap } from '@/app/data/mockItems';
@@ -240,7 +240,7 @@ const PurchaseStats: React.FC = () => {
                 className="flex space-x-4 pb-2"
                 style={{ minWidth: 'min-content' }}
               >
-                {filteredItems.map((item, index) => {
+                {filteredItems.map(item => {
                   // mockData에서 가져온 itemImageMap 사용
                   const imageUrl = itemImageMap[item.itemName];
 

@@ -38,20 +38,20 @@ export default function Page() {
     }
   };
 
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case 'fridge':
-        return '우리 냉장고';
-      case 'foodBenefits':
-        return '식재료 위키';
-      case 'activity':
-        return '활동 기록';
-      case 'assignments':
-        return '담당자 관리';
-      default:
-        return '우리 냉장고';
-    }
-  };
+  // const getTabTitle = () => {
+  //   switch (activeTab) {
+  //     case 'fridge':
+  //       return '우리 냉장고';
+  //     case 'foodBenefits':
+  //       return '식재료 위키';
+  //     case 'activity':
+  //       return '활동 기록';
+  //     case 'assignments':
+  //       return '담당자 관리';
+  //     default:
+  //       return '우리 냉장고';
+  //   }
+  // };
 
   return (
     <FridgeProvider>
