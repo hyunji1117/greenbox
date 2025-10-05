@@ -4,6 +4,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import PushSubscriber from './_client/PushSubscriber';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,7 +33,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Greenbox" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <PushSubscriber />
+        {children}
+      </body>
     </html>
   );
 }
