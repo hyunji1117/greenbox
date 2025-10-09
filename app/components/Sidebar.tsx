@@ -123,6 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             width={45}
             height={45}
             className="mx-auto"
+            style={{ width: 'auto', height: 'auto' }}
           />
         </Link>
       </div>
