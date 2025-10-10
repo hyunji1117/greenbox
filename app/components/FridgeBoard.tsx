@@ -728,7 +728,7 @@ const FridgeBoard: React.FC = () => {
                       className="h-full w-full object-cover"
                       width={180}
                       height={128}
-                      style={{ width: 'auto', height: 'auto' }}
+                      style={{ width: 'auto', height: 'auto' }} // 추가
                     />
 
                     {purchaseCount > 0 && (
