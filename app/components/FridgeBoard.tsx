@@ -189,6 +189,8 @@ const getDietaryRecommendations = (profile: UserProfile): string[] => {
 // ==========================================
 
 const FridgeBoard: React.FC = () => {
+  // 디바운스용 ref 추가
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // ==========================================
   //              상태 관리
   // ==========================================
@@ -226,6 +228,22 @@ const FridgeBoard: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToast, setShowToast] = useState<boolean>(false);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ---------- 디바운스된 클릭 핸들러 ----------
+  const handleItemClick = useCallback(
+    (itemName: string) => {
+      // 이전 타이머 취소
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+
+      // 50ms 디바운싱
+      clickTimeoutRef.current = setTimeout(() => {
+        addToShoppingList(itemName);
+      }, 50);
+    },
+    [shoppingList],
+  );
 
   // ---------- 사용자 프로필 상태 ----------
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -706,7 +724,7 @@ const FridgeBoard: React.FC = () => {
       {/* ---------- 식재료 리스트 ---------- */}
       <div className="overflow-x-auto pb-4">
         <div className="flex space-x-4" style={{ minWidth: 'min-content' }}>
-          {filteredItems.map(item => {
+          {filteredItems.map((item, index) => {
             const listItem = shoppingList.find(
               listItem => listItem.name === item.name,
             );
@@ -719,16 +737,21 @@ const FridgeBoard: React.FC = () => {
               >
                 <div className="relative">
                   <div
-                    className="relative h-32 cursor-pointer"
-                    onClick={() => addToShoppingList(item.name)}
+                    className="relative aspect-[180/128] w-full cursor-pointer"
+                    onClick={() => handleItemClick(item.name)}
                   >
                     <Image
                       src={item.imageUrl}
                       alt={item.name}
                       className="object-cover"
                       fill
-                      priority
-                      sizes="(max-width: 600px) 100vw, 180px"
+                      style={{
+                        contain: 'layout',
+                        willChange: 'auto',
+                        touchAction: 'manipulation',
+                      }}
+                      priority={index < 4}
+                      sizes="180px"
                     />
 
                     {purchaseCount > 0 && (
