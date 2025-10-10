@@ -125,6 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             alt="Our Fridge Logo"
             width={45}
             height={45}
+            priority
             style={{ width: 'auto', height: 'auto' }}
           />
         </Link>
