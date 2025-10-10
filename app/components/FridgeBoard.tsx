@@ -725,10 +725,10 @@ const FridgeBoard: React.FC = () => {
                     <Image
                       src={item.imageUrl}
                       alt={item.name}
-                      className="h-full w-full object-cover"
-                      width={180}
-                      height={128}
-                      style={{ width: 'auto', height: 'auto' }} // 추가
+                      className="object-cover"
+                      fill
+                      priority
+                      sizes="(max-width: 600px) 100vw, 180px"
                     />
 
                     {purchaseCount > 0 && (
