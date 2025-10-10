@@ -1,3 +1,6 @@
+// app/components/Sidebar.tsx
+// 사이드바 컴포넌트
+
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
@@ -122,7 +125,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             alt="Our Fridge Logo"
             width={45}
             height={45}
-            className="mx-auto"
             style={{ width: 'auto', height: 'auto' }}
           />
         </Link>
