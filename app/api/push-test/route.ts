@@ -1,4 +1,6 @@
 // app/api/push-test/route.ts
+// 푸시 알림 테스트용 API 라우트
+
 import webpush from 'web-push';
 
 webpush.setVapidDetails(
