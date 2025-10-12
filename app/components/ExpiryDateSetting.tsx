@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { XIcon, Bell, CalendarClock, CalendarCheck } from 'lucide-react';
-import { mockItems } from '@/app/data/mockItems'; // mockItems import
+import { mockItems } from '@/app/data/mockItems';
+import notificationService from '@/app/lib/services/NotificationService';
 
 // ==========================================
 //                타입 정의
@@ -362,7 +363,24 @@ const ExpiryDateSetting: React.FC<ExpiryDateSettingProps> = ({
   //              이벤트 핸들러
   // ==========================================
 
-  const handleSave = () => {
+  // const handleSave = () => {
+  //   const settings = {
+  //     itemId,
+  //     itemName,
+  //     timing: selectedBeforeDays,
+  //     expiryDate: {
+  //       year: useAutoSettings && itemData ? itemData.year : selectedYear,
+  //       month: useAutoSettings && itemData ? itemData.month : selectedMonth,
+  //       day: useAutoSettings && itemData ? itemData.day : selectedDay,
+  //       formatted: `${useAutoSettings && itemData ? itemData.year : selectedYear}-${(useAutoSettings && itemData ? itemData.month : selectedMonth).padStart(2, '0')}-${(useAutoSettings && itemData ? itemData.day : selectedDay).padStart(2, '0')}`,
+  //     },
+  //     notificationTime: useAutoSettings ? '09:00' : notificationTime,
+  //     isAutoSet: useAutoSettings,
+  //   };
+
+  //   console.log('Saving notification settings:', settings);
+
+  const handleSave = async () => {
     const settings = {
       itemId,
       itemName,
@@ -371,13 +389,71 @@ const ExpiryDateSetting: React.FC<ExpiryDateSettingProps> = ({
         year: useAutoSettings && itemData ? itemData.year : selectedYear,
         month: useAutoSettings && itemData ? itemData.month : selectedMonth,
         day: useAutoSettings && itemData ? itemData.day : selectedDay,
-        formatted: `${useAutoSettings && itemData ? itemData.year : selectedYear}-${(useAutoSettings && itemData ? itemData.month : selectedMonth).padStart(2, '0')}-${(useAutoSettings && itemData ? itemData.day : selectedDay).padStart(2, '0')}`,
       },
       notificationTime: useAutoSettings ? '09:00' : notificationTime,
       isAutoSet: useAutoSettings,
     };
 
+    // 알림 스케줄링 추가
+    if (itemId && settings.expiryDate.year) {
+      const expiryDate = new Date(
+        `${settings.expiryDate.year}-${settings.expiryDate.month.padStart(2, '0')}-${settings.expiryDate.day.padStart(2, '0')}`,
+      );
+
+      const daysBefore =
+        selectedBeforeDays === '당일'
+          ? 0
+          : selectedBeforeDays === '1일전'
+            ? 1
+            : selectedBeforeDays === '3일전'
+              ? 3
+              : selectedBeforeDays === '7일전'
+                ? 7
+                : 3;
+
+      // NotificationService를 통한 알림 예약
+      await notificationService.scheduleNotification(
+        itemId,
+        itemName,
+        expiryDate,
+        daysBefore,
+        settings.notificationTime,
+      );
+    }
+
     console.log('Saving notification settings:', settings);
+
+    // 알림 스케줄링 추가 (새로운 기능)
+    if (itemId && settings.expiryDate.year) {
+      try {
+        const expiryDate = new Date(
+          `${settings.expiryDate.year}-${settings.expiryDate.month.padStart(2, '0')}-${settings.expiryDate.day.padStart(2, '0')}`,
+        );
+
+        const daysBefore =
+          selectedBeforeDays === '당일'
+            ? 0
+            : selectedBeforeDays === '1일전'
+              ? 1
+              : selectedBeforeDays === '3일전'
+                ? 3
+                : selectedBeforeDays === '7일전'
+                  ? 7
+                  : 3;
+
+        await notificationService.scheduleNotification(
+          itemId,
+          itemName,
+          expiryDate,
+          daysBefore,
+          settings.notificationTime,
+        );
+
+        console.log('알림 예약 완료');
+      } catch (error) {
+        console.error('알림 예약 실패:', error);
+      }
+    }
 
     // TODO: API 연동
     // await api.saveExpiryNotification(settings);
@@ -575,6 +651,15 @@ const ExpiryDateSetting: React.FC<ExpiryDateSettingProps> = ({
               </div>
             </div>
           )}
+
+          {/* 알림 테스트 버튼 추가 - 여기에 삽입! */}
+          <button
+            onClick={() => notificationService.sendTestNotification()}
+            className="mb-4 w-full rounded-xl bg-purple-100 py-2 text-sm text-purple-700 transition-colors hover:bg-purple-200"
+            type="button"
+          >
+            🔔 알림 테스트
+          </button>
 
           {/* 설정 요약 (항상 표시) */}
           <div className="mb-6 rounded-xl border border-gray-200 p-4 text-sm shadow-sm">
