@@ -15,16 +15,24 @@ interface ExtendedNotificationOptions extends NotificationOptions {
 }
 
 class NotificationService {
-  private static instance: NotificationService;
+  private static instance: NotificationService | null = null;
   private schedules: Map<number, NotificationSchedule> = new Map();
   private checkInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
-    this.loadSchedules();
-    this.startBackgroundCheck();
+    // 브라우저 환경에서만 실행
+    if (typeof window !== 'undefined') {
+      this.loadSchedules();
+      this.startBackgroundCheck();
+    }
   }
 
-  static getInstance(): NotificationService {
+  static getInstance(): NotificationService | null {
+    // 서버 사이드에서는 null 반환
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService();
     }
@@ -184,6 +192,8 @@ class NotificationService {
 
   // 로컬 스토리지에 스케줄 저장
   private saveSchedules(): void {
+    if (typeof window === 'undefined') return;
+
     const data = Array.from(this.schedules.entries()).map(([id, schedule]) => ({
       id,
       ...schedule,
@@ -195,15 +205,20 @@ class NotificationService {
 
   // 로컬 스토리지에서 스케줄 로드
   private loadSchedules(): void {
+    if (typeof window === 'undefined') return;
+
     const saved = localStorage.getItem('notification-schedules');
     if (saved) {
       try {
-        const data: Array<
-          Omit<NotificationSchedule, 'expiryDate' | 'notificationDate'> & {
-            expiryDate: string;
-            notificationDate: string;
-          }
-        > = JSON.parse(saved);
+        const data: Array<{
+          itemId: number;
+          itemName: string;
+          expiryDate: string;
+          notificationDate: string;
+          notificationTime: string;
+          sent: boolean;
+        }> = JSON.parse(saved);
+
         data.forEach(item => {
           this.schedules.set(item.itemId, {
             ...item,
@@ -238,4 +253,10 @@ class NotificationService {
   }
 }
 
-export default NotificationService.getInstance();
+// 조건부 export
+const notificationService =
+  typeof window !== 'undefined' ? NotificationService.getInstance() : null;
+
+export default notificationService;
+
+// export default NotificationService.getInstance();
