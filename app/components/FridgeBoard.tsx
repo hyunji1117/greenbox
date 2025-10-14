@@ -190,7 +190,8 @@ const getDietaryRecommendations = (profile: UserProfile): string[] => {
 
 const FridgeBoard: React.FC = () => {
   // 디바운스용 ref 추가
-  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // ==========================================
   //              상태 관리
   // ==========================================
@@ -227,23 +228,6 @@ const FridgeBoard: React.FC = () => {
   // ---------- 토스트 상태 ----------
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToast, setShowToast] = useState<boolean>(false);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // ---------- 디바운스된 클릭 핸들러 ----------
-  const handleItemClick = useCallback(
-    (itemName: string) => {
-      // 이전 타이머 취소
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-      }
-
-      // 50ms 디바운싱
-      clickTimeoutRef.current = setTimeout(() => {
-        addToShoppingList(itemName);
-      }, 50);
-    },
-    [shoppingList],
-  );
 
   // ---------- 사용자 프로필 상태 ----------
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -274,14 +258,24 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   // ---------- 토스트 표시 ----------
-  const showToastNotification = useCallback((message: string): void => {
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
+  // const showToastNotification = useCallback((message: string): void => {
+  //   if (toastTimerRef.current) {
+  //     clearTimeout(toastTimerRef.current);
+  //   }
 
+  //   setToastMessage(message);
+  //   setShowToast(true);
+
+  //   toastTimerRef.current = setTimeout(() => {
+  //     setShowToast(false);
+  //     toastTimerRef.current = null;
+  //   }, 3000);
+  // }, []);
+
+  const showToastNotification = useCallback((message: string): void => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(message);
     setShowToast(true);
-
     toastTimerRef.current = setTimeout(() => {
       setShowToast(false);
       toastTimerRef.current = null;
@@ -397,32 +391,91 @@ const FridgeBoard: React.FC = () => {
     setShowFavorites(false);
   };
 
-  const addToShoppingList = (name: string): void => {
-    if (!name || typeof name !== 'string') {
-      console.error('Invalid item name');
-      return;
-    }
+  // const addToShoppingList = (name: string): void => {
+  //   if (!name || typeof name !== 'string') {
+  //     console.error('Invalid item name');
+  //     return;
+  //   }
 
-    const existingItem = shoppingList.find(item => item.name === name);
+  //   const existingItem = shoppingList.find(item => item.name === name);
 
-    if (existingItem) {
-      setShoppingList(prevList =>
-        prevList.map(item =>
-          item.name === name ? { ...item, quantity: item.quantity + 1 } : item,
-        ),
-      );
-      showToastNotification(`${name}의 수량이 증가했어요!`);
-    } else {
-      const newItem: ShoppingListItem = {
-        id: Date.now(),
-        name,
-        quantity: 1,
-        completed: false,
-      };
-      setShoppingList(prevList => [...prevList, newItem]);
-      showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
-    }
-  };
+  //   if (existingItem) {
+  //     setShoppingList(prevList =>
+  //       prevList.map(item =>
+  //         item.name === name ? { ...item, quantity: item.quantity + 1 } : item,
+  //       ),
+  //     );
+  //     showToastNotification(`${name}의 수량이 증가했어요!`);
+  //   } else {
+  //     const newItem: ShoppingListItem = {
+  //       id: Date.now(),
+  //       name,
+  //       quantity: 1,
+  //       completed: false,
+  //     };
+  //     setShoppingList(prevList => [...prevList, newItem]);
+  //     showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
+  //   }
+  // };
+
+  const addToShoppingList = useCallback(
+    (name: string): void => {
+      if (!name || typeof name !== 'string') {
+        console.error('Invalid item name');
+        return;
+      }
+
+      setShoppingList(prevList => {
+        const existing = prevList.find(i => i.name === name);
+        if (existing) {
+          // 수량 +1
+          const next = prevList.map(i =>
+            i.name === name ? { ...i, quantity: i.quantity + 1 } : i,
+          );
+          // 토스트는 state 계산 이후 호출
+          showToastNotification(`${name}의 수량이 증가했어요!`);
+          return next;
+        }
+
+        const newItem: ShoppingListItem = {
+          id: Date.now(),
+          name,
+          quantity: 1,
+          completed: false,
+        };
+        const next = [...prevList, newItem];
+        showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
+        return next;
+      });
+    },
+    [showToastNotification],
+  );
+
+  // ---------- 디바운스된 클릭 핸들러 ----------
+  // const handleItemClick = useCallback(
+  //   (itemName: string) => {
+  //     // 이전 타이머 취소
+  //     if (clickTimeoutRef.current) {
+  //       clearTimeout(clickTimeoutRef.current);
+  //     }
+
+  //     // 50ms 디바운싱
+  //     clickTimeoutRef.current = setTimeout(() => {
+  //       addToShoppingList(itemName);
+  //     }, 50);
+  //   },
+  //   [shoppingList],
+  // );
+
+  const handleItemClick = useCallback(
+    (itemName: string) => {
+      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = setTimeout(() => {
+        addToShoppingList(itemName);
+      }, 50);
+    },
+    [addToShoppingList],
+  );
 
   const toggleItemCompletion = (id: number): void => {
     const item = shoppingList.find(item => item.id === id);
