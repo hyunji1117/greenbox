@@ -1,34 +1,35 @@
-// app/api/push-test/route.ts
-// 푸시 알림 테스트용 API 라우트
-
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  'mailto:you@example.com',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export async function POST() {
-  // TODO: DB에서 방금 저장한 구독 정보(sub) 로드
-  const sub = {
-    endpoint: 'https://fcm.googleapis.com/fcm/send/example-endpoint',
-    keys: {
-      p256dh: 'example-p256dh-key',
-      auth: 'example-auth-key',
-    },
-  };
+export async function POST(req: Request) {
+  const subject = process.env.VAPID_SUBJECT;
+  const publicKey =
+    process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!subject || !publicKey || !privateKey) {
+    console.error('[push-test] Missing VAPID keys in env');
+    return new Response(JSON.stringify({ error: 'Missing VAPID keys' }), {
+      status: 500,
+    });
+  }
+
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+
+  const { subscription } = await req.json();
 
   try {
     await webpush.sendNotification(
-      sub,
-      JSON.stringify({ title: '테스트 푸시', body: '우리집 냉장고에서 보냄' }), // ≤ 4KB
+      subscription,
+      JSON.stringify({ title: '푸시 테스트 성공!' }),
     );
-    return Response.json({ ok: true });
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      return Response.json({ error: e.message }, { status: 500 });
-    }
-    return Response.json({ error: 'Unknown error occurred' }, { status: 500 });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  } catch (err) {
+    console.error('[push-test] Push failed:', err);
+    return new Response(JSON.stringify({ error: 'Push failed' }), {
+      status: 500,
+    });
   }
 }
