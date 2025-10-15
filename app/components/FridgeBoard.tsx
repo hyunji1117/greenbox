@@ -1126,17 +1126,17 @@ interface ShoppingListPanelProps {
 }
 
 const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
-  const [isLongPressed, setIsLongPressed] = useState(false);
+  const [isShortPressed, setIsShortPressed] = useState(false); // 변수명 변경
   const pressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseDown = () => {
     pressTimeoutRef.current = setTimeout(() => {
-      setIsLongPressed(true); // 꾹 눌렀을 때 상태 변경
-    }, 500); // 500ms 이상 눌렀을 때 글씨가 보이도록 설정
+      setIsShortPressed(true); // 짧게 눌렀을 때 상태 변경
+    }, 100); // 100ms 이상 눌렀을 때 글씨가 보이도록 설정
   };
 
   const handleMouseUp = () => {
-    setIsLongPressed(false); // 버튼에서 손을 떼면 초기화
+    setIsShortPressed(false); // 버튼에서 손을 떼면 초기화
     if (pressTimeoutRef.current) {
       clearTimeout(pressTimeoutRef.current);
       pressTimeoutRef.current = null;
@@ -1144,7 +1144,7 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
   };
 
   const handleMouseLeave = () => {
-    setIsLongPressed(false); // 버튼 밖으로 나가면 초기화
+    setIsShortPressed(false); // 버튼 밖으로 나가면 초기화
     if (pressTimeoutRef.current) {
       clearTimeout(pressTimeoutRef.current);
       pressTimeoutRef.current = null;
@@ -1158,27 +1158,27 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
       <div className="flex h-full flex-col p-4 md:p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">쇼핑 리스트</h2>
+          <button
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onClick={props.onClose}
+            className={`flex items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] opacity-300 shadow-md transition-all duration-100 ${
+              isShortPressed ? 'h-12 w-40 min-w-[100px] px-4' : 'h-12 w-12'
+            }`}
+          >
+            {isShortPressed ? (
+              '쇼핑 리스트'
+            ) : (
+              <ChevronLeft size={30} strokeWidth={2} />
+            )}
+          </button>
           {/* <button
             onClick={props.onClose}
             className="bg flex size-11 items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] shadow-md hover:w-15 hover:bg-gray-100"
           >
             <ChevronLeft size={28} strokeWidth={2.5} />
           </button> */}
-          <button
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onClick={props.onClose}
-            className={`flex items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] opacity-300 shadow-md transition-all duration-300 ${
-              isLongPressed ? 'h-11 w-40 min-w-[100px] px-4' : 'h-11 w-11'
-            }`}
-          >
-            {isLongPressed ? (
-              '쇼핑 리스트'
-            ) : (
-              <ChevronLeft size={30} strokeWidth={2} />
-            )}
-          </button>
         </div>
 
         {/* 탭 네비게이션 */}
