@@ -1129,6 +1129,12 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
   const [isShortPressed, setIsShortPressed] = useState(false); // 변수명 변경
   const pressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    if (isShortPressed && navigator.vibrate) {
+      navigator.vibrate(50); // 50ms 동안 진동
+    }
+  }, [isShortPressed]);
+
   const handleMouseDown = () => {
     pressTimeoutRef.current = setTimeout(() => {
       setIsShortPressed(true); // 짧게 눌렀을 때 상태 변경
