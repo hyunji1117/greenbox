@@ -32,6 +32,7 @@ import {
   InfoIcon,
   ChevronDownIcon,
   ChevronLeft,
+  StickyNote,
 } from 'lucide-react';
 
 // ---------- 차트 라이브러리 ----------
@@ -1188,16 +1189,17 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="mb-4 flex border-b">
+        <div className="mb-4 flex justify-evenly border-b">
           <button
             onClick={() => props.onToggleFavorites()}
-            className={`px-4 py-2 ${!props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
+            className={`flex flex-grow items-center justify-center px-4 py-2 ${!props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
           >
+            <StickyNote size={16} className="mr-1" />
             쇼핑 목록
           </button>
           <button
             onClick={() => props.onToggleFavorites()}
-            className={`flex items-center px-4 py-2 ${props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
+            className={`flex flex-grow items-center justify-center px-4 py-2 ${props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
           >
             <Star size={16} className="mr-1" />
             즐겨찾기
