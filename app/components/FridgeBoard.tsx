@@ -31,6 +31,7 @@ import {
   CogIcon,
   InfoIcon,
   ChevronDownIcon,
+  ChevronLeft,
 } from 'lucide-react';
 
 // ---------- 차트 라이브러리 ----------
@@ -1125,18 +1126,58 @@ interface ShoppingListPanelProps {
 }
 
 const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
+  const [isLongPressed, setIsLongPressed] = useState(false);
+  const pressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseDown = () => {
+    pressTimeoutRef.current = setTimeout(() => {
+      setIsLongPressed(true); // 꾹 눌렀을 때 상태 변경
+    }, 500); // 500ms 이상 눌렀을 때 글씨가 보이도록 설정
+  };
+
+  const handleMouseUp = () => {
+    setIsLongPressed(false); // 버튼에서 손을 떼면 초기화
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+      pressTimeoutRef.current = null;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsLongPressed(false); // 버튼 밖으로 나가면 초기화
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+      pressTimeoutRef.current = null;
+    }
+  };
+
   return (
     <div
-      className={`fixed top-0 right-0 z-50 h-full w-full transform bg-white shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${props.showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed top-0 right-0 z-50 h-full w-full transform bg-[#F0F0F4] shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${props.showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
     >
       <div className="flex h-full flex-col p-4 md:p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">쇼핑 리스트</h2>
-          <button
+          {/* <button
             onClick={props.onClose}
-            className="p-1 text-gray-500 hover:text-gray-700"
+            className="bg flex size-11 items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] shadow-md hover:w-15 hover:bg-gray-100"
           >
-            <XIcon size={24} />
+            <ChevronLeft size={28} strokeWidth={2.5} />
+          </button> */}
+          <button
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onClick={props.onClose}
+            className={`flex items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] opacity-300 shadow-md transition-all duration-300 ${
+              isLongPressed ? 'h-11 w-40 min-w-[100px] px-4' : 'h-11 w-11'
+            }`}
+          >
+            {isLongPressed ? (
+              '쇼핑 리스트'
+            ) : (
+              <ChevronLeft size={30} strokeWidth={2} />
+            )}
           </button>
         </div>
 
