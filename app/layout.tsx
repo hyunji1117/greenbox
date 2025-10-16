@@ -5,8 +5,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
-import './globals.css';
-import Script from 'next/script';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,8 +20,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
-
   return (
     <html lang="ko">
       <head>
@@ -38,20 +35,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Greenbox" />
       </head>
       <body className={inter.className}>
-        {/* gtag.js 로드 */}
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-          strategy="afterInteractive"
-        />
-        {/* 초기 설정 */}
-        <Script id="ga-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_path: window.location.pathname });
-          `}
-        </Script>
+        {/* Google Analytics (공식 지원 방식) */}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+
         <PushSubscriber />
         {children}
       </body>
