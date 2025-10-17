@@ -1,5 +1,5 @@
 // app/components/FridgeBoard.tsx
-// 냉장고 보드 컴포넌트 - 최종 리팩토링 버전
+// 냉장고 보드 컴포넌트
 
 // ==========================================
 //                  Imports
@@ -16,6 +16,7 @@ import PurchaseStats from '@/app/components/PurchaseStats';
 import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
 import Toast from '@/app/components/common/Toast';
 import Button from '@/app/components/common/Button';
+import AddItemForm from '@/app/components/AddItemForm';
 
 // ---------- 아이콘 ----------
 import {
@@ -29,7 +30,6 @@ import {
   MinusIcon,
   PlusIcon,
   BellIcon,
-  // CogIcon,
   InfoIcon,
   ChevronDownIcon,
   ShoppingBasket,
@@ -58,7 +58,6 @@ import {
   mockItems,
   consumptionData,
   type FridgeItem,
-  // type ConsumptionData,
 } from '@/app/data/mockItems';
 
 // ==========================================
@@ -197,6 +196,7 @@ const FridgeBoard: React.FC = () => {
   // 디바운스용 ref 추가
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ==========================================
   //              상태 관리
   // ==========================================
@@ -261,20 +261,6 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   // ---------- 토스트 표시 ----------
-  // const showToastNotification = useCallback((message: string): void => {
-  //   if (toastTimerRef.current) {
-  //     clearTimeout(toastTimerRef.current);
-  //   }
-
-  //   setToastMessage(message);
-  //   setShowToast(true);
-
-  //   toastTimerRef.current = setTimeout(() => {
-  //     setShowToast(false);
-  //     toastTimerRef.current = null;
-  //   }, 3000);
-  // }, []);
-
   const showToastNotification = useCallback((message: string): void => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(message);
@@ -395,7 +381,7 @@ const FridgeBoard: React.FC = () => {
   };
 
   const addToShoppingList = useCallback(
-    (name: string): void => {
+    (name: string, quantityToAdd: number = 1): void => {
       if (!name || typeof name !== 'string') {
         console.error('Invalid item name');
         return;
@@ -404,23 +390,29 @@ const FridgeBoard: React.FC = () => {
       setShoppingList(prevList => {
         const existing = prevList.find(i => i.name === name);
         if (existing) {
-          // 수량 +1
+          // 지정된 수량만큼 추가
           const next = prevList.map(i =>
-            i.name === name ? { ...i, quantity: i.quantity + 1 } : i,
+            i.name === name
+              ? { ...i, quantity: i.quantity + quantityToAdd }
+              : i,
           );
           // 토스트는 state 계산 이후 호출
-          showToastNotification(`${name}의 수량이 증가했어요!`);
+          showToastNotification(
+            `${name}의 수량이 ${quantityToAdd}개 증가했어요!`,
+          );
           return next;
         }
 
         const newItem: ShoppingListItem = {
           id: Date.now(),
           name,
-          quantity: 1,
+          quantity: quantityToAdd,
           completed: false,
         };
         const next = [...prevList, newItem];
-        showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
+        showToastNotification(
+          `쇼핑 리스트에 ${name} ${quantityToAdd}개가 추가되었어요!`,
+        );
         return next;
       });
     },
@@ -428,21 +420,6 @@ const FridgeBoard: React.FC = () => {
   );
 
   // ---------- 디바운스된 클릭 핸들러 ----------
-  // const handleItemClick = useCallback(
-  //   (itemName: string) => {
-  //     // 이전 타이머 취소
-  //     if (clickTimeoutRef.current) {
-  //       clearTimeout(clickTimeoutRef.current);
-  //     }
-
-  //     // 50ms 디바운싱
-  //     clickTimeoutRef.current = setTimeout(() => {
-  //       addToShoppingList(itemName);
-  //     }, 50);
-  //   },
-  //   [shoppingList],
-  // );
-
   const handleItemClick = useCallback(
     (itemName: string) => {
       if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
@@ -645,18 +622,6 @@ const FridgeBoard: React.FC = () => {
     setShowBottomSheet(true);
   };
 
-  // ---------- 직접 추가 ----------
-  const handleDirectAdd = (): void => {
-    setShowAddForm(true);
-  };
-
-  const addDirectItem = (name: string): void => {
-    if (!name || typeof name !== 'string') return;
-
-    addToShoppingList(name);
-    setShowAddForm(false);
-  };
-
   // ==========================================
   //                  렌더링
   // ==========================================
@@ -669,12 +634,6 @@ const FridgeBoard: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Button variant="secondary" className="px-3.5">
             <CogIcon size={24} color="gray" />
-            {/* {showSettingsTooltip && (
-              <div className="absolute top-full right-0 z-10 mt-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
-                알림 설정, 유효기간 설정 등 자세한 설정은 여기서 확인하실 수
-                있습니다.
-              </div>
-            )} */}
           </Button>
           <Button
             onClick={toggleShoppingList}
@@ -897,7 +856,7 @@ const FridgeBoard: React.FC = () => {
         onDeleteItem={deleteItem}
         onClearCompleted={clearCompletedItems}
         onClearAll={clearAllItems}
-        onDirectAdd={handleDirectAdd}
+        onDirectAdd={() => setShowAddForm(true)}
         onShowFavoriteInput={() => setShowFavoriteNameInput(true)}
         onLoadFavorite={loadFavorite}
       />
@@ -912,11 +871,15 @@ const FridgeBoard: React.FC = () => {
         />
       )}
 
+      {/* AddItemForm 사용 */}
       {showAddForm && (
-        <AddItemModal
-          onAdd={addDirectItem}
-          onCancel={() => setShowAddForm(false)}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <AddItemForm
+            onClose={() => setShowAddForm(false)}
+            onAddToShoppingList={addToShoppingList}
+            mode="simple"
+          />
+        </div>
       )}
 
       {/* ---------- 토스트 ---------- */}
@@ -1139,11 +1102,11 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
           <>
             <div className="flex-1 overflow-y-auto">
               {props.shoppingList.length === 0 ? (
-                <div className="mt-10 text-center text-gray-500">
+                <div className="mt-10 text-center text-lg text-gray-500">
                   <p>장볼 재료가 없어요</p>
-                  <p className="mt-2 text-sm">
+                  <p className="mt-2 text-base">
                     장보기 전{' '}
-                    <span className="rounded-xl bg-amber-100 px-0.5 py-0.5 font-semibold text-[#6B46C1]">
+                    <span className="rounded-sm bg-amber-200 px-0.5 py-0.5 font-semibold text-[#6B46C1]">
                       식재료 카드
                     </span>
                     를 눌러 추가 해보세요
@@ -1275,7 +1238,7 @@ const FavoriteNameModal: React.FC<FavoriteNameModalProps> = ({
   onSave,
   onCancel,
 }) => (
-  <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
     <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
       <h3 className="mb-3 text-lg font-medium">즐겨찾기에 추가</h3>
       <p className="mb-3 text-sm text-gray-500">
@@ -1307,66 +1270,5 @@ const FavoriteNameModal: React.FC<FavoriteNameModalProps> = ({
     </div>
   </div>
 );
-
-// ---------- 아이템 추가 모달 ----------
-interface AddItemModalProps {
-  onAdd: (name: string) => void;
-  onCancel: () => void;
-}
-
-const AddItemModal: React.FC<AddItemModalProps> = ({ onAdd, onCancel }) => {
-  const [name, setName] = useState<string>('');
-
-  const handleSubmit = (e: React.FormEvent): void => {
-    e.preventDefault();
-    if (name.trim()) {
-      onAdd(name);
-    }
-  };
-
-  return (
-    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-      <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
-        <h3 className="mb-3 text-lg font-medium">직접 추가</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              항목 이름<span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              placeholder="예: 시금치, 계란, 오이 등"
-              required
-              autoFocus
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-500 hover:text-gray-700"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-[#6B46C1] px-4 py-2 text-white hover:bg-[#603fad]"
-              disabled={name.trim() === ''}
-            >
-              추가
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 export default FridgeBoard;
