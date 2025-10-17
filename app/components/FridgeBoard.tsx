@@ -14,7 +14,8 @@ import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 // ---------- 컴포넌트 ----------
 import PurchaseStats from '@/app/components/PurchaseStats';
 import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
-import Toast from '@/app/components/Toast';
+import Toast from '@/app/components/common/Toast';
+import Button from '@/app/components/common/Button';
 
 // ---------- 아이콘 ----------
 import {
@@ -28,11 +29,13 @@ import {
   MinusIcon,
   PlusIcon,
   BellIcon,
-  CogIcon,
+  // CogIcon,
   InfoIcon,
   ChevronDownIcon,
+  ShoppingBasket,
+  NotepadText,
+  CogIcon,
   ChevronLeft,
-  StickyNote,
 } from 'lucide-react';
 
 // ---------- 차트 라이브러리 ----------
@@ -210,8 +213,6 @@ const FridgeBoard: React.FC = () => {
   const [showFavoriteNameInput, setShowFavoriteNameInput] =
     useState<boolean>(false);
   const [showBottomSheet, setShowBottomSheet] = useState<boolean>(false);
-  const [showSettingsTooltip, setShowSettingsTooltip] =
-    useState<boolean>(false);
 
   // ---------- 선택 상태 ----------
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -392,33 +393,6 @@ const FridgeBoard: React.FC = () => {
     setShowShoppingList(!showShoppingList);
     setShowFavorites(false);
   };
-
-  // const addToShoppingList = (name: string): void => {
-  //   if (!name || typeof name !== 'string') {
-  //     console.error('Invalid item name');
-  //     return;
-  //   }
-
-  //   const existingItem = shoppingList.find(item => item.name === name);
-
-  //   if (existingItem) {
-  //     setShoppingList(prevList =>
-  //       prevList.map(item =>
-  //         item.name === name ? { ...item, quantity: item.quantity + 1 } : item,
-  //       ),
-  //     );
-  //     showToastNotification(`${name}의 수량이 증가했어요!`);
-  //   } else {
-  //     const newItem: ShoppingListItem = {
-  //       id: Date.now(),
-  //       name,
-  //       quantity: 1,
-  //       completed: false,
-  //     };
-  //     setShoppingList(prevList => [...prevList, newItem]);
-  //     showToastNotification('쇼핑 리스트에 식재료가 추가되었어요!');
-  //   }
-  // };
 
   const addToShoppingList = useCallback(
     (name: string): void => {
@@ -688,36 +662,30 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   return (
-    <div className="relative flex h-full flex-col bg-white p-0 md:p-0">
+    <div className="relative flex h-full flex-col p-6 md:p-0">
       {/* ---------- 헤더 ---------- */}
       <div className="mb-4 flex items-center justify-between md:mb-6">
         <h1 className="text-xl font-semibold">우리집 냉장고</h1>
         <div className="flex items-center space-x-2">
-          <button
-            onMouseEnter={() => setShowSettingsTooltip(true)}
-            onMouseLeave={() => setShowSettingsTooltip(false)}
-            className="relative rounded-full bg-gray-100 p-2 hover:bg-gray-200"
-          >
-            <CogIcon size={18} />
-            {showSettingsTooltip && (
+          <Button variant="secondary" className="px-3.5">
+            <CogIcon size={24} color="gray" />
+            {/* {showSettingsTooltip && (
               <div className="absolute top-full right-0 z-10 mt-1 w-64 rounded-md border bg-white p-2 text-xs shadow-md">
                 알림 설정, 유효기간 설정 등 자세한 설정은 여기서 확인하실 수
                 있습니다.
               </div>
-            )}
-          </button>
-          <button
+            )} */}
+          </Button>
+          <Button
             onClick={toggleShoppingList}
-            className="relative flex items-center space-x-1 rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-sm text-white shadow-sm transition-colors hover:bg-[#603fad]"
+            variant="primary"
+            className="px-3.5"
+            leftIcon={<NotepadText size={24} className="mr-1" />}
+            badge={totalItems}
+            badgeColor="white"
           >
-            <Plus size={18} />
-            <span>쇼핑 리스트</span>
-            {totalItems > 0 && (
-              <div className="absolute -top-1 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                {totalItems}
-              </div>
-            )}
-          </button>
+            <span>장보기 목록</span>
+          </Button>
         </div>
       </div>
 
@@ -833,7 +801,7 @@ const FridgeBoard: React.FC = () => {
 
                   <button
                     onClick={() => openNotificationSetting(item.id)}
-                    className="absolute -top-1 -right-0.5 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1] hover:text-[#603fad]"
+                    className="absolute -top-1 -right-0.5 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1]"
                   >
                     <BellIcon size={18} />
                   </button>
@@ -1062,13 +1030,14 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
 
     {/* 적용 버튼 */}
     <div className="mb-4 flex justify-end md:mb-6">
-      <button
+      <Button
         onClick={applyProfileChanges}
-        className={`rounded-xl px-3 py-2 text-white shadow-sm transition-colors ${hasUnsavedChanges ? 'bg-[#6B46C1] shadow-md hover:bg-[#603fad]' : 'cursor-not-allowed bg-gray-400'}`}
+        variant="primary"
+        className="px-3 py-3 transition-colors"
         disabled={!hasUnsavedChanges}
       >
         적용하기
-      </button>
+      </Button>
     </div>
 
     {/* 건강 통계 카드 */}
@@ -1127,81 +1096,40 @@ interface ShoppingListPanelProps {
 }
 
 const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
-  const [isShortPressed, setIsShortPressed] = useState(false); // 변수명 변경
-  const pressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (isShortPressed && navigator.vibrate) {
-      navigator.vibrate(50); // 50ms 동안 진동
-    }
-  }, [isShortPressed]);
-
-  const handleMouseDown = () => {
-    pressTimeoutRef.current = setTimeout(() => {
-      setIsShortPressed(true); // 짧게 눌렀을 때 상태 변경
-    }, 100); // 100ms 이상 눌렀을 때 글씨가 보이도록 설정
-  };
-
-  const handleMouseUp = () => {
-    setIsShortPressed(false); // 버튼에서 손을 떼면 초기화
-    if (pressTimeoutRef.current) {
-      clearTimeout(pressTimeoutRef.current);
-      pressTimeoutRef.current = null;
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsShortPressed(false); // 버튼 밖으로 나가면 초기화
-    if (pressTimeoutRef.current) {
-      clearTimeout(pressTimeoutRef.current);
-      pressTimeoutRef.current = null;
-    }
-  };
-
   return (
     <div
-      className={`fixed top-0 right-0 z-50 h-full w-full transform bg-[#F0F0F4] shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${props.showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed top-0 right-0 z-50 h-full w-full transform bg-[#F2F2F6] shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${props.showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
     >
       <div className="flex h-full flex-col p-4 md:p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">쇼핑 리스트</h2>
-          <button
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onClick={props.onClose}
-            className={`flex items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] opacity-300 shadow-md transition-all duration-100 ${
-              isShortPressed ? 'h-12 w-40 min-w-[100px] px-4' : 'h-12 w-12'
-            }`}
+        <div className="mb-4 flex items-center justify-start">
+          <h2 className="sr-only text-base font-bold">쇼핑 리스트</h2>
+
+          <Button onClick={props.onClose} variant="secondary">
+            <ChevronLeft size={30} strokeWidth={2} />
+          </Button>
+          <Button
+            onClick={props.onDirectAdd}
+            variant="secondary"
+            className="ml-auto w-auto gap-1 px-3.5"
           >
-            {isShortPressed ? (
-              '쇼핑 리스트'
-            ) : (
-              <ChevronLeft size={30} strokeWidth={2} />
-            )}
-          </button>
-          {/* <button
-            onClick={props.onClose}
-            className="bg flex size-11 items-center justify-center rounded-full border border-[#FCFCFF] bg-[#FBFBFF] text-[#191F28] shadow-md hover:w-15 hover:bg-gray-100"
-          >
-            <ChevronLeft size={28} strokeWidth={2.5} />
-          </button> */}
+            <SquarePlus size={24} strokeWidth={2} />
+            직접 추가
+          </Button>
         </div>
 
-        {/* 탭 네비게이션 */}
         <div className="mb-4 flex justify-evenly border-b">
           <button
             onClick={() => props.onToggleFavorites()}
-            className={`flex flex-grow items-center justify-center px-4 py-2 ${!props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
+            className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${!props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
           >
-            <StickyNote size={16} className="mr-1" />
-            쇼핑 목록
+            <ShoppingBasket size={24} className="mr-1" />
+            장볼 리스트
           </button>
           <button
             onClick={() => props.onToggleFavorites()}
-            className={`flex flex-grow items-center justify-center px-4 py-2 ${props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
+            className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
           >
-            <Star size={16} className="mr-1" />
+            <Star size={24} className="mr-1" />
             즐겨찾기
           </button>
         </div>
@@ -1212,8 +1140,14 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
             <div className="flex-1 overflow-y-auto">
               {props.shoppingList.length === 0 ? (
                 <div className="mt-10 text-center text-gray-500">
-                  <p>쇼핑 목록이 비어 있습니다</p>
-                  <p className="mt-2 text-sm">식재료를 추가해보세요</p>
+                  <p>장볼 재료가 없어요</p>
+                  <p className="mt-2 text-sm">
+                    장보기 전{' '}
+                    <span className="rounded-xl bg-amber-100 px-0.5 py-0.5 font-semibold text-[#6B46C1]">
+                      식재료 카드
+                    </span>
+                    를 눌러 추가 해보세요
+                  </p>
                 </div>
               ) : (
                 <ul className="space-y-2">
@@ -1270,13 +1204,6 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
             {/* 액션 버튼 */}
             <div className="mt-4 space-y-2">
               <div className="flex space-x-2">
-                <button
-                  onClick={props.onDirectAdd}
-                  className="flex flex-1 items-center justify-center rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
-                >
-                  <SquarePlus size={16} className="mr-1" />
-                  직접 추가
-                </button>
                 <button
                   onClick={props.onShowFavoriteInput}
                   className="flex flex-1 items-center justify-center rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"

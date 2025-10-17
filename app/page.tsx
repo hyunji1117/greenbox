@@ -61,7 +61,7 @@ export default function Page() {
           setActiveTab={setActiveTab}
           onSettingsClick={openSettings}
         />
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
           <div className="mt-0.5">{renderContent()}</div>
         </div>
         <UserSettings isOpen={isSettingsOpen} onClose={closeSettings} />
