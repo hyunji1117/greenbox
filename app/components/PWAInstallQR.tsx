@@ -1,6 +1,8 @@
 // app/components/PWAInstallQR.tsx
 // PWA 설치 QR 코드 및 안내 컴포넌트
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 
