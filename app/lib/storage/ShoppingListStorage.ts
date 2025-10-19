@@ -17,7 +17,6 @@ interface FavoriteItem {
     quantity: number;
   }>;
 }
-
 class ShoppingListStorage {
   private readonly SHOPPING_LIST_KEY = 'fridgeBoard_shoppingList';
   private readonly FAVORITES_KEY = 'fridgeBoard_favorites';
@@ -80,4 +79,7 @@ class ShoppingListStorage {
   }
 }
 
-export default new ShoppingListStorage();
+// ShoppingListStorage 클래스의 인스턴스를 생성
+const shoppingListStorageInstance = new ShoppingListStorage();
+
+export default shoppingListStorageInstance;
