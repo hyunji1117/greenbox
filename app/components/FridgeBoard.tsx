@@ -10,6 +10,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 // ---------- 스토리지 ----------
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
+import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
 // ---------- 컴포넌트 ----------
 import PurchaseStats from '@/app/components/PurchaseStats';
@@ -218,9 +219,15 @@ const FridgeBoard: React.FC = () => {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [favoriteName, setFavoriteName] = useState<string>('');
 
-  // ---------- 쇼핑 리스트 상태 ----------
-  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  // ---------- 쇼핑 리스트 상태 (localStorage에서 초기화) ----------
+  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() => {
+    return shoppingListStorage.loadShoppingList();
+  });
+
+  const [favorites, setFavorites] = useState<FavoriteItem[]>(() => {
+    return shoppingListStorage.loadFavorites();
+  });
+
   const [totalItems, setTotalItems] = useState(0);
 
   // ---------- 구매 횟수 상태 ----------
@@ -271,7 +278,7 @@ const FridgeBoard: React.FC = () => {
     }, 3000);
   }, []);
 
-  // ---------- 날짜 포맷팅 ----------
+  // ---------- 날짜 포매팅 ----------
   const formatExpiryDate = (date: Date): string => {
     const today = new Date();
     const diffTime = date.getTime() - today.getTime();
@@ -319,6 +326,16 @@ const FridgeBoard: React.FC = () => {
 
     loadPurchaseCounts();
   }, []);
+
+  // ---------- shoppingList 변경시 localStorage 저장 ----------
+  useEffect(() => {
+    shoppingListStorage.saveShoppingList(shoppingList);
+  }, [shoppingList]);
+
+  // ---------- favorites 변경시 localStorage 저장 ----------
+  useEffect(() => {
+    shoppingListStorage.saveFavorites(favorites);
+  }, [favorites]);
 
   // ---------- 카테고리별 필터링 ----------
   useEffect(() => {
