@@ -35,7 +35,7 @@ import {
   ChevronDownIcon,
   ShoppingBasket,
   NotepadText,
-  CogIcon,
+  // CogIcon,
   ChevronLeft,
 } from 'lucide-react';
 
@@ -644,14 +644,14 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   return (
-    <div className="relative flex h-full flex-col p-6 md:p-0">
+    <div className="relative flex h-full flex-col p-6 md:p-6">
       {/* ---------- 헤더 ---------- */}
       <div className="mb-4 flex items-center justify-between md:mb-6">
         <h1 className="text-xl font-semibold">우리집 냉장고</h1>
         <div className="flex items-center space-x-2">
-          <Button variant="secondary" className="px-3.5">
+          {/* <Button variant="secondary" className="px-3.5">
             <CogIcon size={24} color="gray" />
-          </Button>
+          </Button> */}
           <Button
             onClick={toggleShoppingList}
             variant="primary"
