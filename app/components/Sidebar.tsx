@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
@@ -31,30 +33,32 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
   const Icon = item.icon;
 
   return (
-    <div className="relative flex w-full justify-center">
-      <button
-        onClick={onClick}
-        className={`relative flex w-11 flex-col items-center p-1 shadow-sm transition-all duration-200 ${
-          isActive
-            ? 'z-10 rounded-xl bg-[#F3F4F6] text-[#4b2f8c]'
-            : 'rounded-xl text-white hover:bg-white/10'
+    <button
+      onClick={onClick}
+      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center py-1 transition-all duration-150 ${isActive ? 'text-[#4b2f8c]' : 'text-gray-600'} `}
+      title={item.title}
+      aria-current={isActive ? 'page' : undefined}
+    >
+      <Icon size={22} />
+      <span className="mt-0.5 text-[11px] leading-none">{item.label}</span>
+      {/* 활성 탭 상단 보더 인디케이터 */}
+      <span
+        className={`absolute -top-[1px] h-[2px] w-10 rounded-full ${
+          isActive ? 'bg-[#4b2f8c]' : 'bg-transparent'
         }`}
-        title={item.title}
-      >
-        <Icon size={22} />
-        <span className="mt-0 text-xs">{item.label}</span>
-      </button>
-    </div>
+        aria-hidden
+      />
+    </button>
   );
 };
 
-interface SidebarProps {
+interface BottomBarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  onSettingsClick: () => void;
+  onSettingsClick: () => void; // 필요시 유지
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
+const BottomBar: React.FC<BottomBarProps> = ({
   activeTab,
   setActiveTab,
   onSettingsClick,
@@ -64,111 +68,98 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // 네비게이션 아이템 정의
   const navItems: NavItem[] = [
-    {
-      id: 'fridge',
-      icon: Refrigerator,
-      label: '냉장고',
-      title: '냉장고',
-    },
-    {
-      id: 'foodBenefits',
-      icon: BookOpen,
-      label: '위키',
-      title: '식재료 위키',
-    },
-    {
-      id: 'activity',
-      icon: MessageCircleHeart,
-      label: '활동',
-      title: '활동',
-    },
-    {
-      id: 'assignments',
-      icon: HardHat,
-      label: '담당자',
-      title: '담당자',
-    },
+    { id: 'fridge', icon: Refrigerator, label: '냉장고', title: '냉장고' },
+    { id: 'foodBenefits', icon: BookOpen, label: '위키', title: '식재료 위키' },
+    { id: 'activity', icon: MessageCircleHeart, label: '활동', title: '활동' },
+    { id: 'assignments', icon: HardHat, label: '담당자', title: '담당자' },
   ];
 
   const userOptions: { id: UserId; name: string }[] = [
-    {
-      id: 'mom',
-      name: '먐무',
-    },
-    {
-      id: 'dad',
-      name: '빙빵',
-    },
-    {
-      id: 'bigKid',
-      name: '낭농',
-    },
-    {
-      id: 'littleKid',
-      name: '떡자',
-    },
+    { id: 'mom', name: '먐무' },
+    { id: 'dad', name: '빙빵' },
+    { id: 'bigKid', name: '낭농' },
+    { id: 'littleKid', name: '떡자' },
   ];
 
-  const toggleUserSelect = () => {
-    setShowUserSelect(!showUserSelect);
-  };
+  const toggleUserSelect = () => setShowUserSelect(v => !v);
 
   return (
-    <div className="flex h-full w-15 flex-col items-center bg-[#4b2f8c] py-4 text-white">
-      <div className="mb-4.5">
-        <Link href="/">
-          <Image
-            src="/our-fridge_logo2.png"
-            alt="Our Fridge Logo"
-            width={45}
-            height={45}
-            className="mx-auto"
-          />
-        </Link>
-      </div>
+    <>
+      {/* 실제 하단 고정 바 */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/80 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/80"
+        role="navigation"
+        aria-label="하단 내비게이션"
+        style={{
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)',
+        }}
+      >
+        <div className="relative mx-auto flex h-16 max-w-screen-sm items-end justify-between px-2">
+          {/* 탭들 */}
+          <div className="relative flex h-full w-full items-stretch justify-between">
+            {navItems.map(item => (
+              <div
+                key={item.id}
+                className="relative flex h-full flex-1 items-center justify-center"
+              >
+                <NavButton
+                  item={item}
+                  isActive={activeTab === item.id}
+                  onClick={() => setActiveTab(item.id)}
+                />
+              </div>
+            ))}
+          </div>
 
-      <nav className="flex w-full flex-col items-center space-y-3">
-        {navItems.map(item => (
-          <NavButton
-            key={item.id}
-            item={item}
-            isActive={activeTab === item.id}
-            onClick={() => setActiveTab(item.id)}
-          />
-        ))}
+          {/* 사용자 버튼 */}
+          <div className="absolute top-2 right-1">
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4b2f8c] text-white shadow-md transition hover:opacity-90"
+              title="사용자 전환"
+              aria-haspopup="listbox"
+              aria-expanded={showUserSelect}
+              onClick={toggleUserSelect}
+            >
+              <UserIcon size={20} />
+            </button>
+          </div>
+        </div>
       </nav>
 
-      <div className="mt-auto">
-        <div className="relative">
-          <button
-            className="max-h-11 max-w-11 rounded-full bg-white/10 p-3 shadow-sm transition-colors duration-200 hover:bg-white/20"
-            title="사용자 설정"
-            onClick={onSettingsClick}
+      {/* 사용자 선택 팝오버 */}
+      {showUserSelect && (
+        <div
+          className="fixed right-3 bottom-[76px] z-[60] w-40 rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
+          role="dialog"
+          aria-label="현재 사용자 선택"
+        >
+          <p className="mb-2 text-center text-xs font-medium text-gray-600">
+            현재 사용자
+          </p>
+          <select
+            value={currentUser as UserId}
+            onChange={e => setCurrentUser(e.target.value as UserId)}
+            className="w-full rounded-md border border-gray-300 bg-white p-1.5 text-sm"
+            aria-label="사용자 선택"
           >
-            <UserIcon size={24} />
+            {userOptions.map(user => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+
+          {/* (선택) 설정 페이지 버튼 유지하고 싶으면 사용 */}
+          <button
+            onClick={onSettingsClick}
+            className="mt-2 w-full rounded-md bg-gray-100 py-1.5 text-center text-xs text-gray-700 transition hover:bg-gray-200"
+          >
+            설정 열기
           </button>
-          {showUserSelect && (
-            <div className="absolute bottom-full left-1/2 mb-2 w-32 -translate-x-1/2 transform rounded-md bg-[#F3F4F6] p-2 text-gray-800 shadow-lg">
-              <p className="mb-2 text-center text-xs font-medium">
-                현재 사용자
-              </p>
-              <select
-                value={currentUser as UserId}
-                onChange={e => setCurrentUser(e.target.value as UserId)}
-                className="w-full rounded border border-gray-300 p-1 text-sm"
-              >
-                {userOptions.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
-export default Sidebar;
+export default BottomBar;
