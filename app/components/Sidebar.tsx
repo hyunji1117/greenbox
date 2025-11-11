@@ -1,3 +1,6 @@
+// app/components/Sidebar.tsx
+// 사이드바 컴포넌트
+
 'use client';
 
 import React, { useState } from 'react';
@@ -94,6 +97,20 @@ const BottomBar: React.FC<BottomBarProps> = ({
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)',
         }}
       >
+        {/* 상단 로고/홈(선택): 필요 없으면 제거 가능 */}
+        <div className="pointer-events-none absolute -top-10 left-3">
+          <Link href="/" className="pointer-events-auto">
+            <Image
+              src="/our-fridge_logo2.png"
+              alt="Our Fridge Logo"
+              width={32}
+              height={32}
+              className="rounded"
+              priority
+            />
+          </Link>
+        </div>
+
         <div className="relative mx-auto flex h-16 max-w-screen-sm items-end justify-between px-2">
           {/* 탭들 */}
           <div className="relative flex h-full w-full items-stretch justify-between">
@@ -126,36 +143,33 @@ const BottomBar: React.FC<BottomBarProps> = ({
         </div>
       </nav>
 
-      {/* 사용자 선택 팝오버 */}
-      {showUserSelect && (
-        <div
-          className="fixed right-3 bottom-[76px] z-[60] w-40 rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
-          role="dialog"
-          aria-label="현재 사용자 선택"
-        >
-          <p className="mb-2 text-center text-xs font-medium text-gray-600">
-            현재 사용자
-          </p>
-          <select
-            value={currentUser as UserId}
-            onChange={e => setCurrentUser(e.target.value as UserId)}
-            className="w-full rounded-md border border-gray-300 bg-white p-1.5 text-sm"
-            aria-label="사용자 선택"
-          >
-            {userOptions.map(user => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
-
-          {/* (선택) 설정 페이지 버튼 유지하고 싶으면 사용 */}
+      <div className="mt-auto">
+        <div className="relative">
           <button
+            className="max-h-11 max-w-11 rounded-full bg-white/10 p-3 shadow-sm transition-colors duration-200 hover:bg-white/20"
+            title="사용자 설정"
             onClick={onSettingsClick}
-            className="mt-2 w-full rounded-md bg-gray-100 py-1.5 text-center text-xs text-gray-700 transition hover:bg-gray-200"
           >
-            설정 열기
+            <UserIcon size={24} />
           </button>
+          {showUserSelect && (
+            <div className="absolute bottom-full left-1/2 mb-2 w-32 -translate-x-1/2 transform rounded-md bg-[#F3F4F6] p-2 text-gray-800 shadow-lg">
+              <p className="mb-2 text-center text-xs font-medium">
+                현재 사용자
+              </p>
+              <select
+                value={currentUser as UserId}
+                onChange={e => setCurrentUser(e.target.value as UserId)}
+                className="w-full rounded border border-gray-300 p-1 text-sm"
+              >
+                {userOptions.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       )}
     </>
