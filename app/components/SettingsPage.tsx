@@ -1,3 +1,4 @@
+'use client';
 // app/components/SettingsPage.tsx
 // 사용자 설정 페이지 컴포넌트
 
@@ -20,13 +21,18 @@ import {
 import { useFridge, FamilyMember } from '@/app/context/FridgeContext';
 import Image from 'next/image';
 
+interface SettingsPageProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 // --------------------------------------
 // 타입 정의
 // --------------------------------------
 type UserId = 'mom' | 'dad' | 'bigKid' | 'littleKid';
 type SettingsSection = 'account' | 'family' | 'notifications' | 'app';
 
-const SettingsPage: React.FC = () => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const { currentUser, setCurrentUser } = useFridge();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('account');
@@ -145,6 +151,7 @@ const SettingsPage: React.FC = () => {
     { id: 'bigKid', name: '낭농' },
     { id: 'littleKid', name: '떡자' },
   ];
+  if (isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex justify-end bg-black/50 transition-opacity duration-300">

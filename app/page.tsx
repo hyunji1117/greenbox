@@ -80,7 +80,7 @@ export default function Page() {
         <Sidebar
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          onSettingsClick={openSettings}
+          onSettingsClick={() => {}}
         />
 
         {/* 메인 콘텐츠 */}
