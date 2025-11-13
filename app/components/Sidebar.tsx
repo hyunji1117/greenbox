@@ -8,14 +8,11 @@ import { useFridge } from '@/app/context/FridgeContext';
 import {
   Refrigerator,
   Salad,
-  UserIcon,
   LucideIcon,
   NotepadText,
   Cog,
   HeartPulse,
 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
 
 // --------------------------------------
 // 공통 Tab 타입
@@ -119,20 +116,6 @@ const BottomBar: React.FC<BottomBarProps> = ({
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)',
         }}
       >
-        {/* 상단 로고/홈 */}
-        <div className="pointer-events-none absolute -top-10 left-3">
-          <Link href="/" className="pointer-events-auto">
-            <Image
-              src="/our-fridge_logo2.png"
-              alt="Our Fridge Logo"
-              width={32}
-              height={32}
-              className="rounded"
-              priority
-            />
-          </Link>
-        </div>
-
         <div className="relative mx-auto flex h-16 max-w-screen-sm items-end justify-between px-2">
           {/* 탭 버튼 */}
           <div className="relative flex h-full w-full items-stretch justify-between">
