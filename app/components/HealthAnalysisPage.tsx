@@ -201,7 +201,8 @@ const HealthAnalysisPage: React.FC = () => {
   // ---------- UI 토글 상태 ----------
   const [showShoppingList, setShowShoppingList] = useState<boolean>(false);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
-  const [showFavorites, setShowFavorites] = useState<boolean>(false);
++ // TODO: 즐겨찾기 기능 분리 재점검 시 다시 사용할 예정
++ // const [showFavorites, setShowFavorites] = useState<boolean>(false);
   const [showFavoriteNameInput, setShowFavoriteNameInput] =
     useState<boolean>(false);
   const [showBottomSheet, setShowBottomSheet] = useState<boolean>(false);
