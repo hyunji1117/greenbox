@@ -371,8 +371,9 @@ export const FridgeProvider: React.FC<{
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [assignments, setAssignments] =
     useState<Assignment[]>(initialAssignments);
-  const [foodBenefits, setFoodBenefits] =
-    useState<FoodBenefit[]>(initialFoodBenefits);
+  // const [foodBenefits, setFoodBenefits] =
+  //   useState<FoodBenefit[]>(initialFoodBenefits);
+  const [foodBenefits] = useState<FoodBenefit[]>(initialFoodBenefits);
   const [currentUser, setCurrentUser] = useState<FamilyMember>('mom');
 
   const addItem = (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => {

@@ -1,14 +1,15 @@
+'use client';
+// app/components/SettingsPage.tsx
+// 사용자 설정 페이지 컴포넌트
+
 import React, { useState } from 'react';
 import {
-  X,
   Copy,
   User,
-  // Mail,
   Lock,
   LogOut,
   Users,
   Bell,
-  // Moon,
   Download,
   Trash2,
   Info,
@@ -19,13 +20,20 @@ import {
 } from 'lucide-react';
 import { useFridge, FamilyMember } from '@/app/context/FridgeContext';
 import Image from 'next/image';
-interface UserSettingsProps {
+
+interface SettingsPageProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// --------------------------------------
+// 타입 정의
+// --------------------------------------
+type UserId = 'mom' | 'dad' | 'bigKid' | 'littleKid';
 type SettingsSection = 'account' | 'family' | 'notifications' | 'app';
-const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
-  const { currentUser } = useFridge();
+
+const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
+  const { currentUser, setCurrentUser } = useFridge();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('account');
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
@@ -36,6 +44,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     notificationDays: 3,
     pushEnabled: false,
   });
+
   // Mock data
   const familyCode = 'FRIDGE123456';
   const familyMembers = [
@@ -66,11 +75,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   ];
   const userEmail = 'user@example.com';
   const appVersion = '1.0.0';
+
+  const onSettingsClick = () => {
+    console.log('Settings button clicked');
+    // 설정을 여는 것 관련 추가 로직 추가 위치
+  };
+
   const copyFamilyCode = () => {
     navigator.clipboard.writeText(familyCode);
     setShowCopiedMessage(true);
     setTimeout(() => setShowCopiedMessage(false), 2000);
   };
+
   const confirmLeaveFamily = () => {
     if (
       window.confirm(
@@ -81,16 +97,19 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       console.log('Left family group');
     }
   };
+
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
     // Implement actual dark mode logic here
   };
+
   const handleNotificationToggle = () => {
     setNotificationSettings({
       ...notificationSettings,
       expiryNotifications: !notificationSettings.expiryNotifications,
     });
   };
+
   const handleNotificationTimeChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -99,6 +118,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       notificationTime: e.target.value,
     });
   };
+
   const handleNotificationDaysChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
@@ -107,12 +127,14 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       notificationDays: parseInt(e.target.value),
     });
   };
+
   const clearCache = () => {
     if (window.confirm('캐시를 지우시겠습니까? 앱이 재시작될 수 있습니다.')) {
       // Implement cache clearing logic
       console.log('Cache cleared');
     }
   };
+
   const getFamilyMemberName = (member: FamilyMember): string => {
     const memberMap = {
       mom: '먐무',
@@ -122,20 +144,22 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     };
     return memberMap[member] || member;
   };
-  if (!isOpen) return null;
+
+  const userOptions: { id: UserId; name: string }[] = [
+    { id: 'mom', name: '먐무' },
+    { id: 'dad', name: '빙빵' },
+    { id: 'bigKid', name: '낭농' },
+    { id: 'littleKid', name: '떡자' },
+  ];
+  if (isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity duration-300">
-      <div className="h-full w-full transform overflow-y-auto bg-white shadow-xl transition-transform duration-300">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4">
+    <div className="fixed inset-0 flex justify-end bg-black/50 transition-opacity duration-300">
+      <div className="h-full w-full bg-white md:w-2/4 lg:w-1/4">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4">
           <h2 className="text-xl font-semibold">사용자 설정</h2>
-          <button
-            onClick={onClose}
-            className="ml-auto text-gray-500 hover:text-gray-700"
-          >
-            <X size={20} />
-          </button>
         </div>
-        <div className="flex h-full">
+        <div className="flex h-[calc(100%-65px)]">
           {/* Settings navigation */}
           <div className="w-1/4.5 border-r border-gray-200 bg-gray-50 p-4">
             <nav className="space-y-3">
@@ -464,7 +488,30 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
+      {/* 사용자 선택 팝오버 */}
+      <div
+        className="fixed right-3 bottom-[76px] z-[60] w-40 rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
+        role="dialog"
+        aria-label="현재 사용자 선택"
+      >
+        <p className="mb-2 text-center text-xs font-medium text-gray-600">
+          현재 사용자
+        </p>
+        <select
+          value={currentUser as UserId}
+          onChange={e => setCurrentUser(e.target.value as UserId)}
+          className="w-full rounded-md border border-gray-300 bg-white p-1.5 text-sm"
+          aria-label="사용자 선택"
+        >
+          {userOptions.map(user => (
+            <option key={user.id} value={user.id}>
+              {user.name}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
-export default UserSettings;
+
+export default SettingsPage;

@@ -645,7 +645,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
                 } ${selectedItem?.id === item.id ? 'm-[-1px] border-[2px] border-[#615FFF]' : 'border-gray-200'}`}
                 onClick={() => !itemAdded && handleItemClick(item)}
               >
-                <div className="relative flex h-30 items-center justify-center">
+                <div className="relative flex h-25 items-center justify-center">
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
