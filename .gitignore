@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+public/workbox-*.js
+public/precache-manifest.*
 
 # production
 /build
