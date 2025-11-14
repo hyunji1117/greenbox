@@ -52,7 +52,7 @@ export default function Page() {
     setActiveTab(tab);
   };
 
-  const openSettings = () => setIsSettingsOpen(true);
+  // const openSettings = () => setIsSettingsOpen(true);
   const closeSettings = () => setIsSettingsOpen(false);
 
   // 각 탭별 렌더링 분기
