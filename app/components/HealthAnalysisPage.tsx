@@ -18,7 +18,6 @@ import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
 import Toast from '@/app/components/common/Toast';
 import Button from '@/app/components/common/Button';
 import AddItemForm from '@/app/components/AddItemForm';
-import ShoppingListPanel from '@/app/components/ShoppingListPage';
 
 // ---------- 아이콘 ----------
 import {
