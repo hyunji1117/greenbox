@@ -27,7 +27,6 @@ import {
   BellIcon,
   InfoIcon,
   ChevronDownIcon,
-  NotepadText,
   // CogIcon,
 } from 'lucide-react';
 
