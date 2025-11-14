@@ -8,7 +8,6 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useEffect,
 } from 'react';
 import Image from 'next/image';
 import { Plus, ListIcon, GridIcon, BellIcon } from 'lucide-react';
