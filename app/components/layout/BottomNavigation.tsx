@@ -113,7 +113,7 @@ const BottomBar: React.FC<BottomBarProps> = ({
         role="navigation"
         aria-label="하단 내비게이션"
       >
-        <div className="relative mx-auto flex h-25 max-w-screen-sm items-end justify-between px-2 md:h-20">
+        <div className="relative mx-auto flex h-20 max-w-screen-sm items-end justify-between px-2 md:h-15">
           {/* 탭 버튼 */}
           <div className="relative flex h-full w-full items-stretch justify-between">
             {navItems.map(item => (
