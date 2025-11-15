@@ -52,7 +52,7 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center py-1 transition-all duration-150 ${
+      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center pt-5 transition-all duration-150 ${
         isActive ? 'text-[#4b2f8c]' : 'text-gray-600'
       }`}
       title={item.title}
@@ -112,17 +112,14 @@ const BottomBar: React.FC<BottomBarProps> = ({
         className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/80 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/80"
         role="navigation"
         aria-label="하단 내비게이션"
-        style={{
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)',
-        }}
       >
-        <div className="relative mx-auto flex h-16 max-w-screen-sm items-end justify-between px-2">
+        <div className="relative mx-auto flex h-25 max-w-screen-sm items-end justify-between px-2 md:h-20">
           {/* 탭 버튼 */}
           <div className="relative flex h-full w-full items-stretch justify-between">
             {navItems.map(item => (
               <div
                 key={item.id}
-                className="relative flex h-full flex-1 items-center justify-center"
+                className="relative flex h-full flex-1 items-start justify-center"
               >
                 <NavButton
                   item={item}
