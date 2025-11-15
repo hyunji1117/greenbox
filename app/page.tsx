@@ -5,7 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import Sidebar, { Tab } from '@/app/components/Sidebar';
+import BottomNavigation, {
+  Tab,
+} from '@/app/components/layout/BottomNavigation';
 import FridgeBoard from '@/app/components/FridgeBoard';
 import IngredientsBoard from '@/app/components/IngredientsBoard';
 import HealthAnalysisPage from '@/app/components/HealthAnalysisPage';
@@ -77,7 +79,7 @@ export default function Page() {
     <FridgeProvider>
       <div className="flex h-screen bg-white">
         {/* 하단 내비게이션 */}
-        <Sidebar
+        <BottomNavigation
           activeTab={activeTab}
           setActiveTab={handleTabChange}
           onSettingsClick={() => {}}
@@ -87,9 +89,6 @@ export default function Page() {
         <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
           <div className="mt-0.5">{renderContent()}</div>
         </div>
-
-        {/* 사용자 설정 모달 */}
-        {/* <SettingsPage isOpen={isSettingsOpen} onClose={closeSettings} /> */}
       </div>
     </FridgeProvider>
   );

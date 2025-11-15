@@ -1,4 +1,4 @@
-// app/components/Sidebar.tsx
+// app/components/layout/BottomNavigation.tsx
 // 하단 고정 내비게이션 바 컴포넌트
 
 'use client';
