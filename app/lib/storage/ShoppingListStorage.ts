@@ -18,8 +18,8 @@ interface FavoriteItem {
   }>;
 }
 class ShoppingListStorage {
-  private readonly SHOPPING_LIST_KEY = 'fridgeBoard_shoppingList';
-  private readonly FAVORITES_KEY = 'fridgeBoard_favorites';
+  private readonly SHOPPING_LIST_KEY = 'HealthAnalysisPage_shoppingList';
+  private readonly FAVORITES_KEY = 'HealthAnalysisPage_favorites';
 
   // 장바구니 리스트 저장
   saveShoppingList(shoppingList: ShoppingListItem[]): void {

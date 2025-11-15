@@ -44,13 +44,6 @@ const Button: React.FC<ButtonProps> = ({
     large: 'h-12 text-lg gap-0',
   };
 
-  const badgeColors = {
-    red: 'bg-red-500 text-white',
-    blue: 'bg-blue-500 text-white',
-    green: 'bg-green-500 text-white',
-    yellow: 'bg-yellow-500 text-black',
-    white: 'bg-white text-black border border-[#6B46C1]',
-  };
 
   const disabledClasses = 'opacity-50 cursor-not-allowed';
 

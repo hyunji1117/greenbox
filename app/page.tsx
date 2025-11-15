@@ -1,70 +1,94 @@
 // app/page.tsx
+// 메인 페이지 컴포넌트
+
 'use client';
 
-import React, { useState } from 'react';
-import Sidebar from '@/app/components/Sidebar';
-import FridgeBoard from '@/app/components/FridgeBoard';
-import AssignmentBoard from '@/app/components/AssignmentBoard';
-import ActivityFeed from '@/app/components/ActivityFeed';
-import FoodBenefitsBoard from '@/app/components/FoodBenefitsBoard';
-import UserSettings from '@/app/components/UserSettings';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import BottomNavigation, {
+  Tab,
+} from '@/app/components/layout/BottomNavigation';
+import FridgeBoard from '@/app/components/fridge/FridgeBoard';
+import IngredientsBoard from '@/app/components/ingredients/IngredientsBoard';
+import HealthAnalysisPage from '@/app/components/analysis/HealthAnalysisPage';
+// import ActivityFeed from '@/app/components/ActivityFeed';
+import GroceryListPage from '@/app/components/grocery-list/GroceryListPage';
+import SettingsPage from '@/app/components/settings/SettingsPage';
 import { FridgeProvider } from '@/app/context/FridgeContext';
 
-// 중요: default export로 변경
 export default function Page() {
-  const [activeTab, setActiveTab] = useState('fridge');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL 쿼리 기반으로 탭 상태 파싱
+  const paramToTab = (v: string | null): Tab => {
+    switch (v) {
+      case 'healthAnalysis':
+      case 'fridge':
+      case 'shoppingList':
+      case 'ingredients':
+      case 'settings':
+        return v;
+      default:
+        return 'fridge';
+    }
+  };
+
+  // 초기 탭 상태
+  const [activeTab, setActiveTab] = useState<Tab>(
+    paramToTab(searchParams.get('tab')),
+  );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const openSettings = () => {
-    setIsSettingsOpen(true);
+  // URL 변경 → activeTab 동기화
+  useEffect(() => {
+    setActiveTab(paramToTab(searchParams.get('tab')));
+  }, [searchParams]);
+
+  // 탭 클릭 시 URL 쿼리 갱신
+  const handleTabChange = (tab: Tab) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set('tab', tab);
+    router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+    setActiveTab(tab);
   };
 
-  const closeSettings = () => {
-    setIsSettingsOpen(false);
-  };
+  // const openSettings = () => setIsSettingsOpen(true);
+  const closeSettings = () => setIsSettingsOpen(false);
 
+  // 각 탭별 렌더링 분기
   const renderContent = () => {
     switch (activeTab) {
+      case 'healthAnalysis':
+        return <HealthAnalysisPage />;
       case 'fridge':
         return <FridgeBoard />;
-      case 'foodBenefits':
-        return <FoodBenefitsBoard />;
-      case 'activity':
-        return <ActivityFeed />;
-      case 'assignments':
-        return <AssignmentBoard />;
+      case 'ingredients':
+        return <IngredientsBoard />;
+      case 'shoppingList':
+        return <GroceryListPage />;
+      case 'settings':
+        return <SettingsPage isOpen={isSettingsOpen} onClose={closeSettings} />;
       default:
         return <FridgeBoard />;
     }
   };
 
-  // const getTabTitle = () => {
-  //   switch (activeTab) {
-  //     case 'fridge':
-  //       return '우리 냉장고';
-  //     case 'foodBenefits':
-  //       return '식재료 위키';
-  //     case 'activity':
-  //       return '활동 기록';
-  //     case 'assignments':
-  //       return '담당자 관리';
-  //     default:
-  //       return '우리 냉장고';
-  //   }
-  // };
-
   return (
     <FridgeProvider>
       <div className="flex h-screen bg-white">
-        <Sidebar
+        {/* 하단 내비게이션 */}
+        <BottomNavigation
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onSettingsClick={openSettings}
+          setActiveTab={handleTabChange}
+          onSettingsClick={() => {}}
         />
+
+        {/* 메인 콘텐츠 */}
         <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
           <div className="mt-0.5">{renderContent()}</div>
         </div>
-        <UserSettings isOpen={isSettingsOpen} onClose={closeSettings} />
       </div>
     </FridgeProvider>
   );

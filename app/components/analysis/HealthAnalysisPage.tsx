@@ -1,4 +1,4 @@
-// app/components/FridgeBoard.tsx
+// app/components/HealthAnalysisPage.tsx
 // 냉장고 보드 컴포넌트
 
 // ==========================================
@@ -13,30 +13,21 @@ import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
 // ---------- 컴포넌트 ----------
-import PurchaseStats from '@/app/components/PurchaseStats';
-import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
+import PurchaseStats from '@/app/components/fridge/PurchaseStats';
+import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import Toast from '@/app/components/common/Toast';
 import Button from '@/app/components/common/Button';
-import AddItemForm from '@/app/components/AddItemForm';
+import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 
 // ---------- 아이콘 ----------
 import {
   Plus,
   ListIcon,
   GridIcon,
-  XIcon,
-  Star,
-  SquarePlus,
-  Check,
-  MinusIcon,
-  PlusIcon,
   BellIcon,
   InfoIcon,
   ChevronDownIcon,
-  ShoppingBasket,
-  NotepadText,
-  CogIcon,
-  ChevronLeft,
+  // CogIcon,
 } from 'lucide-react';
 
 // ---------- 차트 라이브러리 ----------
@@ -193,7 +184,7 @@ const getDietaryRecommendations = (profile: UserProfile): string[] => {
 //            컴포넌트 메인
 // ==========================================
 
-const FridgeBoard: React.FC = () => {
+const HealthAnalysisPage: React.FC = () => {
   // 디바운스용 ref 추가
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -210,7 +201,8 @@ const FridgeBoard: React.FC = () => {
   // ---------- UI 토글 상태 ----------
   const [showShoppingList, setShowShoppingList] = useState<boolean>(false);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
-  const [showFavorites, setShowFavorites] = useState<boolean>(false);
+  // TODO: 즐겨찾기 기능 분리 재점검 시 다시 사용할 예정
+  // const [showFavorites, setShowFavorites] = useState<boolean>(false);
   const [showFavoriteNameInput, setShowFavoriteNameInput] =
     useState<boolean>(false);
   const [showBottomSheet, setShowBottomSheet] = useState<boolean>(false);
@@ -392,10 +384,10 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   // ---------- 쇼핑리스트 관련 ----------
-  const toggleShoppingList = (): void => {
-    setShowShoppingList(!showShoppingList);
-    setShowFavorites(false);
-  };
+  // const toggleShoppingList = (): void => {
+  //   setShowShoppingList(!showShoppingList);
+  //   setShowFavorites(false);
+  // };
 
   const addToShoppingList = useCallback(
     (name: string, quantityToAdd: number = 1): void => {
@@ -570,7 +562,7 @@ const FridgeBoard: React.FC = () => {
       }));
 
       setShoppingList(newShoppingList);
-      setShowFavorites(false);
+      // setShowFavorites(false);
       showToastNotification(`'${favorite.name}' 목록을 불러왔어요!`);
     }
   };
@@ -644,25 +636,10 @@ const FridgeBoard: React.FC = () => {
   // ==========================================
 
   return (
-    <div className="relative flex h-full flex-col p-6 md:p-0">
+    <div className="relative flex h-full flex-col p-6 md:p-6">
       {/* ---------- 헤더 ---------- */}
       <div className="mb-4 flex items-center justify-between md:mb-6">
-        <h1 className="text-xl font-semibold">우리집 냉장고</h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="secondary" className="px-3.5">
-            <CogIcon size={24} color="gray" />
-          </Button>
-          <Button
-            onClick={toggleShoppingList}
-            variant="primary"
-            className="px-3.5"
-            leftIcon={<NotepadText size={24} className="mr-1" />}
-            badge={totalItems}
-            badgeColor="white"
-          >
-            <span>장보기 목록</span>
-          </Button>
-        </div>
+        <h1 className="text-xl font-semibold">AI 건강분석</h1>
       </div>
 
       {/* ---------- 카테고리 탭 ---------- */}
@@ -859,25 +836,6 @@ const FridgeBoard: React.FC = () => {
         sleepOptions={sleepOptions}
       />
 
-      {/* ---------- 쇼핑 리스트 패널 ---------- */}
-      <ShoppingListPanel
-        showShoppingList={showShoppingList}
-        showFavorites={showFavorites}
-        shoppingList={shoppingList}
-        favorites={favorites}
-        totalItems={totalItems}
-        onClose={toggleShoppingList}
-        onToggleFavorites={() => setShowFavorites(!showFavorites)}
-        onToggleCompletion={toggleItemCompletion}
-        onUpdateQuantity={updateItemQuantity}
-        onDeleteItem={deleteItem}
-        onClearCompleted={clearCompletedItems}
-        onClearAll={clearAllItems}
-        onDirectAdd={() => setShowAddForm(true)}
-        onShowFavoriteInput={() => setShowFavoriteNameInput(true)}
-        onLoadFavorite={loadFavorite}
-      />
-
       {/* ---------- 모달들 ---------- */}
       {showFavoriteNameInput && (
         <FavoriteNameModal
@@ -1056,191 +1014,6 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
   </div>
 );
 
-// ---------- 쇼핑 리스트 패널 ----------
-interface ShoppingListPanelProps {
-  showShoppingList: boolean;
-  showFavorites: boolean;
-  shoppingList: ShoppingListItem[];
-  favorites: FavoriteItem[];
-  totalItems: number;
-  onClose: () => void;
-  onToggleFavorites: () => void;
-  onToggleCompletion: (id: number) => void;
-  onUpdateQuantity: (id: number, change: number) => void;
-  onDeleteItem: (id: number) => void;
-  onClearCompleted: () => void;
-  onClearAll: () => void;
-  onDirectAdd: () => void;
-  onShowFavoriteInput: () => void;
-  onLoadFavorite: (id: number) => void;
-}
-
-const ShoppingListPanel: React.FC<ShoppingListPanelProps> = props => {
-  return (
-    <div
-      className={`fixed top-0 right-0 z-50 h-full w-full transform bg-[#F2F2F6] shadow-xl transition-transform duration-300 ease-in-out sm:w-80 ${props.showShoppingList ? 'translate-x-0' : 'translate-x-full'}`}
-    >
-      <div className="flex h-full flex-col p-4 md:p-5">
-        <div className="mb-4 flex items-center justify-start">
-          <h2 className="sr-only text-base font-bold">쇼핑 리스트</h2>
-
-          <Button onClick={props.onClose} variant="secondary">
-            <ChevronLeft size={30} strokeWidth={2} />
-          </Button>
-          <Button
-            onClick={props.onDirectAdd}
-            variant="secondary"
-            className="ml-auto w-auto gap-1 px-3.5"
-          >
-            <SquarePlus size={24} strokeWidth={2} />
-            직접 추가
-          </Button>
-        </div>
-
-        <div className="mb-4 flex justify-evenly border-b">
-          <button
-            onClick={() => props.onToggleFavorites()}
-            className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${!props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
-          >
-            <ShoppingBasket size={24} className="mr-1" />
-            장볼 리스트
-          </button>
-          <button
-            onClick={() => props.onToggleFavorites()}
-            className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${props.showFavorites ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]' : 'text-gray-500'}`}
-          >
-            <Star size={24} className="mr-1" />
-            즐겨찾기
-          </button>
-        </div>
-
-        {/* 쇼핑 리스트 내용 */}
-        {!props.showFavorites ? (
-          <>
-            <div className="flex-1 overflow-y-auto">
-              {props.shoppingList.length === 0 ? (
-                <div className="mt-10 text-center text-lg text-gray-500">
-                  <p>장볼 재료가 없어요</p>
-                  <p className="mt-2 text-base">
-                    장보기 전{' '}
-                    <span className="rounded-sm bg-amber-200 px-0.5 py-0.5 font-semibold text-[#6B46C1]">
-                      식재료 카드
-                    </span>
-                    를 눌러 추가 해보세요
-                  </p>
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {props.shoppingList.map(item => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between border-b p-2"
-                    >
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => props.onToggleCompletion(item.id)}
-                          className={`mr-2 rounded-full border ${item.completed ? 'border-[#6B46C1] bg-[#6B46C1]' : 'border-gray-300'} p-1`}
-                        >
-                          {item.completed && <Check size={12} color="white" />}
-                        </button>
-                        <span
-                          className={
-                            item.completed ? 'text-gray-400 line-through' : ''
-                          }
-                        >
-                          {item.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => props.onUpdateQuantity(item.id, -1)}
-                          className="p-1 text-gray-500 hover:text-gray-700"
-                          disabled={item.quantity <= 1}
-                        >
-                          <MinusIcon size={14} />
-                        </button>
-                        <span className="mx-2 w-5 text-center">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => props.onUpdateQuantity(item.id, 1)}
-                          className="p-1 text-gray-500 hover:text-gray-700"
-                        >
-                          <PlusIcon size={14} />
-                        </button>
-                        <button
-                          onClick={() => props.onDeleteItem(item.id)}
-                          className="ml-2 p-1 text-red-500 hover:text-red-700"
-                        >
-                          <XIcon size={14} />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* 액션 버튼 */}
-            <div className="mt-4 space-y-2">
-              <div className="flex space-x-2">
-                <button
-                  onClick={props.onShowFavoriteInput}
-                  className="flex flex-1 items-center justify-center rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
-                >
-                  <Star size={16} className="mr-1" />
-                  즐겨찾기 추가
-                </button>
-              </div>
-              {props.shoppingList.length > 0 && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={props.onClearCompleted}
-                    className="flex-1 rounded-lg bg-[#6B46C1] py-2 text-sm text-white hover:bg-[#603fad]"
-                  >
-                    장보기 완료
-                  </button>
-                  <button
-                    onClick={props.onClearAll}
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    삭제
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          /* 즐겨찾기 탭 */
-          <div className="flex-1 overflow-y-auto">
-            {props.favorites.length === 0 ? (
-              <div className="mt-10 text-center text-gray-500">
-                <p>저장된 즐겨찾기가 없습니다</p>
-                <p className="mt-2 text-sm">쇼핑 목록을 저장해보세요</p>
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {props.favorites.map(favorite => (
-                  <li
-                    key={favorite.id}
-                    className="cursor-pointer rounded-lg border p-3 hover:bg-gray-50"
-                    onClick={() => props.onLoadFavorite(favorite.id)}
-                  >
-                    <div className="font-medium">{favorite.name}</div>
-                    <div className="mt-1 text-sm text-gray-500">
-                      {favorite.items.length}개 항목
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // ---------- 즐겨찾기 이름 모달 ----------
 interface FavoriteNameModalProps {
   favoriteName: string;
@@ -1288,4 +1061,4 @@ const FavoriteNameModal: React.FC<FavoriteNameModalProps> = ({
   </div>
 );
 
-export default FridgeBoard;
+export default HealthAnalysisPage;
