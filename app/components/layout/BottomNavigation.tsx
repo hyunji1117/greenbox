@@ -52,7 +52,7 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center pt-5 transition-all duration-150 ${
+      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center pt-3 transition-all duration-150 ${
         isActive ? 'text-[#4b2f8c]' : 'text-gray-600'
       }`}
       title={item.title}
