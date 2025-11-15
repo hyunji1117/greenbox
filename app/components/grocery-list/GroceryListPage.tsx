@@ -1,4 +1,4 @@
-// app/components/ShoppingListPage.tsx
+// app/components/GroceryListPage.tsx
 // 장보기 리스트 페이지 (하단 내비게이션과 공존하도록 수정)
 
 'use client';
@@ -14,7 +14,7 @@ import {
   XIcon,
 } from 'lucide-react';
 import Button from '@/app/components/common/Button';
-import AddItemForm from '@/app/components/AddItemForm';
+import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import Toast from '@/app/components/common/Toast';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
@@ -32,7 +32,7 @@ interface FavoriteItem {
   items: Array<{ id: number; name: string; quantity: number }>;
 }
 
-const ShoppingListPage: React.FC = () => {
+const GroceryListPage: React.FC = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() =>
@@ -317,4 +317,4 @@ const ShoppingListPage: React.FC = () => {
   );
 };
 
-export default ShoppingListPage;
+export default GroceryListPage;

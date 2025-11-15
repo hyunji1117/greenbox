@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useFridge } from '../context/FridgeContext';
+import { useFridge } from '@/app/context/FridgeContext';
 import {
   CircleCheckBig,
   MessageCircleIcon,

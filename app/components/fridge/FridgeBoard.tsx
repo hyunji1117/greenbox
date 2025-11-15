@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useFridge } from '../context/FridgeContext';
-import FridgeItem from '@/app/components/FridgeItem';
-import AddItemForm from '@/app/components/AddItemForm';
+import { useFridge } from '@/app/context/FridgeContext';
+import FridgeItem from '@/app/components/fridge/FridgeItem';
+import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import {
   PlusIcon,
   RefrigeratorIcon,

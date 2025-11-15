@@ -8,12 +8,12 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import BottomNavigation, {
   Tab,
 } from '@/app/components/layout/BottomNavigation';
-import FridgeBoard from '@/app/components/FridgeBoard';
-import IngredientsBoard from '@/app/components/IngredientsBoard';
-import HealthAnalysisPage from '@/app/components/HealthAnalysisPage';
+import FridgeBoard from '@/app/components/fridge/FridgeBoard';
+import IngredientsBoard from '@/app/components/ingredients/IngredientsBoard';
+import HealthAnalysisPage from '@/app/components/analysis/HealthAnalysisPage';
 // import ActivityFeed from '@/app/components/ActivityFeed';
-import ShoppingListPage from '@/app/components/ShoppingListPage';
-import SettingsPage from '@/app/components/SettingsPage';
+import GroceryListPage from '@/app/components/grocery-list/GroceryListPage';
+import SettingsPage from '@/app/components/settings/SettingsPage';
 import { FridgeProvider } from '@/app/context/FridgeContext';
 
 export default function Page() {
@@ -67,7 +67,7 @@ export default function Page() {
       case 'ingredients':
         return <IngredientsBoard />;
       case 'shoppingList':
-        return <ShoppingListPage />;
+        return <GroceryListPage />;
       case 'settings':
         return <SettingsPage isOpen={isSettingsOpen} onClose={closeSettings} />;
       default:

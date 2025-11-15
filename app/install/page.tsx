@@ -1,7 +1,7 @@
 // app/install/page.tsx
 // PWA 설치 페이지
 
-import PWAInstallQR from '@/app/components/PWAInstallQR';
+import PWAInstallQR from '@/app/components/notification/PWAInstallQR';
 
 export default function InstallPage() {
   return (

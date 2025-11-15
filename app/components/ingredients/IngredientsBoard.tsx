@@ -3,15 +3,10 @@
 
 'use client';
 
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Plus, ListIcon, GridIcon, BellIcon } from 'lucide-react';
-import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
+import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 // (선택) 구매횟수까지 보고 싶으면 purchaseStorage 가져와 초기화 로직 추가 가능

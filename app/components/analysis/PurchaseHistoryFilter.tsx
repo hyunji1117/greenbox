@@ -1,4 +1,4 @@
-// app/components/IngredientFilter.tsx
+// app/components/PurchaseHistoryFilter.tsx
 import React, { useState, useEffect } from 'react';
 import { ListFilter } from 'lucide-react';
 import Image from 'next/image';
@@ -55,7 +55,7 @@ const getExpiryStatusColor = (date: string | undefined): string => {
   return 'text-gray-600';
 };
 
-const IngredientFilter: React.FC = () => {
+const PurchaseHistoryFilter: React.FC = () => {
   const [showSortOptions, setShowSortOptions] = useState<boolean>(false);
   const [sortOption, setSortOption] = useState<SortOption>('most-purchased');
   const [filteredSectionItems, setFilteredSectionItems] = useState<
@@ -340,4 +340,4 @@ const IngredientFilter: React.FC = () => {
   );
 };
 
-export default IngredientFilter;
+export default PurchaseHistoryFilter;

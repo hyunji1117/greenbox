@@ -13,11 +13,11 @@ import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
 // ---------- 컴포넌트 ----------
-import PurchaseStats from '@/app/components/PurchaseStats';
-import ExpiryDateSetting from '@/app/components/ExpiryDateSetting';
+import PurchaseStats from '@/app/components/fridge/PurchaseStats';
+import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import Toast from '@/app/components/common/Toast';
 import Button from '@/app/components/common/Button';
-import AddItemForm from '@/app/components/AddItemForm';
+import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 
 // ---------- 아이콘 ----------
 import {

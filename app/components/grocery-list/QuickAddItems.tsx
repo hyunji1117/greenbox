@@ -12,7 +12,7 @@ import {
   MinusIcon,
   // Check,
 } from 'lucide-react';
-import AddItemForm from '@/app/components/AddItemForm';
+import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import Image from 'next/image';
 interface QuickAddItemProps {
   onClose: () => void;
