@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import BottomNavigation, {
   Tab,
@@ -11,17 +11,23 @@ import BottomNavigation, {
 import FridgeBoard from '@/app/components/fridge/FridgeBoard';
 import IngredientsBoard from '@/app/components/ingredients/IngredientsBoard';
 import HealthAnalysisPage from '@/app/components/analysis/HealthAnalysisPage';
-// import ActivityFeed from '@/app/components/ActivityFeed';
 import GroceryListPage from '@/app/components/grocery-list/GroceryListPage';
 import SettingsPage from '@/app/components/settings/SettingsPage';
 import { FridgeProvider } from '@/app/context/FridgeContext';
+import Loading from '@/app/components/layout/Loading';
+
+import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
+import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
 export default function Page() {
+  // 부팅/로딩 상태
+  const [bootProgress, setBootProgress] = useState(0);
+  const [bootDone, setBootDone] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // URL 쿼리 기반으로 탭 상태 파싱
   const paramToTab = (v: string | null): Tab => {
     switch (v) {
       case 'healthAnalysis':
@@ -35,18 +41,45 @@ export default function Page() {
     }
   };
 
-  // 초기 탭 상태
   const [activeTab, setActiveTab] = useState<Tab>(
     paramToTab(searchParams.get('tab')),
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // URL 변경 → activeTab 동기화
+  // 실제 비동기 작업들을 Promise 배열로 관리
   useEffect(() => {
-    setActiveTab(paramToTab(searchParams.get('tab')));
-  }, [searchParams]);
+    const initPurchaseStorage = purchaseStorage.init().catch(err => {
+      console.error('purchaseStorage init failed', err);
+    });
 
-  // 탭 클릭 시 URL 쿼리 갱신
+    const preloadGroceryData = Promise.resolve().then(() => {
+      shoppingListStorage.loadShoppingList();
+      shoppingListStorage.loadFavorites();
+    });
+
+    const tasks: Promise<unknown>[] = [initPurchaseStorage, preloadGroceryData];
+
+    tasks.forEach(promise => {
+      promise.then(() => {
+        setBootProgress(prev => {
+          const next = prev + 100 / tasks.length;
+          return next > 100 ? 100 : next;
+        });
+      });
+    });
+
+    Promise.all(tasks).then(() => {
+      setBootProgress(100);
+      setTimeout(() => setBootDone(true), 300);
+    });
+  }, []);
+
+  // URL 변경 → activeTab 동기화 (부팅 완료 후에만)
+  useEffect(() => {
+    if (!bootDone) return;
+    setActiveTab(paramToTab(searchParams.get('tab')));
+  }, [searchParams, bootDone]);
+
   const handleTabChange = (tab: Tab) => {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set('tab', tab);
@@ -54,10 +87,8 @@ export default function Page() {
     setActiveTab(tab);
   };
 
-  // const openSettings = () => setIsSettingsOpen(true);
   const closeSettings = () => setIsSettingsOpen(false);
 
-  // 각 탭별 렌더링 분기
   const renderContent = () => {
     switch (activeTab) {
       case 'healthAnalysis':
@@ -74,22 +105,25 @@ export default function Page() {
         return <FridgeBoard />;
     }
   };
+  // 부팅 중에는 로딩만
+  if (!bootDone) {
+    return <Loading progress={bootProgress} />;
+  }
 
   return (
     <FridgeProvider>
-      <div className="flex h-screen bg-white">
-        {/* 하단 내비게이션 */}
-        <BottomNavigation
-          activeTab={activeTab}
-          setActiveTab={handleTabChange}
-          onSettingsClick={() => {}}
-        />
-
-        {/* 메인 콘텐츠 */}
-        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
-          <div className="mt-0.5">{renderContent()}</div>
+      <Suspense fallback={<Loading progress={bootProgress} />}>
+        <div className="flex h-screen bg-white">
+          <BottomNavigation
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+            onSettingsClick={() => {}}
+          />
+          <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
+            <div className="mt-0.5">{renderContent()}</div>
+          </div>
         </div>
-      </div>
+      </Suspense>
     </FridgeProvider>
   );
 }
