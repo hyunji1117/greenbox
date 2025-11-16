@@ -295,17 +295,31 @@ const GroceryListPage: React.FC = () => {
             </div>
           ) : (
             // 즐겨찾기 목록
-            <ul className="space-y-2">
+            <ul className="relative space-y-2">
               {favorites.map(favorite => (
                 <li
                   key={favorite.id}
                   className="cursor-pointer rounded-lg border p-3 hover:bg-gray-50"
                   onClick={() => onLoadFavorite(favorite.id)}
                 >
-                  <div className="font-medium">{favorite.name}</div>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {favorite.items.length}개 항목
+                  <div>
+                    <div className="font-medium">{favorite.name}</div>
+                    <div className="mt-1 text-sm text-gray-500">
+                      {favorite.items.length}개 항목
+                    </div>
                   </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation(); // Prevent triggering onClick for the list item
+                      setFavorites(prev =>
+                        prev.filter(fav => fav.id !== favorite.id),
+                      );
+                      toast(`'${favorite.name}' 즐겨찾기를 삭제했어요`);
+                    }}
+                    className="absolute top-2 right-2 p-1 text-gray-700 hover:text-black"
+                  >
+                    <XIcon size={14} />
+                  </button>
                 </li>
               ))}
             </ul>
