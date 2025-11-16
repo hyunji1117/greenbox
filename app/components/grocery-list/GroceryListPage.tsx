@@ -108,10 +108,18 @@ const GroceryListPage: React.FC = () => {
     setShowFavorites(false);
     toast(`'${fav.name}' 목록을 불러왔어요`);
   };
+  // 즐겨찾기 추가
   const onShowFavoriteInput = () => {
     if (shoppingList.length === 0) return toast('저장할 항목이 없습니다');
     const name = window.prompt('즐겨찾기 이름을 입력하세요', '주간 장보기');
     if (!name || !name.trim()) return;
+
+    // 즐겨찾기 이름증복 검사
+    const trimmedName = name.trim();
+    if (favorites.some(fav => fav.name === trimmedName)) {
+      return toast('존재하는 즐겨찾기 이름입니다.');
+    }
+
     const fav: FavoriteItem = {
       id: Date.now(),
       name: name.trim(),
@@ -286,6 +294,7 @@ const GroceryListPage: React.FC = () => {
               <p className="mt-2 text-sm">쇼핑 목록을 저장해보세요</p>
             </div>
           ) : (
+            // 즐겨찾기 목록
             <ul className="space-y-2">
               {favorites.map(favorite => (
                 <li
