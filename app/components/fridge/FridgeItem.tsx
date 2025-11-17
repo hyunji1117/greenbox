@@ -78,7 +78,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
     markAsFinished(item.id);
   };
   return (
-    <div className="rounded-xl border-l-4 border-indigo-500 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg">
+    <div className="mt-2 rounded-xl border-l-4 border-indigo-500 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg">
       <div className="flex items-start justify-between">
         <div className="relative flex items-center">
           <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600 shadow-sm">
