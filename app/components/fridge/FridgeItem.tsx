@@ -1,3 +1,6 @@
+// app/components/fridge/FridgeItem.tsx
+// 냉장고 아이템 컴포넌트
+
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {

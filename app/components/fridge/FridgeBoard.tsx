@@ -1,3 +1,6 @@
+// app/components/fridge/FridgeBoard.tsx
+// 냉장고 보드 컴포넌트
+
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
