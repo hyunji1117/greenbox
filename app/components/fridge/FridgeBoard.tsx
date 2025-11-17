@@ -20,21 +20,21 @@ const FridgeBoard: React.FC = () => {
       <div className="mb-6 flex space-x-4">
         <button
           onClick={() => setActiveCategory('fridge')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'fridge' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'fridge' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <RefrigeratorIcon size={20} />
           <span className="font-medium">냉장실</span>
         </button>
         <button
           onClick={() => setActiveCategory('freezer')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'freezer' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'freezer' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <SnowflakeIcon size={20} />
           <span className="font-medium">냉동실</span>
         </button>
         <button
           onClick={() => setActiveCategory('pantry')}
-          className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 ${activeCategory === 'pantry' ? 'border border-blue-300 bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'pantry' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <PackageIcon size={20} />
           <span className="font-medium">식료품 저장고</span>
@@ -42,8 +42,8 @@ const FridgeBoard: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto">
         {filteredItems.length === 0 ? (
-          <div className="rounded-lg bg-gray-50 py-12 text-center">
-            <p className="text-gray-500">
+          <div className="bg-gray-50 py-12 text-center">
+            <p className="text-gray-800">
               아이템이 없습니다. 새 아이템을 추가해보세요!
             </p>
           </div>
@@ -56,7 +56,6 @@ const FridgeBoard: React.FC = () => {
         )}
       </div>
       {showAddForm && (
-        // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">새 아이템 추가</h2>

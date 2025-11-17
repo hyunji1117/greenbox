@@ -7,6 +7,7 @@ import {
   PlusIcon,
   Trash2,
 } from 'lucide-react';
+import Button from '@/app/components/common/Button';
 interface FridgeItemProps {
   item: {
     id: string;
@@ -78,8 +79,8 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
     markAsFinished(item.id);
   };
   return (
-    <div className="mt-2 rounded-xl border-l-4 border-indigo-500 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg">
-      <div className="flex items-start justify-between">
+    <div className="mt-2 rounded-xl border-l-4 border-[#6B46C1] bg-[#FBFBFF] p-4 text-base font-semibold text-gray-800 shadow-md transition-shadow">
+      <div className="flex items-start justify-between rounded-xl">
         <div className="relative flex items-center">
           <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600 shadow-sm">
             {item.quantity}
@@ -96,9 +97,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
         </div>
         <section>
           <div className="relative -top-1 flex space-x-2">
-            <button
+            <Button
               onClick={() => setShowComments(!showComments)}
-              className="relative rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
+              variant="secondary"
+              className="relative rounded-full border border-gray-300 bg-[#F2F2F6] p-1"
               title="댓글"
             >
               <MessageCircleIcon size={20} />
@@ -107,21 +109,23 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
                   {item.comments.length}
                 </span>
               )}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => markAsFinished(item.id)}
+              variant="secondary"
               className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="다 먹음"
             >
               <CircleCheckBig size={20} />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleTrashItem}
+              variant="secondary"
               className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="버림"
             >
               <Trash2 size={20} />
-            </button>
+            </Button>
           </div>
           <div className="mt-2 flex max-w-35 items-center justify-around overflow-hidden rounded-xl bg-gray-100 shadow-sm">
             <button
