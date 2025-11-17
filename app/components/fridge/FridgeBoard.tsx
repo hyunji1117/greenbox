@@ -2,12 +2,7 @@ import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import AddItemForm from '@/app/components/grocery-list/AddItemForm';
-import {
-  PlusIcon,
-  RefrigeratorIcon,
-  SnowflakeIcon,
-  PackageIcon,
-} from 'lucide-react';
+import { RefrigeratorIcon, SnowflakeIcon, PackageIcon } from 'lucide-react';
 const FridgeBoard: React.FC = () => {
   const { items } = useFridge();
   const [activeCategory, setActiveCategory] = useState<
@@ -18,16 +13,9 @@ const FridgeBoard: React.FC = () => {
     item => item.category === activeCategory && !item.finished,
   );
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col p-6 md:p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">우리집 냉장고</h1>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center space-x-2 rounded-lg bg-[#6B46C1] px-4 py-2 text-white transition-colors hover:bg-indigo-700"
-        >
-          <PlusIcon size={18} />
-          <span>아이템 추가</span>
-        </button>
+        <h1 className="text-xl font-semibold">우리집 냉장고</h1>
       </div>
       <div className="mb-6 flex space-x-4">
         <button
