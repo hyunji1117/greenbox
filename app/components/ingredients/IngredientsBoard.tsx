@@ -111,7 +111,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
   return (
     <>
       {/* 카테고리 탭, 뷰 토글 영역 동일 */}
-      <div className="mt-2 mb-2 flex overflow-x-auto">
+      <div className="mt-2 mb-2 flex overflow-x-auto p-6 md:p-6">
         <div className="flex min-w-full space-x-2">
           {['vegetables', 'fruits', 'meat', 'seafood'].map(category => (
             <button
