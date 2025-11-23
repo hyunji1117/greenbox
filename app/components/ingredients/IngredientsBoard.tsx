@@ -9,8 +9,6 @@ import { Plus, ListIcon, GridIcon, BellIcon } from 'lucide-react';
 import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
-// (선택) 구매횟수까지 보고 싶으면 purchaseStorage 가져와 초기화 로직 추가 가능
-// import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 
 export interface ShoppingListItem {
   id: number;
@@ -70,6 +68,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
 
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleItemClick = useCallback(
@@ -106,6 +105,27 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
   const getSelectedItemName = () => {
     const item = mockItems.find(m => m.id === selectedItemId);
     return item ? item.name : '식재료';
+  };
+
+  // 이미지 에러 처리 함수
+  const handleImageError = (itemId: number) => {
+    setImageErrors(prev => new Set(prev).add(itemId));
+  };
+
+  // 이미지 URL 처리 함수 (URL 디코딩 및 폴백)
+  const getImageUrl = (item: FridgeItem) => {
+    // 이미지 에러가 발생한 경우 플레이스홀더 반환
+    if (imageErrors.has(item.id)) {
+      return '/images/placeholder.jpg';
+    }
+    
+    // URL 디코딩 처리
+    try {
+      const decodedUrl = decodeURIComponent(item.imageUrl);
+      return decodedUrl;
+    } catch {
+      return item.imageUrl;
+    }
   };
 
   return (
@@ -183,17 +203,19 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                     onClick={() => handleItemClick(item.name)}
                   >
                     <Image
-                      src={item.imageUrl}
+                      src={getImageUrl(item)}
                       alt={item.name}
                       className="object-cover"
                       fill
+                      sizes="(max-width: 640px) 180px, (max-width: 768px) 180px, 180px"
+                      priority={index < 4}
+                      quality={75}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
+                      onError={() => handleImageError(item.id)}
                       style={{
-                        contain: 'layout',
-                        willChange: 'auto',
                         touchAction: 'manipulation',
                       }}
-                      priority={index < 4}
-                      sizes="180px"
                     />
 
                     {purchaseCount > 0 && (
