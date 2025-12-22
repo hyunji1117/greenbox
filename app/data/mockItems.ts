@@ -35,7 +35,7 @@ export const mockItems: FridgeItem[] = [
     id: 3,
     name: '당근',
     category: 'vegetables',
-    imageUrl: '/vege/vege_carrot.jpg',
+    imageUrl: '/vege/vege_carrot.avif',
     expiryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     purchaseCount: 15,
     purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
