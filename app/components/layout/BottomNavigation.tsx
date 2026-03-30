@@ -7,11 +7,11 @@ import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
   Refrigerator,
-  Salad,
+  House,
+  ShoppingBasket,
   LucideIcon,
-  NotepadText,
-  Cog,
   HeartPulse,
+  UserRound,
 } from 'lucide-react';
 
 // --------------------------------------
@@ -52,22 +52,22 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex shrink-0 grow basis-0 flex-col items-center justify-center pt-3 transition-all duration-150 ${
-        isActive ? 'text-[#4b2f8c]' : 'text-gray-600'
+      className={`flex h-[64px] w-full shrink-0 grow basis-0 flex-col items-center justify-center rounded-3xl px-2 transition-all duration-150 ${
+        isActive
+          ? 'text-[#4b2f8c]'
+          : 'text-[#7b6d99] hover:bg-[#f3edff]/70'
       }`}
       title={item.title}
       aria-current={isActive ? 'page' : undefined}
     >
-      <Icon size={22} />
-      <span className="mt-0.5 text-[11px] leading-none">{item.label}</span>
-
-      {/* 활성 탭 상단 보더 인디케이터 */}
+      <Icon size={25} />
       <span
-        className={`absolute -top-[1px] h-[2px] w-10 rounded-full ${
-          isActive ? 'bg-[#4b2f8c]' : 'bg-transparent'
+        className={`mt-2 text-sm leading-none ${
+          isActive ? 'font-semibold' : 'font-normal'
         }`}
-        aria-hidden
-      />
+      >
+        {item.label}
+      </span>
     </button>
   );
 };
@@ -86,40 +86,54 @@ const BottomBar: React.FC<BottomBarProps> = ({
   // 네비게이션 아이템 정의 (Tab 타입 사용)
   const navItems: NavItem[] = [
     // { id: 'activity', icon: MessageCircleHeart, label: '활동', title: '활동' },
-    {
-      id: 'healthAnalysis',
-      icon: HeartPulse,
-      label: 'AI 건강분석',
-      title: '건강분석',
-    },
+    { id: 'ingredients', icon: House, label: '홈', title: 'Home' },
     { id: 'fridge', icon: Refrigerator, label: '냉장고', title: '냉장고' },
     {
       id: 'shoppingList',
-      icon: NotepadText,
+      icon: ShoppingBasket,
       label: '장보기 리스트',
       title: '장보기 리스트',
     },
-    { id: 'ingredients', icon: Salad, label: '식재료', title: '식재료 관리' },
-    { id: 'settings', icon: Cog, label: '설정', title: '설정' },
+    {
+      id: 'healthAnalysis',
+      icon: HeartPulse,
+      label: 'AI 건강 분석',
+      title: 'AI 건강 분석',
+    },
+    { id: 'settings', icon: UserRound, label: '마이', title: 'My' },
   ];
 
   const toggleUserSelect = () => setShowUserSelect(v => !v);
+  const activeIndex = Math.max(
+    0,
+    navItems.findIndex(item => item.id === activeTab),
+  );
 
   return (
     <>
       {/* 실제 하단 고정 바 */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/80 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/80"
+        className="fixed bottom-5 left-1/2 z-50 w-[60%] -translate-x-1/2 rounded-3xl bg-[#fbf9ff]/55 shadow-[0_8px_20px_rgba(45,25,90,0.24)] backdrop-blur supports-[backdrop-filter]:bg-[#fbf9ff]/85"
         role="navigation"
         aria-label="하단 내비게이션"
       >
-        <div className="relative mx-auto flex h-20 max-w-screen-sm items-end justify-between px-2 md:h-15">
+        <div className="relative mx-auto flex h-20 items-center justify-between px-3">
           {/* 탭 버튼 */}
-          <div className="relative flex h-full w-full items-stretch justify-between">
+          <div className="relative flex h-full w-full items-center justify-between">
+            {/* 활성 탭 배경 슬라이드 인디케이터 */}
+            <div
+              aria-hidden
+              className="absolute left-0 top-[10px] bottom-[12px] rounded-3xl bg-[#e9ddff] shadow-[0_2px_10px_rgba(75,47,140,0.22)] transition-transform duration-300 ease-out"
+              style={{
+                width: `${100 / navItems.length}%`,
+                transform: `translateX(${activeIndex * 100}%)`,
+              }}
+            />
+
             {navItems.map(item => (
               <div
                 key={item.id}
-                className="relative flex h-full flex-1 items-start justify-center"
+                className="relative flex h-full flex-1 items-center justify-center"
               >
                 <NavButton
                   item={item}
