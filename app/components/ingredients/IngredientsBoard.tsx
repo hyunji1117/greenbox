@@ -5,7 +5,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Plus, ListIcon, GridIcon, BellIcon } from 'lucide-react';
+import { Plus, ListIcon, GridIcon, BellIcon, ScanLine } from 'lucide-react';
 import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
@@ -128,8 +128,112 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
     }
   };
 
+  const quickGrabItems = [
+    { name: 'Banana', emoji: '🍌', count: 4 },
+    { name: 'Ice Cream', emoji: '🍨', count: 5 },
+    { name: 'Beef Jerky', emoji: '🥩', count: 8 },
+  ];
+
+  const locationCards = [
+    {
+      name: 'Pantry',
+      count: 56,
+      image:
+        'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=720&q=80',
+    },
+    {
+      name: 'Friedge',
+      count: 37,
+      image:
+        'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=720&q=80',
+    },
+    {
+      name: 'Freezer',
+      count: 37,
+      image:
+        'https://images.unsplash.com/photo-1615486363973-f79ce905135e?auto=format&fit=crop&w=720&q=80',
+    },
+  ];
+
   return (
     <>
+      <section className="mx-6 mt-5 mb-2 rounded-[28px] bg-[#f7f7fa] px-4 py-4">
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h2 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+              Groceries
+            </h2>
+            <p className="mt-2 text-[22px] leading-none text-[#888892]">
+              33 Items, 5 near expiration
+            </p>
+          </div>
+          <button
+            className="mt-1 flex h-14 w-14 items-center justify-center rounded-full bg-[#cff2d8] text-[#4b2f8c]"
+            aria-label="Scan groceries"
+          >
+            <ScanLine size={24} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_2fr]">
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+                Ready to grab
+              </h3>
+              <button className="text-[20px] font-medium text-[#6ab2a7]">
+                See all
+              </button>
+            </div>
+            <div className="space-y-2">
+              {quickGrabItems.map(item => (
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between rounded-2xl bg-white/85 px-3 py-2.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f3f7] text-2xl">
+                      {item.emoji}
+                    </div>
+                    <span className="text-[24px] font-semibold leading-none text-[#323238]">
+                      {item.name}
+                    </span>
+                  </div>
+                  <span className="text-[28px] font-medium leading-none text-[#76767f]">
+                    {item.count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+              Locations
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {locationCards.map(card => (
+                <div
+                  key={card.name}
+                  className="relative h-[170px] overflow-hidden rounded-2xl bg-cover bg-center"
+                  style={{ backgroundImage: `url(${card.image})` }}
+                >
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className="absolute inset-x-0 bottom-3 text-center text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
+                    <p className="text-[36px] font-semibold leading-none">
+                      {card.count}
+                    </p>
+                    <p className="mt-1 text-[24px] font-semibold leading-none">
+                      {card.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 카테고리 탭, 뷰 토글 영역 동일 */}
       <div className="mt-2 mb-2 flex overflow-x-auto p-6 md:p-6">
         <div className="flex min-w-full space-x-2">
