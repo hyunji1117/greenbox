@@ -2,12 +2,9 @@
 // RootLayout 컴포넌트에 PWA 설정 추가
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
 import { GoogleAnalytics } from '@next/third-parties/google';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: '우리집 냉장고 식재료 관리',
@@ -34,7 +31,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Greenbox" />
       </head>
-      <body className={inter.className}>
+      <body>
         {/* Google Analytics (공식 지원 방식) */}
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
 

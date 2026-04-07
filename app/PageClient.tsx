@@ -117,7 +117,7 @@ export default function PageClient() {
           setActiveTab={handleTabChange}
           onSettingsClick={() => {}}
         />
-        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0">
+        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           <div className="mt-0.5">{renderContent()}</div>
         </div>
       </div>

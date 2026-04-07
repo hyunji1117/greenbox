@@ -129,26 +129,26 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
   };
 
   const quickGrabItems = [
-    { name: 'Banana', emoji: '🍌', count: 4 },
-    { name: 'Ice Cream', emoji: '🍨', count: 5 },
-    { name: 'Beef Jerky', emoji: '🥩', count: 8 },
+    { name: '바나나', emoji: '🍌', count: 4 },
+    { name: '아이스크림', emoji: '🍨', count: 5 },
+    { name: '육포', emoji: '🥩', count: 8 },
   ];
 
   const locationCards = [
     {
-      name: 'Pantry',
+      name: '팬트리',
       count: 56,
       image:
         'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=720&q=80',
     },
     {
-      name: 'Friedge',
+      name: '냉장고',
       count: 37,
       image:
         'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=720&q=80',
     },
     {
-      name: 'Freezer',
+      name: '냉동실',
       count: 37,
       image:
         'https://images.unsplash.com/photo-1615486363973-f79ce905135e?auto=format&fit=crop&w=720&q=80',
@@ -161,15 +161,15 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
         <div className="mb-4 flex items-start justify-between">
           <div>
             <h2 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
-              Groceries
+              식료품
             </h2>
             <p className="mt-2 text-[22px] leading-none text-[#888892]">
-              33 Items, 5 near expiration
+              품목 33개, 유통기한 임박 5개
             </p>
           </div>
           <button
             className="mt-1 flex h-14 w-14 items-center justify-center rounded-full bg-[#cff2d8] text-[#4b2f8c]"
-            aria-label="Scan groceries"
+            aria-label="식료품 스캔"
           >
             <ScanLine size={24} />
           </button>
@@ -179,10 +179,10 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
-                Ready to grab
+                바로 꺼내기
               </h3>
               <button className="text-[20px] font-medium text-[#6ab2a7]">
-                See all
+                전체 보기
               </button>
             </div>
             <div className="space-y-2">
@@ -209,7 +209,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
 
           <div>
             <h3 className="mb-3 text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
-              Locations
+              보관 위치
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {locationCards.map(card => (
