@@ -55,10 +55,8 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 <td align="center"><b>After</b><br/>Performance 72</td>
 </tr>
 <tr>
-<td><img width="380" alt="Lighthouse before (mobile, Slow 4G)" src="<img width="765" height="531" alt="lh-before-mobile-score" src="https://github.com/user-attachments/assets/68fbecba-48bc-4aae-a483-5cfee4897d35" />
-" /></td>
-<td><img width="380" alt="Lighthouse after (mobile, Slow 4G)" src="<img width="776" height="529" alt="lh-after-mobile-score" src="https://github.com/user-attachments/assets/aa0da37d-c9fb-4d99-b42c-b9623427acd0" />
-" /></td>
+<td><img width="380" alt="Lighthouse before (mobile, Slow 4G)" src="docs/images/lh-before-mobile-score.png" /></td>
+<td><img width="380" alt="Lighthouse after (mobile, Slow 4G)" src="docs/images/lh-after-mobile-score.png" /></td>
 </tr>
 </table>
 
