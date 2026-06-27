@@ -2,17 +2,56 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import BottomNavigation, {
   Tab,
 } from '@/app/components/layout/BottomNavigation';
-import FridgeBoard from '@/app/components/fridge/FridgeBoard';
-import IngredientsBoard from '@/app/components/ingredients/IngredientsBoard';
-import HealthAnalysisPage from '@/app/components/analysis/HealthAnalysisPage';
-import GroceryListPage from '@/app/components/grocery-list/GroceryListPage';
-import SettingsPage from '@/app/components/settings/SettingsPage';
 import { FridgeProvider } from '@/app/context/FridgeContext';
 import Loading from '@/app/components/layout/Loading';
+
+// 탭 콘텐츠 로딩 중 깜빡임 방지용 경량 스켈레톤
+// (하단 네비게이션은 이미 렌더링돼 있으므로 콘텐츠 영역만 표시)
+const TabSkeleton = () => (
+  <div className="space-y-4 p-4">
+    <div className="flex items-center justify-between">
+      <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+      <div className="h-8 w-24 animate-pulse rounded-xl bg-gray-200" />
+    </div>
+    <div className="grid grid-cols-2 gap-4">
+      {[1, 2, 3, 4].map(i => (
+        <div
+          key={i}
+          className="h-40 animate-pulse rounded-xl bg-gray-200"
+        />
+      ))}
+    </div>
+  </div>
+);
+
+// 각 탭을 동적 import로 분리 → 해당 탭을 열 때만 청크 로드.
+// recharts를 쓰는 HealthAnalysisPage(363KB)가 메인 첫 로드에서 빠지는 게 핵심.
+// 전부 클라이언트 전용 화면이라 ssr: false.
+const FridgeBoard = dynamic(
+  () => import('@/app/components/fridge/FridgeBoard'),
+  { ssr: false, loading: () => <TabSkeleton /> },
+);
+const IngredientsBoard = dynamic(
+  () => import('@/app/components/ingredients/IngredientsBoard'),
+  { ssr: false, loading: () => <TabSkeleton /> },
+);
+const HealthAnalysisPage = dynamic(
+  () => import('@/app/components/analysis/HealthAnalysisPage'),
+  { ssr: false, loading: () => <TabSkeleton /> },
+);
+const GroceryListPage = dynamic(
+  () => import('@/app/components/grocery-list/GroceryListPage'),
+  { ssr: false, loading: () => <TabSkeleton /> },
+);
+const SettingsPage = dynamic(
+  () => import('@/app/components/settings/SettingsPage'),
+  { ssr: false, loading: () => <TabSkeleton /> },
+);
 
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';

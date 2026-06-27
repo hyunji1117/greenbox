@@ -1,15 +1,22 @@
 // next.config.mjs
 
-// next.config.mjs
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import withPWAInit from '@ducanh2912/next-pwa';
 
-import withPWA from 'next-pwa';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const pwaConfig = withPWA({
+// next-pwa(5.6.0) → @ducanh2912/next-pwa(Next 15 호환 포크) 교체.
+// 기존 설정(dest/register/skipWaiting/runtimeCaching)을 새 API로 동등 이전.
+// skipWaiting·runtimeCaching은 이제 workboxOptions 하위로 이동.
+const pwaConfig = withPWAInit({
   dest: 'public',
   register: true,
-  skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-  runtimeCaching: [], // PWA 캐싱 설정 추가
+  workboxOptions: {
+    skipWaiting: true,
+    runtimeCaching: [], // 기존과 동일: 추가 런타임 캐싱 없음(start-url만 자동 캐싱)
+  },
 });
 
 const nextConfig = {
@@ -160,8 +167,8 @@ const nextConfig = {
     ],
   },
 
-  // 컴파일러 최적화 설정
-  swcMinify: true,
+  // 워크스페이스 루트 명시 (상위 디렉터리의 lockfile 오인식 방지)
+  outputFileTracingRoot: __dirname,
 
   // 실험적 기능 (Fast Refresh 개선)
   experimental: {
