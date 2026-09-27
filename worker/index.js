@@ -1,4 +1,6 @@
-// public/service-worker.js
+// worker/index.js
+// next-pwa 커스텀 워커: 빌드 시 번들링되어 sw.js에 importScripts로 포함된다.
+// (별도 서비스워커를 등록하면 같은 scope의 precache SW를 대체하므로 여기로 합침)
 
 self.addEventListener('push', event => {
   const data = event.data?.json() ?? {};
@@ -13,5 +15,5 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('/'));
+  event.waitUntil(self.clients.openWindow('/'));
 });

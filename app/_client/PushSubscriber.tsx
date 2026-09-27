@@ -25,9 +25,9 @@ export default function PushSubscriber() {
         if (!('serviceWorker' in navigator) || !('PushManager' in window))
           return;
 
-        // 서비스워커 등록
-        const reg =
-          await navigator.serviceWorker.register('/service-worker.js');
+        // next-pwa가 등록한 서비스워커(sw.js)를 사용
+        // (여기서 별도 등록하면 같은 scope의 precache SW를 대체함)
+        const reg = await navigator.serviceWorker.ready;
 
         // 알림 권한 요청
         const permission = await Notification.requestPermission();
@@ -69,7 +69,7 @@ export default function PushSubscriber() {
         await fetch('/api/save-subscription', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(key),
+          body: JSON.stringify(sub),
         });
       } catch (e) {
         console.error('푸시 구독 실패:', e);
