@@ -744,7 +744,7 @@ const HealthAnalysisPage: React.FC = () => {
                             className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             strokeWidth={2}
                           />
-                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                          <span className="text-title text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                             {listItem.quantity}
                           </span>
                         </div>
@@ -995,7 +995,7 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
             <ChevronDownIcon size={16} color="#121212" />
           </button>
         </div>
-        <div className="mb-2 text-7xl font-extralight md:text-6xl">
+        <div className="text-title mb-2 text-7xl font-extralight md:text-6xl">
           {healthStats.nutrientScore}%
         </div>
       </div>

@@ -199,7 +199,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                       {item.name}
                     </span>
                   </div>
-                  <span className="text-[20px] font-medium leading-none text-[#76767f] sm:text-[28px]">
+                  <span className="text-title text-[20px] font-medium leading-none text-[#76767f] sm:text-[28px]">
                     {item.count}
                   </span>
                 </div>
@@ -220,7 +220,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                 >
                   <div className="absolute inset-0 bg-black/20" />
                   <div className="absolute inset-x-1 bottom-3 text-center text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
-                    <p className="text-[26px] font-semibold leading-none sm:text-[36px]">
+                    <p className="text-title text-[26px] font-semibold leading-none sm:text-[36px]">
                       {card.count}
                     </p>
                     <p className="mt-1 truncate text-[15px] font-semibold leading-none sm:text-[24px]">
@@ -336,7 +336,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                             className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             strokeWidth={2}
                           />
-                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                          <span className="text-title text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                             {listItem.quantity}
                           </span>
                         </div>

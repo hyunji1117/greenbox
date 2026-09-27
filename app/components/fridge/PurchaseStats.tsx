@@ -257,7 +257,7 @@ const PurchaseStats: React.FC = () => {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-100 to-purple-200">
-                            <span className="text-2xl font-bold text-purple-600">
+                            <span className="text-title text-2xl font-bold text-purple-600">
                               {item.itemName.charAt(0)}
                             </span>
                           </div>
