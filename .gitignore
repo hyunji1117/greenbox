@@ -17,6 +17,10 @@
 /.next/
 /out/
 public/workbox-*.js
+public/sw.js
+public/sw.js.map
+public/worker-*.js
+public/worker-*.js.map
 public/precache-manifest.*
 
 # production
