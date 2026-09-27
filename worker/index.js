@@ -3,7 +3,13 @@
 // (별도 서비스워커를 등록하면 같은 scope의 precache SW를 대체하므로 여기로 합침)
 
 self.addEventListener('push', event => {
-  const data = event.data?.json() ?? {};
+  // JSON이 아닌 텍스트 페이로드(예: DevTools 테스트 푸시)는 본문으로 사용
+  let data = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    data = { body: event.data?.text() };
+  }
 
   event.waitUntil(
     self.registration.showNotification(data.title || '알림', {
