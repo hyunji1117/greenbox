@@ -795,15 +795,21 @@ const HealthAnalysisPage: React.FC = () => {
             <BarChart
               data={consumptionData}
               layout="vertical"
-              margin={{ top: 10, right: 10, left: 40, bottom: 5 }}
+              margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#f0f0f0"
                 strokeWidth={0.5}
               />
-              <XAxis type="number" />
-              <YAxis dataKey="week" type="category" width={40} />
+              <XAxis type="number" tick={{ fontSize: 12 }} />
+              <YAxis
+                dataKey="week"
+                type="category"
+                width={44}
+                interval={0}
+                tick={{ fontSize: 12 }}
+              />
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               <Bar dataKey="채소" stackId="a" fill="#9C6ADE" />

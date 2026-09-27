@@ -16,28 +16,28 @@ const FridgeBoard: React.FC = () => {
     item => item.category === activeCategory && !item.finished,
   );
   return (
-    <div className="relative flex h-full flex-col p-6 md:p-6">
+    <div className="relative flex h-full flex-col p-4 sm:p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">우리집 냉장고</h1>
       </div>
-      <div className="mb-6 flex space-x-4">
+      <div className="mb-6 flex gap-2 sm:gap-4">
         <button
           onClick={() => setActiveCategory('fridge')}
-          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'fridge' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
+          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'fridge' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <RefrigeratorIcon size={20} />
           <span className="font-medium">냉장실</span>
         </button>
         <button
           onClick={() => setActiveCategory('freezer')}
-          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'freezer' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
+          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'freezer' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <SnowflakeIcon size={20} />
           <span className="font-medium">냉동실</span>
         </button>
         <button
           onClick={() => setActiveCategory('pantry')}
-          className={`font-semibol flex flex-1 items-center justify-center space-x-2 overflow-y-auto rounded-xl px-4 py-3 text-base shadow-md focus:ring-gray-300 ${activeCategory === 'pantry' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
+          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'pantry' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
         >
           <PackageIcon size={20} />
           <span className="font-medium">식료품 저장고</span>

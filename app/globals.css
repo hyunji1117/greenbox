@@ -24,6 +24,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Nanum Gothic", ui-sans-serif, system-ui, sans-serif;
+  /* 한글이 글자 단위로 끊기지 않도록 어절 단위 줄바꿈 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .sr-only {
