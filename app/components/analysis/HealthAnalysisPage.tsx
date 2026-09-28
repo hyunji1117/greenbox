@@ -744,7 +744,7 @@ const HealthAnalysisPage: React.FC = () => {
                             className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             strokeWidth={2}
                           />
-                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                          <span className="text-title text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                             {listItem.quantity}
                           </span>
                         </div>
@@ -795,15 +795,21 @@ const HealthAnalysisPage: React.FC = () => {
             <BarChart
               data={consumptionData}
               layout="vertical"
-              margin={{ top: 10, right: 10, left: 40, bottom: 5 }}
+              margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#f0f0f0"
                 strokeWidth={0.5}
               />
-              <XAxis type="number" />
-              <YAxis dataKey="week" type="category" width={40} />
+              <XAxis type="number" tick={{ fontSize: 12 }} />
+              <YAxis
+                dataKey="week"
+                type="category"
+                width={44}
+                interval={0}
+                tick={{ fontSize: 12 }}
+              />
               <Tooltip />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               <Bar dataKey="채소" stackId="a" fill="#9C6ADE" />
@@ -989,7 +995,7 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
             <ChevronDownIcon size={16} color="#121212" />
           </button>
         </div>
-        <div className="mb-2 text-7xl font-extralight md:text-6xl">
+        <div className="text-title mb-2 text-7xl font-extralight md:text-6xl">
           {healthStats.nutrientScore}%
         </div>
       </div>

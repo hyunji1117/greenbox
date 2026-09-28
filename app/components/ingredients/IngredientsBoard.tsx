@@ -151,24 +151,24 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
       name: '냉동실',
       count: 37,
       image:
-        'https://images.unsplash.com/photo-1615486363973-f79ce905135e?auto=format&fit=crop&w=720&q=80',
+        'https://images.unsplash.com/photo-1580915411954-282cb1b0d780?auto=format&fit=crop&w=720&q=80',
     },
   ];
 
   return (
     <>
-      <section className="mx-6 mt-5 mb-2 rounded-[28px] bg-[#f7f7fa] px-4 py-4">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h2 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+      <section className="mx-4 mt-5 mb-2 rounded-[28px] bg-[#f7f7fa] px-4 py-4 sm:mx-6">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-[28px] font-semibold sm:text-[34px] leading-none tracking-[-0.02em] text-[#2f2f35]">
               식료품
             </h2>
-            <p className="mt-2 text-[22px] leading-none text-[#888892]">
+            <p className="mt-2 text-[15px] leading-snug text-[#888892] sm:text-[22px] sm:leading-none">
               품목 33개, 유통기한 임박 5개
             </p>
           </div>
           <button
-            className="mt-1 flex h-14 w-14 items-center justify-center rounded-full bg-[#cff2d8] text-[#4b2f8c]"
+            className="mt-1 flex h-12 w-12 shrink-0 items-center sm:h-14 sm:w-14 justify-center rounded-full bg-[#cff2d8] text-[#4b2f8c]"
             aria-label="식료품 스캔"
           >
             <ScanLine size={24} />
@@ -177,11 +177,11 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_2fr]">
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-[24px] sm:text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
                 바로 꺼내기
               </h3>
-              <button className="text-[20px] font-medium text-[#6ab2a7]">
+              <button className="shrink-0 text-[15px] font-medium whitespace-nowrap text-[#6ab2a7] sm:text-[20px]">
                 전체 보기
               </button>
             </div>
@@ -191,15 +191,15 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                   key={item.name}
                   className="flex items-center justify-between rounded-2xl bg-white/85 px-3 py-2.5"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f3f7] text-2xl">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f3f7] text-2xl">
                       {item.emoji}
                     </div>
-                    <span className="text-[24px] font-semibold leading-none text-[#323238]">
+                    <span className="truncate text-[18px] font-semibold leading-none text-[#323238] sm:text-[24px]">
                       {item.name}
                     </span>
                   </div>
-                  <span className="text-[28px] font-medium leading-none text-[#76767f]">
+                  <span className="text-title text-[20px] font-medium leading-none text-[#76767f] sm:text-[28px]">
                     {item.count}
                   </span>
                 </div>
@@ -208,22 +208,22 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
           </div>
 
           <div>
-            <h3 className="mb-3 text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
+            <h3 className="mb-3 text-[24px] sm:text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
               보관 위치
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {locationCards.map(card => (
                 <div
                   key={card.name}
-                  className="relative h-[170px] overflow-hidden rounded-2xl bg-cover bg-center"
+                  className="relative h-[130px] overflow-hidden sm:h-[170px] rounded-2xl bg-cover bg-center"
                   style={{ backgroundImage: `url(${card.image})` }}
                 >
                   <div className="absolute inset-0 bg-black/20" />
-                  <div className="absolute inset-x-0 bottom-3 text-center text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
-                    <p className="text-[36px] font-semibold leading-none">
+                  <div className="absolute inset-x-1 bottom-3 text-center text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
+                    <p className="text-title text-[26px] font-semibold leading-none sm:text-[36px]">
                       {card.count}
                     </p>
-                    <p className="mt-1 text-[24px] font-semibold leading-none">
+                    <p className="mt-1 truncate text-[15px] font-semibold leading-none sm:text-[24px]">
                       {card.name}
                     </p>
                   </div>
@@ -235,13 +235,13 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
       </section>
 
       {/* 카테고리 탭, 뷰 토글 영역 동일 */}
-      <div className="mt-2 mb-2 flex overflow-x-auto p-6 md:p-6">
+      <div className="mt-2 mb-2 flex overflow-x-auto px-4 py-4 sm:p-6">
         <div className="flex min-w-full space-x-2">
           {['vegetables', 'fruits', 'meat', 'seafood'].map(category => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`flex min-h-[40px] min-w-[80px] flex-1 items-center justify-center rounded-xl shadow-sm ${
+              className={`flex min-h-[40px] min-w-[64px] flex-1 whitespace-nowrap items-center justify-center rounded-xl shadow-sm ${
                 activeCategory === category
                   ? category === 'vegetables'
                     ? 'border border-green-300 bg-green-100 text-green-700'
@@ -267,8 +267,8 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
         </div>
       </div>
 
-      <div className="mb-2 flex items-center justify-between">
-        <div className="mt-4 text-sm text-gray-500">
+      <div className="mb-2 flex items-center justify-between px-4 sm:px-6">
+        <div className="text-sm text-gray-500">
           총 {filteredItems.length}개 식재료
         </div>
         <div className="flex items-center space-x-2">
@@ -290,7 +290,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
       </div>
 
       {/* ▶ 여기서 list 가 항상 배열이 되도록 보장됨 */}
-      <div className="overflow-x-auto pb-4">
+      <div className="overflow-x-auto px-4 pb-4 sm:px-6">
         <div className="flex space-x-4" style={{ minWidth: 'min-content' }}>
           {filteredItems.map((item, index) => {
             const listItem = (list ?? []).find(s => s.name === item.name);
@@ -336,7 +336,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
                             className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             strokeWidth={2}
                           />
-                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                          <span className="text-title text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                             {listItem.quantity}
                           </span>
                         </div>
