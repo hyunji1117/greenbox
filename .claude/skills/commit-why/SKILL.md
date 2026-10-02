@@ -91,6 +91,7 @@ description: /commit-why 호출 또는 커밋, PR 초안 요청 시 사용. 커�
 | NOTIFICATION | 푸시 알림, 서비스워커 알림 (`app/components/notification`, `worker/`) |
 | PWA | 설치, 매니페스트, 서비스워커 빌드 |
 | PRIVACY | 개인정보처리방침 (`app/privacy`) |
+| BRAND | 앱 이름, 로고, 매니페스트 표기 (`app/lib/brand.ts`, `public/manifest.json`) |
 | DOCS | README, 결정 기록 (`docs/`) |
 
 목록에 없는 영역이 필요하면 먼저 묻고 이 표에 추가한다.
