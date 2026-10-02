@@ -8,7 +8,7 @@ import {
   UserIcon,
 } from 'lucide-react';
 const ActivityFeed: React.FC = () => {
-  const { activities } = useFridge();
+  const { activities, getFamilyMemberName } = useFridge();
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'add':
@@ -23,20 +23,6 @@ const ActivityFeed: React.FC = () => {
         return <UserIcon size={16} className="text-indigo-500" />;
       default:
         return null;
-    }
-  };
-  const getFamilyMemberName = (member: string): string => {
-    switch (member) {
-      case 'mom':
-        return '먐무';
-      case 'dad':
-        return '빙빵';
-      case 'bigKid':
-        return '낭농';
-      case 'littleKid':
-        return '떡자';
-      default:
-        return member;
     }
   };
   const getRelativeTimeString = (date: Date): string => {
