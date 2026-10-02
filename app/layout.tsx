@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   description: '우리 가족의 스마트한 냉장고 관리 앱 서비스',
   manifest: '/manifest.json',
+  // Google Search Console 소유권 확인 (구글 OAuth 브랜딩 심사에 필요, 확인 후에도 지우지 않는다)
+  verification: { google: 'xwuP85KXgrKYQEizrQQHB94K-S6UP7UWEUO8QjjgUZo' },
 };
 
 export default function RootLayout({
