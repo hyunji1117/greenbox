@@ -2,7 +2,7 @@
 // 동의 항목과 현재 방침 버전 정의.
 // 개인정보처리방침 내용을 바꾸면 POLICY_VERSION을 올린다 → 기존 사용자는 다음 로그인 때 다시 동의한다.
 
-export const POLICY_VERSION = '2026-09-27';
+export const POLICY_VERSION = '2026-10-02';
 
 // 로그인 전 동의 내용을 OAuth 왕복 동안 들고 있는 쿠키
 export const PENDING_CONSENT_COOKIE = 'gb_pending_consent';

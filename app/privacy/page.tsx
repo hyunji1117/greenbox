@@ -3,16 +3,17 @@
 
 import type { Metadata } from 'next';
 import { POLICY_VERSION } from '@/app/lib/consent/policies';
+import { APP_NAME } from '@/app/lib/brand';
 
 export const metadata: Metadata = {
-  title: '개인정보처리방침 | Greenbox',
+  title: '개인정보처리방침',
 };
 
-// TODO(출시 전): 실제 운영자 정보로 바꾼다
+// 개인 운영이라 운영자가 개인정보 보호책임자를 겸한다
 const OPERATOR = {
-  name: '[운영자 이름]',
-  officer: '[개인정보 보호책임자 이름]',
-  email: '[연락처 이메일]',
+  name: '김현지',
+  officer: '김현지',
+  email: 'eve0204eve@gmail.com',
 };
 
 function Section({
@@ -41,7 +42,7 @@ export default function PrivacyPage() {
         <header className="space-y-2">
           <h1 className="text-xl font-bold text-gray-900">개인정보처리방침</h1>
           <p className="text-sm text-gray-600">
-            {OPERATOR.name}(이하 &lsquo;운영자&rsquo;)는 Greenbox(이하
+            {OPERATOR.name}(이하 &lsquo;운영자&rsquo;)는 {APP_NAME}(이하
             &lsquo;서비스&rsquo;) 이용자의 개인정보를 「개인정보 보호법」에
             따라 보호하고, 관련 고충을 신속하게 처리하기 위해 다음과 같이
             개인정보처리방침을 둡니다.
@@ -86,6 +87,11 @@ export default function PrivacyPage() {
                   </td>
                 </tr>
                 <tr>
+                  <td className={cell}>선택 (호칭 등록 시)</td>
+                  <td className={cell}>가족 내 호칭</td>
+                  <td className={cell}>이용자가 설정 화면에서 직접 입력</td>
+                </tr>
+                <tr>
                   <td className={cell}>선택 (알림 사용 시)</td>
                   <td className={cell}>푸시 알림 구독 정보</td>
                   <td className={cell}>알림 허용 시 브라우저가 생성</td>
@@ -106,6 +112,13 @@ export default function PrivacyPage() {
             <li>유통기한 알림 등 서비스 기능 제공</li>
             <li>서비스 이용 통계 분석과 품질 개선</li>
           </ul>
+          <p>
+            구글 로그인으로 제공받는 정보(이름, 이메일 주소, 프로필 사진, 구글
+            계정 식별자)는 회원 식별과 서비스 화면의 이름 및 사진 표시에만
+            이용합니다. 이 정보를 광고에 이용하거나 판매하지 않으며, 4조와 5조에
+            적힌 경우 외에는 다른 곳에 제공하지 않습니다. 서비스는 구글 계정의
+            다른 데이터(메일, 드라이브, 연락처 등)에 접근하지 않습니다.
+          </p>
         </Section>
 
         <Section title="3. 보유 및 이용 기간">
@@ -147,7 +160,8 @@ export default function PrivacyPage() {
                     회원 정보와 동의 기록 저장 (저장 위치: 대한민국 서울)
                   </td>
                   <td className={cell}>
-                    이름, 이메일 주소, 프로필 사진, 구글 계정 식별자, 동의 기록
+                    이름, 이메일 주소, 프로필 사진, 구글 계정 식별자, 가족 내
+                    호칭, 동의 기록
                   </td>
                   <td className={cell}>회원 탈퇴 또는 위탁 계약 종료 시까지</td>
                 </tr>
