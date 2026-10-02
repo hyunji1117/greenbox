@@ -6,6 +6,8 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth, signIn, signOut, unstable_update } from '@/auth';
 import { recordConsents } from '@/app/lib/consent/record';
+import { setFamilyNickname } from '@/app/lib/user/profile';
+import { FAMILY_NICKNAME_MAX } from '@/app/lib/user/displayName';
 import {
   PENDING_CONSENT_COOKIE,
   POLICY_VERSION,
@@ -49,6 +51,21 @@ export async function agreeToCurrentPolicy(
   await recordConsents(session.user.id, types, userAgent);
   await unstable_update({}); // 쿠키(JWT)의 동의 버전을 DB 기준으로 갱신
   redirect('/');
+}
+
+// 설정 > 계정: 가족 내 호칭 저장. 빈 값이면 호칭을 지운다.
+export async function updateFamilyNickname(
+  input: string,
+): Promise<{ error: string } | { familyNickname: string | null }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: '로그인이 필요해요' };
+
+  const nickname = input.trim() || null;
+  if (nickname && nickname.length > FAMILY_NICKNAME_MAX) {
+    return { error: `호칭은 ${FAMILY_NICKNAME_MAX}자까지 쓸 수 있어요` };
+  }
+  await setFamilyNickname(session.user.id, nickname);
+  return { familyNickname: nickname };
 }
 
 export async function logout(): Promise<void> {
