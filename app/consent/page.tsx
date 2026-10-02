@@ -7,9 +7,10 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import AuthShell from '@/app/components/auth/AuthShell';
 import ConsentForm from './ConsentForm';
+import { APP_NAME } from '@/app/lib/brand';
 
 export const metadata: Metadata = {
-  title: '이용 동의 | Greenbox',
+  title: '이용 동의',
 };
 
 export default async function ConsentPage() {
@@ -21,7 +22,7 @@ export default async function ConsentPage() {
       title="이용 동의가 필요해요"
       description={
         <>
-          Greenbox를 이용하려면 아래 필수 항목에 동의해 주세요.
+          {APP_NAME}를 이용하려면 아래 필수 항목에 동의해 주세요.
           <br />
           개인정보처리방침이 바뀌면 다시 동의를 받아요.
         </>

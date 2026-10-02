@@ -5,15 +5,16 @@
 import type { Metadata } from 'next';
 import AuthShell from '@/app/components/auth/AuthShell';
 import LoginForm from './LoginForm';
+import { APP_NAME } from '@/app/lib/brand';
 
 export const metadata: Metadata = {
-  title: '로그인 | Greenbox',
+  title: '로그인',
 };
 
 export default function LoginPage() {
   return (
     <AuthShell
-      title="Greenbox 시작하기"
+      title={`${APP_NAME} 시작하기`}
       description={
         <>
           냉장고 속 식재료와 유통기한, 장보기 목록을

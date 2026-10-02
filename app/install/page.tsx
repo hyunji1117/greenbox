@@ -2,13 +2,14 @@
 // PWA 설치 페이지
 
 import PWAInstallQR from '@/app/components/notification/PWAInstallQR';
+import { APP_NAME } from '@/app/lib/brand';
 
 export default function InstallPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <PWAInstallQR
         appUrl="https://greenbox-seven.vercel.app/"
-        appName="GreenBox - 우리집 냉장고"
+        appName={APP_NAME}
         showInstructions={true}
       />
     </div>
