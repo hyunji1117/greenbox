@@ -68,7 +68,9 @@ export default function PrivacyPage() {
                   <td className={cell}>
                     이름, 이메일 주소, 프로필 사진, 구글 계정 식별자
                   </td>
-                  <td className={cell}>구글 로그인 시 구글로부터 제공받음</td>
+                  <td className={cell}>
+                    구글 로그인 후 필수 항목에 동의하면 저장 (구글로부터 제공받음)
+                  </td>
                 </tr>
                 <tr>
                   <td className={cell}>필수 (동의 기록)</td>
@@ -126,6 +128,10 @@ export default function PrivacyPage() {
             회원 탈퇴 시 지체 없이 파기합니다. 다만 동의 기록은 동의 사실을
             증명하기 위해 회원 탈퇴 시까지 보관하며, 관계 법령에 따라 보존할
             필요가 있는 경우 해당 기간 동안 보관합니다.
+          </p>
+          <p>
+            회원 가입은 구글 로그인 후 필수 항목에 동의해야 완료됩니다. 동의하지
+            않으면 구글로부터 제공받은 정보를 저장하지 않습니다.
           </p>
         </Section>
 

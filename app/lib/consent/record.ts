@@ -2,6 +2,7 @@
 // 동의 기록 저장과 조회 (서버 전용)
 // 앱 계정은 consents에 추가와 조회만 할 수 있다. (db/migrations/0002_consents.sql)
 
+import type { PoolClient } from 'pg';
 import { getPool } from '@/app/lib/db';
 import {
   POLICY_VERSION,
@@ -11,13 +12,15 @@ import {
 } from './policies';
 
 // 현재 방침 버전으로 동의 기록을 남긴다. 동의 시각은 DB 서버 시간(now())
+// 가입 트랜잭션 안에서 부를 때는 그 트랜잭션의 client를 넘긴다
 export async function recordConsents(
   userId: string,
   types: ConsentType[],
   userAgent: string | null,
+  db: Pick<PoolClient, 'query'> = getPool(),
 ): Promise<void> {
   if (types.length === 0) return;
-  await getPool().query(
+  await db.query(
     `INSERT INTO consents (user_id, consent_type, policy_version, user_agent)
      SELECT $1, t, $3, $4 FROM unnest($2::text[]) AS t`,
     [Number(userId), types, POLICY_VERSION, userAgent?.slice(0, 500) ?? null],

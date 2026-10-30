@@ -8,7 +8,7 @@ import { getMyProfile } from '@/app/lib/user/profile';
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.registered) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
