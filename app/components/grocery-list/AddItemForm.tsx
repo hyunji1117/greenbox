@@ -3,6 +3,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
+import { useCreateItem } from '@/app/lib/items/useItems';
+import { ITEM_NAME_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import Toast from '@/app/components/common/Toast';
 import {
   RefrigeratorIcon,
@@ -25,7 +27,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   mode: initialMode = 'simple',
   initialCategory = 'fridge',
 }) => {
-  const { addItem, currentUser } = useFridge();
+  const { currentUser } = useFridge();
+  const createItem = useCreateItem();
   const formRef = useRef<HTMLFormElement>(null);
 
   // 상태 관리
@@ -92,22 +95,28 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   };
 
   // Advanced 모드 제출 핸들러
-  const handleAdvancedSubmit = (e: React.FormEvent) => {
+  const handleAdvancedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (createItem.isPending) return;
 
     const finalQuantity =
       typeof quantity === 'string' || quantity < 1 ? 1 : quantity;
 
     if (name.trim() && expiryDate) {
       // 냉장고에 추가
-      addItem({
-        name,
-        category,
-        quantity: finalQuantity,
-        expiryDate: expiryDate || undefined,
-        addedBy: currentUser,
-        finished: false,
-      });
+      try {
+        await createItem.mutateAsync({
+          name,
+          category,
+          quantity: finalQuantity,
+          expiryDate: expiryDate || undefined,
+          addedBy: currentUser,
+        });
+      } catch {
+        // 실패하면 폼을 닫지 않아 입력한 내용으로 다시 시도할 수 있다
+        showToastNotification('저장하지 못했어요. 다시 시도해 주세요.');
+        return;
+      }
 
       // 쇼핑리스트에도 같은 수량만큼 추가
       if (onAddToShoppingList) {
@@ -122,7 +131,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   const handleQuantityChange = (value: number) => {
     const currentQty = typeof quantity === 'string' ? 1 : quantity;
     const newValue = currentQty + value;
-    if (newValue >= 1) {
+    if (newValue >= 1 && newValue <= QUANTITY_MAX) {
       setQuantity(newValue);
     }
   };
@@ -133,7 +142,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     const value = e.target.value;
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
-      setQuantity(numValue);
+      setQuantity(Math.min(numValue, QUANTITY_MAX));
     }
   };
 
@@ -170,6 +179,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
               onChange={e => setName(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2"
               placeholder="예: 시금치, 계란, 오이 등"
+              maxLength={ITEM_NAME_MAX}
               required
               autoFocus
             />
@@ -339,14 +349,14 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           </button>
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || createItem.isPending}
             className={`h-[40px] rounded-xl px-6 text-white shadow-sm transition-colors ${
-              isFormValid
+              isFormValid && !createItem.isPending
                 ? 'bg-[#6B46C1] hover:bg-[#603fad]'
                 : 'cursor-not-allowed bg-gray-400'
             }`}
           >
-            추가하기
+            {createItem.isPending ? '추가하는 중...' : '추가하기'}
           </button>
         </div>
       </form>

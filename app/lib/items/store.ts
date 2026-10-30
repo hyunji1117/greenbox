@@ -3,7 +3,11 @@
 // 모든 쿼리를 user_id로 제한해서 다른 사용자의 품목은 읽거나 고칠 수 없다.
 
 import { getPool } from '@/app/lib/db';
-import type { CreateItemInput, UpdateItemInput } from '@/app/lib/schemas/item';
+import type {
+  CreateCommentInput,
+  CreateItemInput,
+  UpdateItemInput,
+} from '@/app/lib/schemas/item';
 
 interface CommentJson {
   id: string;
@@ -127,4 +131,31 @@ export async function updateItem(
     ],
   );
   return rowCount ? findItem(userId, itemId) : null;
+}
+
+// 내 품목일 때만 댓글을 남긴다. 내 품목이 아니면 null
+export async function addComment(
+  userId: string,
+  itemId: string,
+  input: CreateCommentInput,
+): Promise<CommentJson | null> {
+  const { rows } = await getPool().query<{
+    id: string;
+    text: string;
+    author: string;
+    created_at: Date;
+  }>(
+    `INSERT INTO item_comments (item_id, author, text)
+     SELECT i.id, $3, $4 FROM items i WHERE i.user_id = $1 AND i.id = $2
+     RETURNING id, text, author, created_at`,
+    [Number(userId), itemId, input.author, input.text],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    text: row.text,
+    author: row.author,
+    createdAt: row.created_at.toISOString(),
+  };
 }

@@ -16,6 +16,9 @@ import {
 import Button from '@/app/components/common/Button';
 import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import Toast from '@/app/components/common/Toast';
+import { useFridge } from '@/app/context/FridgeContext';
+import { useAddPurchasedItems } from '@/app/lib/items/useItems';
+import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
@@ -33,6 +36,8 @@ interface FavoriteItem {
 }
 
 const GroceryListPage: React.FC = () => {
+  const { currentUser } = useFridge();
+  const addPurchasedItems = useAddPurchasedItems();
   const [showFavorites, setShowFavorites] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() =>
@@ -89,17 +94,45 @@ const GroceryListPage: React.FC = () => {
   const onClearCompleted = async () => {
     const completed = shoppingList.filter(i => i.completed);
     if (completed.length === 0) return toast('완료된 항목이 없습니다');
+    if (addPurchasedItems.isPending) return;
+
+    // 구매한 품목은 냉장실로 넣는다. 다른 곳에 둘 품목은 나중에 옮기는 기능이 필요하다
+    let saved: boolean[];
+    try {
+      saved = await addPurchasedItems.mutateAsync(
+        completed.map(i => ({
+          name: i.name,
+          category: 'fridge' as const,
+          quantity: Math.min(i.quantity, QUANTITY_MAX),
+          addedBy: currentUser,
+        })),
+      );
+    } catch (e) {
+      console.error(e);
+      return toast('냉장고에 넣지 못했어요. 다시 시도해 주세요');
+    }
+
+    // 저장된 품목만 리스트에서 빼서, 실패한 품목은 다시 시도할 수 있게 둔다
+    const purchased = completed.filter((_, index) => saved[index]);
+    if (purchased.length === 0) {
+      return toast('냉장고에 넣지 못했어요. 다시 시도해 주세요');
+    }
+    const purchasedIds = new Set(purchased.map(i => i.id));
+    setShoppingList(prev => prev.filter(i => !purchasedIds.has(i.id)));
 
     try {
       await purchaseStorage.recordPurchase(
-        completed.map(i => ({ name: i.name, quantity: i.quantity })),
+        purchased.map(i => ({ name: i.name, quantity: i.quantity })),
       );
-      setShoppingList(prev => prev.filter(i => !i.completed));
-      toast(`${completed.length}개 항목을 구매 완료 처리했어요`);
     } catch (e) {
       console.error(e);
-      toast('구매 기록 저장 중 오류가 발생했어요');
+      return toast('냉장고에 넣었지만 구매 기록은 저장하지 못했어요');
     }
+    toast(
+      purchased.length === completed.length
+        ? `${purchased.length}개 항목을 냉장고에 넣었어요`
+        : `${purchased.length}개만 냉장고에 넣었어요. 나머지는 다시 시도해 주세요`,
+    );
   };
   const onLoadFavorite = (favoriteId: number) => {
     const fav = favorites.find(f => f.id === favoriteId);

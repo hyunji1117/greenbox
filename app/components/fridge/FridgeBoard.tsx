@@ -2,12 +2,13 @@
 // 냉장고 보드 컴포넌트
 
 import React, { useState } from 'react';
-import { useFridge } from '@/app/context/FridgeContext';
+import { ApiSchemaError } from '@/app/lib/api/apiFetch';
+import { useItems } from '@/app/lib/items/useItems';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import { RefrigeratorIcon, SnowflakeIcon, PackageIcon } from 'lucide-react';
 const FridgeBoard: React.FC = () => {
-  const { items } = useFridge();
+  const { data: items = [], isPending, error, refetch } = useItems();
   const [activeCategory, setActiveCategory] = useState<
     'fridge' | 'freezer' | 'pantry'
   >('fridge');
@@ -44,7 +45,25 @@ const FridgeBoard: React.FC = () => {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {filteredItems.length === 0 ? (
+        {isPending ? (
+          <div className="bg-gray-50 py-12 text-center">
+            <p className="text-gray-500">불러오는 중...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-gray-50 py-12 text-center">
+            <p className="mb-3 text-gray-800">
+              {error instanceof ApiSchemaError
+                ? '데이터 형식이 맞지 않아요.'
+                : '냉장고를 불러오지 못했어요.'}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-xl bg-[#6B46C1] px-4 py-2 text-sm text-white hover:bg-[#603fad]"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="bg-gray-50 py-12 text-center">
             <p className="text-gray-800">
               아이템이 없습니다. 새 아이템을 추가해보세요!

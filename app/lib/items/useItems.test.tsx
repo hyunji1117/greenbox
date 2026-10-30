@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { itemKeys } from '@/app/lib/query/keys';
 import type { Item } from '@/app/lib/schemas/item';
 import {
+  useAddComment,
+  useAddPurchasedItems,
   useCreateItem,
   useFinishItem,
   useItems,
@@ -158,5 +160,80 @@ describe('useFinishItem 낙관적 업데이트', () => {
 
     second.resolve(jsonResponse(itemJson('2', { quantity: 7 })));
     await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('같은 품목의 연속 변경', () => {
+  it('앞 요청이 끝난 뒤에 다음 요청을 보낸다', async () => {
+    seedCache();
+    const first = deferredResponse();
+    fetchMock
+      .mockReturnValueOnce(first.promise)
+      .mockImplementation(async () =>
+        jsonResponse(itemJson('1', { quantity: 3 })),
+      );
+    const { result } = renderHook(() => useUpdateItem('1'), { wrapper });
+
+    act(() => result.current.mutate({ id: '1', updates: { quantity: 2 } }));
+    act(() => result.current.mutate({ id: '1', updates: { quantity: 3 } }));
+
+    await waitFor(() => expect(cachedItem('1')?.quantity).toBe(3));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    first.resolve(jsonResponse(itemJson('1', { quantity: 2 })));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe('useAddComment', () => {
+  it('서버가 만든 댓글을 해당 품목 캐시에 넣는다', async () => {
+    seedCache();
+    fetchMock.mockImplementation(async () =>
+      jsonResponse(
+        {
+          id: '9',
+          text: '맛있다',
+          author: 'mom',
+          createdAt: '2026-10-30T05:00:00.000Z',
+        },
+        201,
+      ),
+    );
+    const { result } = renderHook(() => useAddComment(), { wrapper });
+
+    await act(() =>
+      result.current.mutateAsync({
+        itemId: '1',
+        input: { text: '맛있다', author: 'mom' },
+      }),
+    );
+
+    expect(cachedItem('1')?.comments[0].createdAt).toBeInstanceOf(Date);
+    expect(cachedItem('2')?.comments).toHaveLength(0);
+  });
+});
+
+describe('useAddPurchasedItems', () => {
+  it('일부가 실패하면 품목별 결과를 돌려주고 목록은 1번만 다시 불러온다', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(itemJson('3'), 201))
+      .mockResolvedValueOnce(jsonResponse({ error: 'server' }, 500));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(() => useAddPurchasedItems(), { wrapper });
+    const input = {
+      category: 'fridge' as const,
+      quantity: 1,
+      addedBy: 'mom' as const,
+    };
+
+    const saved = await act(() =>
+      result.current.mutateAsync([
+        { ...input, name: '우유' },
+        { ...input, name: '계란' },
+      ]),
+    );
+
+    expect(saved).toEqual([true, false]);
+    expect(invalidate).toHaveBeenCalledTimes(1);
   });
 });

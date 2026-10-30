@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POLICY_VERSION } from '@/app/lib/consent/policies';
 import { toItemJson, type ItemRow } from '@/app/lib/items/store';
 import { ItemSchema } from '@/app/lib/schemas/item';
+import { POST as POST_COMMENT } from './[id]/comments/route';
 import { PATCH } from './[id]/route';
 import { GET, POST } from './route';
 
@@ -13,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   listItems: vi.fn(),
   createItem: vi.fn(),
   updateItem: vi.fn(),
+  addComment: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
@@ -21,6 +23,7 @@ vi.mock('@/app/lib/items/store', async importOriginal => ({
   listItems: mocks.listItems,
   createItem: mocks.createItem,
   updateItem: mocks.updateItem,
+  addComment: mocks.addComment,
 }));
 
 const row: ItemRow = {
@@ -151,6 +154,36 @@ describe('PATCH /api/items/[id]', () => {
     expect((await patch('999', { finished: true })).status).toBe(404);
     expect(mocks.updateItem).toHaveBeenCalledWith('7', '999', {
       finished: true,
+    });
+  });
+});
+
+describe('POST /api/items/[id]/comments', () => {
+  const postComment = (id: string, body: unknown) =>
+    POST_COMMENT(
+      new Request('http://localhost/api/items/1/comments', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+      params(id),
+    );
+
+  it('공백뿐인 댓글은 400이다', async () => {
+    const res = await postComment('1', { text: '   ', author: 'mom' });
+
+    expect(res.status).toBe(400);
+    expect(mocks.addComment).not.toHaveBeenCalled();
+  });
+
+  it('내 품목이 아니면 404다', async () => {
+    mocks.addComment.mockResolvedValue(null);
+
+    const res = await postComment('999', { text: '맛있다', author: 'mom' });
+
+    expect(res.status).toBe(404);
+    expect(mocks.addComment).toHaveBeenCalledWith('7', '999', {
+      text: '맛있다',
+      author: 'mom',
     });
   });
 });

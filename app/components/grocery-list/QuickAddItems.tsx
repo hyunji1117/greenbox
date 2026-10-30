@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
+import { useCreateItem, useItems } from '@/app/lib/items/useItems';
+import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import {
   Milk,
   LeafyGreenIcon,
@@ -25,7 +27,9 @@ interface CategoryItem {
   expiryDays: number;
 }
 const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
-  const { addItem, currentUser, items } = useFridge();
+  const { currentUser } = useFridge();
+  const { data: items = [] } = useItems();
+  const createItem = useCreateItem();
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<
     'vegetables' | 'fruits' | 'meat' | 'seafood' | 'others'
@@ -492,26 +496,34 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
   const handleAddItem = () => {
     if (selectedItem) {
       if (!isItemAdded(selectedItem.name, selectedItem.defaultCategory)) {
-        addItem({
-          name: selectedItem.name,
-          category: selectedItem.defaultCategory,
-          quantity: quantity,
-          addedBy: currentUser,
-          finished: false,
-        });
-        // setToastMessage(`${selectedItem.name} 식재료가 추가되었습니다`);
-        setToastMessage('식재료가 추가되었습니다!');
-        setShowToast(true);
-        setTimeout(() => {
-          setShowToast(false);
-        }, 3000);
-        setSelectedItem(null);
-        setQuantity(1);
+        const showResult = (message: string) => {
+          setToastMessage(message);
+          setShowToast(true);
+          setTimeout(() => {
+            setShowToast(false);
+          }, 3000);
+        };
+        createItem.mutate(
+          {
+            name: selectedItem.name,
+            category: selectedItem.defaultCategory,
+            quantity: quantity,
+            addedBy: currentUser,
+          },
+          {
+            onSuccess: () => {
+              showResult('식재료가 추가되었습니다!');
+              setSelectedItem(null);
+              setQuantity(1);
+            },
+            onError: () => showResult('저장하지 못했어요. 다시 시도해 주세요.'),
+          },
+        );
       }
     }
   };
   const incrementQuantity = () => {
-    setQuantity(prev => prev + 1);
+    setQuantity(prev => Math.min(prev + 1, QUANTITY_MAX));
   };
   const decrementQuantity = () => {
     if (quantity > 1) {
@@ -718,9 +730,10 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             </div>
             <button
               onClick={handleAddItem}
-              className="mt-2 w-full rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white shadow-sm transition-colors hover:bg-[#603fad]"
+              disabled={createItem.isPending}
+              className="mt-2 w-full rounded-xl bg-[#6B46C1] py-1 pr-3 pl-2 text-xs text-white shadow-sm transition-colors hover:bg-[#603fad] disabled:opacity-50"
             >
-              추가하기
+              {createItem.isPending ? '추가하는 중...' : '추가하기'}
             </button>
           </div>
         )}

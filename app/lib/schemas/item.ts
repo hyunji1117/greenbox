@@ -59,9 +59,15 @@ export const UpdateItemSchema = CreateItemSchema.omit({ addedBy: true })
     message: '바꿀 항목이 없습니다',
   });
 
+export const CreateCommentSchema = z.object({
+  text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),
+  author: FamilyMemberSchema,
+});
+
 export type FamilyMember = z.infer<typeof FamilyMemberSchema>;
 export type Category = z.infer<typeof CategorySchema>;
 export type Comment = z.output<typeof CommentSchema>;
 export type Item = z.output<typeof ItemSchema>;
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
+export type CreateCommentInput = z.infer<typeof CreateCommentSchema>;

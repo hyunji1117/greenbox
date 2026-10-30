@@ -5,25 +5,6 @@ import { toDisplayName, type MyProfile } from '@/app/lib/user/displayName';
 // Types
 export type FamilyMember = 'mom' | 'dad' | 'bigKid' | 'littleKid';
 
-export interface FridgeItem {
-  id: string;
-  name: string;
-  category: 'fridge' | 'freezer' | 'pantry';
-  quantity: number;
-  addedBy: FamilyMember;
-  addedAt: Date;
-  comments: Comment[];
-  finished: boolean;
-  expiryDate?: string;
-}
-
-export interface Comment {
-  id: string;
-  text: string;
-  author: FamilyMember;
-  createdAt: Date;
-}
-
 export interface Assignment {
   id: string;
   title: string;
@@ -41,14 +22,9 @@ export interface Activity {
 }
 
 interface FridgeContextType {
-  items: FridgeItem[];
   activities: Activity[];
   assignments: Assignment[];
   currentUser: FamilyMember;
-  addItem: (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => void;
-  updateItem: (id: string, updates: Partial<FridgeItem>) => void;
-  markAsFinished: (id: string) => void;
-  addComment: (itemId: string, text: string) => void;
   addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
   setCurrentUser: (user: FamilyMember) => void;
   // 로그인 사용자 프로필 (불러오기 전에는 null)
@@ -60,47 +36,7 @@ interface FridgeContextType {
 
 const FridgeContext = createContext<FridgeContextType | undefined>(undefined);
 
-// Mock data
-const initialItems: FridgeItem[] = [
-  {
-    id: '1',
-    name: '우유',
-    category: 'fridge',
-    quantity: 1,
-    addedBy: 'mom',
-    addedAt: new Date(Date.now() - 86400000),
-    comments: [
-      {
-        id: '101',
-        text: '이거 내일 아침에 먹을거야~',
-        author: 'littleKid',
-        createdAt: new Date(Date.now() - 3600000),
-      },
-    ],
-    finished: false,
-  },
-  {
-    id: '2',
-    name: '딸기',
-    category: 'fridge',
-    quantity: 1,
-    addedBy: 'mom',
-    addedAt: new Date(),
-    comments: [],
-    finished: false,
-  },
-  {
-    id: '3',
-    name: '치킨',
-    category: 'freezer',
-    quantity: 2,
-    addedBy: 'dad',
-    addedAt: new Date(Date.now() - 172800000),
-    comments: [],
-    finished: false,
-  },
-];
-
+// Mock data (활동과 할일은 아직 서버에 저장하지 않는다. 품목은 app/lib/items/useItems.ts)
 const initialActivities: Activity[] = [
   {
     id: '1',
@@ -132,7 +68,6 @@ const initialAssignments: Assignment[] = [
 export const FridgeProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [items, setItems] = useState<FridgeItem[]>(initialItems);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [assignments, setAssignments] =
     useState<Assignment[]>(initialAssignments);
@@ -152,104 +87,6 @@ export const FridgeProvider: React.FC<{
       cancelled = true;
     };
   }, []);
-
-  const addItem = (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => {
-    const newItem: FridgeItem = {
-      ...item,
-      id: Date.now().toString(),
-      addedAt: new Date(),
-      comments: [],
-    };
-    setItems([newItem, ...items]);
-
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type: 'add',
-      message: `${item.name} 추가했어요`,
-      timestamp: new Date(),
-      by: currentUser,
-      itemId: newItem.id,
-    };
-    setActivities([newActivity, ...activities]);
-  };
-
-  const updateItem = (id: string, updates: Partial<FridgeItem>) => {
-    setItems(
-      items.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              ...updates,
-            }
-          : item,
-      ),
-    );
-
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type: 'update',
-      message: `${items.find(i => i.id === id)?.name} 업데이트했어요`,
-      timestamp: new Date(),
-      by: currentUser,
-      itemId: id,
-    };
-    setActivities([newActivity, ...activities]);
-  };
-
-  const markAsFinished = (id: string) => {
-    setItems(
-      items.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              finished: true,
-            }
-          : item,
-      ),
-    );
-
-    const itemName = items.find(i => i.id === id)?.name || '';
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type: 'finish',
-      message: `${itemName} 다 먹음 표시했어요`,
-      timestamp: new Date(),
-      by: currentUser,
-      itemId: id,
-    };
-    setActivities([newActivity, ...activities]);
-  };
-
-  const addComment = (itemId: string, text: string) => {
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      text,
-      author: currentUser,
-      createdAt: new Date(),
-    };
-
-    setItems(
-      items.map(item =>
-        item.id === itemId
-          ? {
-              ...item,
-              comments: [...item.comments, newComment],
-            }
-          : item,
-      ),
-    );
-
-    const itemName = items.find(i => i.id === itemId)?.name || '';
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type: 'comment',
-      message: `${itemName}에 댓글 남겼어요: "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"`,
-      timestamp: new Date(),
-      by: currentUser,
-      itemId,
-    };
-    setActivities([newActivity, ...activities]);
-  };
 
   const addAssignment = (assignment: Omit<Assignment, 'id'>) => {
     const newAssignment: Assignment = {
@@ -291,14 +128,9 @@ export const FridgeProvider: React.FC<{
   return (
     <FridgeContext.Provider
       value={{
-        items,
         activities,
         assignments,
         currentUser,
-        addItem,
-        updateItem,
-        markAsFinished,
-        addComment,
         addAssignment,
         setCurrentUser,
         myProfile,

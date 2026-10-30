@@ -4,6 +4,12 @@
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
 import {
+  useAddComment,
+  useFinishItem,
+  useUpdateItem,
+} from '@/app/lib/items/useItems';
+import { COMMENT_TEXT_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
+import {
   CircleCheckBig,
   MessageCircleIcon,
   MinusIcon,
@@ -29,26 +35,38 @@ interface FridgeItemProps {
   };
 }
 const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
-  const { markAsFinished, addComment, updateItem, getFamilyMemberName } =
-    useFridge();
+  const { currentUser, getFamilyMemberName } = useFridge();
+  const updateItem = useUpdateItem(item.id);
+  const { finishItem, isError: isFinishError } = useFinishItem(item.id);
+  const addComment = useAddComment();
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newComment.trim()) {
-      addComment(item.id, newComment);
-      setNewComment('');
+    if (newComment.trim() && !addComment.isPending) {
+      // 실패하면 입력한 내용을 지우지 않아 다시 보낼 수 있다
+      addComment.mutate(
+        {
+          itemId: item.id,
+          input: { text: newComment, author: currentUser },
+        },
+        { onSuccess: () => setNewComment('') },
+      );
     }
   };
   const incrementQuantity = () => {
-    updateItem(item.id, {
-      quantity: item.quantity + 1,
-    });
+    if (item.quantity < QUANTITY_MAX) {
+      updateItem.mutate({
+        id: item.id,
+        updates: { quantity: item.quantity + 1 },
+      });
+    }
   };
   const decrementQuantity = () => {
     if (item.quantity > 1) {
-      updateItem(item.id, {
-        quantity: item.quantity - 1,
+      updateItem.mutate({
+        id: item.id,
+        updates: { quantity: item.quantity - 1 },
       });
     }
   };
@@ -63,10 +81,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       return `${Math.floor(diffInSeconds / 3600)}시간 전`;
     return `${Math.floor(diffInSeconds / 86400)}일 전`;
   };
-  // 현재로서는 markAsFinished와 동일한 동작을 사용합니다.
+  // 현재로서는 다 먹음과 동일한 동작을 사용합니다.
   // 추후 애플리케이션에서 "버림"과 "다 먹음"을 다르게 추적 예정.
   const handleTrashItem = () => {
-    markAsFinished(item.id);
+    finishItem(item.id);
   };
   return (
     <div className="mt-2 rounded-xl border-l-4 border-[#6B46C1] bg-[#FBFBFF] p-4 text-base font-semibold text-gray-800 shadow-md transition-shadow">
@@ -101,7 +119,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
               )}
             </Button>
             <Button
-              onClick={() => markAsFinished(item.id)}
+              onClick={() => finishItem(item.id)}
               variant="secondary"
               className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
               title="다 먹음"
@@ -137,6 +155,11 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
           </div>
         </section>
       </div>
+      {(updateItem.isError || isFinishError) && (
+        <p className="mt-2 text-xs text-red-500">
+          저장하지 못해 이전 상태로 되돌렸어요.
+        </p>
+      )}
       {showComments && (
         <div className="mt-4">
           <div className="max-h-32 overflow-y-auto rounded-lg bg-gray-50 p-3">
@@ -164,15 +187,22 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
               placeholder="댓글 추가..."
+              maxLength={COMMENT_TEXT_MAX}
               className="flex-1 rounded-l-xl border border-gray-300 px-3 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <button
               type="submit"
-              className="rounded-r-xl bg-indigo-500 px-3 py-1 text-sm text-white hover:bg-indigo-600"
+              disabled={addComment.isPending}
+              className="rounded-r-xl bg-indigo-500 px-3 py-1 text-sm text-white hover:bg-indigo-600 disabled:opacity-50"
             >
               추가
             </button>
           </form>
+          {addComment.isError && (
+            <p className="mt-1 text-xs text-red-500">
+              댓글을 저장하지 못했어요. 다시 시도해 주세요.
+            </p>
+          )}
         </div>
       )}
     </div>
