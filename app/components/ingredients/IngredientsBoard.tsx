@@ -109,7 +109,10 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
 
   // 이미지 에러 처리 함수
   const handleImageError = (itemId: number) => {
-    setImageErrors(prev => new Set(prev).add(itemId));
+    // 대체 이미지까지 실패해도 다시 렌더링하지 않아 요청이 반복되지 않는다
+    setImageErrors(prev =>
+      prev.has(itemId) ? prev : new Set(prev).add(itemId),
+    );
   };
 
   // 이미지 URL 처리 함수 (URL 디코딩 및 폴백)

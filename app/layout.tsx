@@ -6,6 +6,7 @@ import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
+import QueryProvider from '@/app/lib/query/QueryProvider';
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
@@ -40,7 +41,7 @@ export default function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
 
         <PushSubscriber />
-        {children}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

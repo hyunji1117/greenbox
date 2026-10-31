@@ -4,9 +4,6 @@
 
 export const POLICY_VERSION = '2026-10-02';
 
-// 로그인 전 동의 내용을 OAuth 왕복 동안 들고 있는 쿠키
-export const PENDING_CONSENT_COOKIE = 'gb_pending_consent';
-
 export type ConsentType = 'privacy_collection' | 'age_over_14';
 
 export const CONSENT_ITEMS: {

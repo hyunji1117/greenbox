@@ -1,14 +1,9 @@
 'use client';
 // app/login/LoginForm.tsx
-// 동의 체크리스트와 구글 로그인 버튼
+// 구글 로그인 버튼. 동의는 로그인 후 계정별 기록을 보고 필요할 때만 /consent에서 받는다.
 
-import React, { useState, useTransition } from 'react';
-import ConsentChecklist from '@/app/components/auth/ConsentChecklist';
+import React, { useTransition } from 'react';
 import { startGoogleLogin } from '@/app/auth/actions';
-import {
-  hasAllRequired,
-  type ConsentType,
-} from '@/app/lib/consent/policies';
 
 // 구글 브랜드 가이드의 "G" 로고 (색상 변경 금지)
 const GoogleLogo = () => (
@@ -33,45 +28,25 @@ const GoogleLogo = () => (
 );
 
 const LoginForm: React.FC = () => {
-  const [consents, setConsents] = useState<ConsentType[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const agreed = hasAllRequired(consents);
 
   const handleContinue = () => {
-    if (!agreed || isPending) return;
-    setError(null);
+    if (isPending) return;
     startTransition(async () => {
-      // 성공하면 서버에서 구글로 이동하고, 실패할 때만 결과가 돌아온다
-      const result = await startGoogleLogin(consents);
-      if (result?.error) setError(result.error);
+      await startGoogleLogin();
     });
   };
 
   return (
-    <div className="space-y-4">
-      <ConsentChecklist value={consents} onChange={setConsents} />
-
-      <button
-        type="button"
-        onClick={handleContinue}
-        disabled={!agreed || isPending}
-        className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-gray-300 bg-white text-base font-semibold text-gray-800 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
-      >
-        <GoogleLogo />
-        {isPending ? '구글로 이동하는 중...' : 'Google로 계속하기'}
-      </button>
-
-      {error ? (
-        <p className="text-center text-xs text-red-500">{error}</p>
-      ) : (
-        !agreed && (
-          <p className="text-center text-xs text-gray-400">
-            필수 항목에 모두 동의하면 로그인할 수 있어요
-          </p>
-        )
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={handleContinue}
+      disabled={isPending}
+      className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-gray-300 bg-white text-base font-semibold text-gray-800 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+    >
+      <GoogleLogo />
+      {isPending ? '구글로 이동하는 중...' : 'Google로 계속하기'}
+    </button>
   );
 };
 

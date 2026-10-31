@@ -1,6 +1,6 @@
 // app/consent/page.tsx
-// 동의 화면. 로그인했지만 현재 방침에 동의한 기록이 없을 때 온다.
-// (처음 로그인하면서 동의가 저장되지 않았거나, 방침 버전이 바뀐 경우)
+// 동의 화면. 구글 로그인했지만 가입 전이거나, 회원이지만 현재 방침에 동의한 기록이 없을 때 온다.
+// 가입 전이면 여기서 동의해야 가입되고, 회원이면 바뀐 방침에 다시 동의한다.
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -17,18 +17,31 @@ export default async function ConsentPage() {
   const session = await auth();
   if (!session?.user) redirect('/login');
 
+  const isFirstLogin = !session.registered;
+
   return (
     <AuthShell
-      title="이용 동의가 필요해요"
+      title={isFirstLogin ? '처음 오셨네요' : '개인정보처리방침이 바뀌었어요'}
       description={
-        <>
-          {APP_NAME}를 이용하려면 아래 필수 항목에 동의해 주세요.
-          <br />
-          개인정보처리방침이 바뀌면 다시 동의를 받아요.
-        </>
+        isFirstLogin ? (
+          <>
+            {APP_NAME}를 이용하려면
+            <br />
+            아래 필수 항목에 동의해 주세요.
+          </>
+        ) : (
+          <>
+            바뀐 방침을 확인하고
+            <br />
+            다시 동의하면 계속 이용할 수 있어요.
+          </>
+        )
       }
     >
-      <ConsentForm email={session.user.email ?? null} />
+      <ConsentForm
+        email={session.user.email ?? null}
+        isFirstLogin={isFirstLogin}
+      />
     </AuthShell>
   );
 }
