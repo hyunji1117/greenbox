@@ -39,6 +39,12 @@ const nextConfig = {
         hostname: 'lh6.googleusercontent.com',
         pathname: '/**',
       },
+      // 구글 로그인 프로필 사진
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
       // 이커머스/식품 관련
       {
         protocol: 'https',

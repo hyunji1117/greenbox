@@ -2,11 +2,10 @@
 // app/components/SettingsPage.tsx
 // 사용자 설정 페이지 컴포넌트
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import {
   Copy,
   User,
-  Lock,
   LogOut,
   Users,
   Bell,
@@ -20,6 +19,11 @@ import {
 } from 'lucide-react';
 import { useFridge, FamilyMember } from '@/app/context/FridgeContext';
 import Image from 'next/image';
+import { logout, updateFamilyNickname } from '@/app/auth/actions';
+import {
+  FAMILY_NICKNAME_MAX,
+  toDisplayName,
+} from '@/app/lib/user/displayName';
 
 interface SettingsPageProps {
   isOpen: boolean;
@@ -33,7 +37,20 @@ type UserId = 'mom' | 'dad' | 'bigKid' | 'littleKid';
 type SettingsSection = 'account' | 'family' | 'notifications' | 'app';
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
-  const { currentUser, setCurrentUser } = useFridge();
+  const {
+    currentUser,
+    setCurrentUser,
+    myProfile,
+    setMyProfile,
+    getFamilyMemberName,
+  } = useFridge();
+  const [nicknameDraft, setNicknameDraft] = useState<string | null>(null);
+  const [nicknameMessage, setNicknameMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [isSaving, startSaving] = useTransition();
+  const [isLoggingOut, startLoggingOut] = useTransition();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('account');
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
@@ -73,7 +90,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       image: 'https://i.pravatar.cc/150?img=4',
     },
   ];
-  const userEmail = 'user@example.com';
   const appVersion = '1.0.0';
 
   const onSettingsClick = () => {
@@ -135,22 +151,36 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const getFamilyMemberName = (member: FamilyMember): string => {
-    const memberMap = {
-      mom: '먐무',
-      dad: '빙빵',
-      bigKid: '낭농',
-      littleKid: '떡자',
-    };
-    return memberMap[member] || member;
+  const userOptions: { id: UserId; name: string }[] = (
+    ['mom', 'dad', 'bigKid', 'littleKid'] as UserId[]
+  ).map(id => ({ id, name: getFamilyMemberName(id) }));
+
+  // 입력 중이 아니면 저장된 호칭을 보여준다
+  const nicknameValue = nicknameDraft ?? myProfile?.familyNickname ?? '';
+  const isNicknameChanged =
+    nicknameDraft !== null &&
+    nicknameDraft.trim() !== (myProfile?.familyNickname ?? '');
+
+  const saveNickname = () => {
+    if (!myProfile || !isNicknameChanged || isSaving) return;
+    setNicknameMessage(null);
+    startSaving(async () => {
+      const result = await updateFamilyNickname(nicknameValue);
+      if ('error' in result) {
+        setNicknameMessage({ type: 'error', text: result.error });
+        return;
+      }
+      setMyProfile({ ...myProfile, familyNickname: result.familyNickname });
+      setNicknameDraft(null);
+      setNicknameMessage({ type: 'success', text: '호칭을 저장했어요' });
+    });
   };
 
-  const userOptions: { id: UserId; name: string }[] = [
-    { id: 'mom', name: '먐무' },
-    { id: 'dad', name: '빙빵' },
-    { id: 'bigKid', name: '낭농' },
-    { id: 'littleKid', name: '떡자' },
-  ];
+  const handleLogout = () => {
+    startLoggingOut(async () => {
+      await logout();
+    });
+  };
   if (isOpen) return null;
 
   return (
@@ -198,18 +228,78 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             {activeSection === 'account' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900">계정 설정</h3>
+                {/* 구글 계정 프로필 */}
+                <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 shadow-sm">
+                  {myProfile?.image ? (
+                    <Image
+                      src={myProfile.image}
+                      alt="프로필 사진"
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f3edff] text-[#6B46C1]">
+                      <User size={22} />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold text-gray-900">
+                      {toDisplayName(myProfile) ?? '불러오는 중...'}
+                    </div>
+                    <div className="truncate text-xs text-gray-500">
+                      {myProfile?.familyNickname && myProfile.name
+                        ? `${myProfile.name} / `
+                        : ''}
+                      {myProfile?.email ?? ''}
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="family-nickname"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       가족 내 호칭
                     </label>
-                    <div className="mt-1 flex rounded-xl shadow-sm">
+                    <div className="mt-1 flex gap-2">
                       <input
+                        id="family-nickname"
                         type="text"
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        defaultValue={getFamilyMemberName(currentUser)}
+                        maxLength={FAMILY_NICKNAME_MAX}
+                        value={nicknameValue}
+                        placeholder={myProfile?.name ?? '예: 엄마, 첫째'}
+                        disabled={!myProfile || isSaving}
+                        onChange={e => {
+                          setNicknameDraft(e.target.value);
+                          setNicknameMessage(null);
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') saveNickname();
+                        }}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-50"
                       />
+                      <button
+                        type="button"
+                        onClick={saveNickname}
+                        disabled={!isNicknameChanged || isSaving}
+                        className="shrink-0 rounded-xl bg-[#6B46C1] px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-sm hover:bg-[#603fad] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isSaving ? '저장 중' : '저장'}
+                      </button>
                     </div>
+                    {nicknameMessage ? (
+                      <p
+                        className={`mt-1 text-xs ${nicknameMessage.type === 'error' ? 'text-red-500' : 'text-green-600'}`}
+                      >
+                        {nicknameMessage.text}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-400">
+                        호칭을 등록하면 앱에서 구글 이름 대신 호칭으로 보여요
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -218,10 +308,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                     <div className="mt-1 flex rounded-xl shadow-sm">
                       <input
                         type="email"
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 pl-4 text-[#636465] focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        defaultValue={userEmail}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 pl-4 text-[#636465] focus:outline-none"
+                        value={myProfile?.email ?? ''}
+                        readOnly
                       />
                     </div>
+                    <p className="mt-1 text-xs text-gray-400">
+                      구글 계정 이메일이라 여기서 바꿀 수 없어요
+                    </p>
                   </div>
                   <div>
                     <label
@@ -246,19 +340,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                   <div>
                     <button
                       type="button"
-                      className="flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                    >
-                      <Lock size={16} className="mr-2" />
-                      비밀번호 변경
-                    </button>
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-center rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="flex w-full items-center justify-center rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
                     >
                       <LogOut size={16} className="mr-2" />
-                      로그아웃
+                      {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
                     </button>
                   </div>
                 </div>
@@ -311,14 +398,20 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                           className="flex items-center rounded-xl border border-gray-200 p-3 shadow-sm"
                         >
                           <Image
-                            src={member.image}
-                            alt={member.name}
+                            src={
+                              member.id === currentUser && myProfile?.image
+                                ? myProfile.image
+                                : member.image
+                            }
+                            alt={getFamilyMemberName(member.id as FamilyMember)}
                             className="h-10 w-10 rounded-full"
                             width={24}
                             height={24}
                           />
                           <div className="ml-3 flex-1">
-                            <div className="font-medium">{member.name}</div>
+                            <div className="font-medium">
+                              {getFamilyMemberName(member.id as FamilyMember)}
+                            </div>
                             <div className="text-xs text-gray-500">
                               {member.role}
                             </div>

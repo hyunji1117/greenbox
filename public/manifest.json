@@ -1,12 +1,12 @@
 {
-  "name": "Greenbox",
+  "name": "Greenbox(우리집 냉장고)",
   "short_name": "Greenbox",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4b2f8c",
-  "description": "Greenbox PWA Application",
+  "description": "우리 가족의 스마트한 냉장고 관리 앱 서비스",
   "orientation": "portrait-primary",
   "icons": [
     {

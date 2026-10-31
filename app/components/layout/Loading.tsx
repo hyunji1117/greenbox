@@ -18,7 +18,7 @@ export default function Loading({ progress }: LoadingProps) {
         <div className="motion-safe:animate-logo-float relative h-20 w-[260px]">
           <Image
             src="/greenbox_logo_5_black.png"
-            alt="Our Fridge 로고"
+            alt="Greenbox 로고"
             fill
             className="object-contain"
             priority

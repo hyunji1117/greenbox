@@ -1,5 +1,6 @@
 // app/context/FridgeContext.tsx
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { toDisplayName, type MyProfile } from '@/app/lib/user/displayName';
 
 // Types
 export type FamilyMember = 'mom' | 'dad' | 'bigKid' | 'littleKid';
@@ -50,6 +51,11 @@ interface FridgeContextType {
   addComment: (itemId: string, text: string) => void;
   addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
   setCurrentUser: (user: FamilyMember) => void;
+  // 로그인 사용자 프로필 (불러오기 전에는 null)
+  myProfile: MyProfile | null;
+  setMyProfile: (profile: MyProfile) => void;
+  // 화면에 표시할 가족 구성원 이름. 현재 사용자는 가족 내 호칭 또는 구글 이름
+  getFamilyMemberName: (member: string) => string;
 }
 
 const FridgeContext = createContext<FridgeContextType | undefined>(undefined);
@@ -131,6 +137,21 @@ export const FridgeProvider: React.FC<{
   const [assignments, setAssignments] =
     useState<Assignment[]>(initialAssignments);
   const [currentUser, setCurrentUser] = useState<FamilyMember>('mom');
+  const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
+
+  // 로그인 사용자 프로필은 앱을 열 때 한 번 불러온다
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/me', { cache: 'no-store' })
+      .then(res => (res.ok ? (res.json() as Promise<MyProfile>) : null))
+      .then(profile => {
+        if (!cancelled && profile) setMyProfile(profile);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const addItem = (item: Omit<FridgeItem, 'id' | 'addedAt' | 'comments'>) => {
     const newItem: FridgeItem = {
@@ -247,7 +268,12 @@ export const FridgeProvider: React.FC<{
     setActivities([newActivity, ...activities]);
   };
 
-  const getFamilyMemberName = (member: FamilyMember): string => {
+  // 다른 가족 구성원은 가족 기능을 만들기 전까지 목업 이름
+  const getFamilyMemberName = (member: string): string => {
+    if (member === currentUser) {
+      const myName = toDisplayName(myProfile);
+      if (myName) return myName;
+    }
     switch (member) {
       case 'mom':
         return '먐무';
@@ -275,6 +301,9 @@ export const FridgeProvider: React.FC<{
         addComment,
         addAssignment,
         setCurrentUser,
+        myProfile,
+        setMyProfile,
+        getFamilyMemberName,
       }}
     >
       {children}

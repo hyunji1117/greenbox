@@ -29,7 +29,8 @@ interface FridgeItemProps {
   };
 }
 const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
-  const { markAsFinished, addComment, updateItem } = useFridge();
+  const { markAsFinished, addComment, updateItem, getFamilyMemberName } =
+    useFridge();
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const handleAddComment = (e: React.FormEvent) => {
@@ -49,20 +50,6 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       updateItem(item.id, {
         quantity: item.quantity - 1,
       });
-    }
-  };
-  const getFamilyMemberName = (member: string): string => {
-    switch (member) {
-      case 'mom':
-        return '먐무';
-      case 'dad':
-        return '빙빵';
-      case 'bigKid':
-        return '낭농';
-      case 'littleKid':
-        return '떡자';
-      default:
-        return member;
     }
   };
   const getRelativeTimeString = (date: Date): string => {

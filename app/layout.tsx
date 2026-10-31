@@ -5,11 +5,15 @@ import type { Metadata } from 'next';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 
 export const metadata: Metadata = {
-  title: '우리집 냉장고 식재료 관리',
+  title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
+  applicationName: APP_NAME,
   description: '우리 가족의 스마트한 냉장고 관리 앱 서비스',
   manifest: '/manifest.json',
+  // Google Search Console 소유권 확인 (구글 OAuth 브랜딩 심사에 필요, 확인 후에도 지우지 않는다)
+  verification: { google: 'xwuP85KXgrKYQEizrQQHB94K-S6UP7UWEUO8QjjgUZo' },
 };
 
 export default function RootLayout({
@@ -29,7 +33,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Greenbox" />
+        <meta name="apple-mobile-web-app-title" content={APP_SHORT_NAME} />
       </head>
       <body>
         {/* Google Analytics (공식 지원 방식) */}
