@@ -36,10 +36,12 @@ interface FridgeItemProps {
     finished: boolean;
     expiryDate?: string;
   };
+  isNew?: boolean;
   onFinish: (kind: FinishKind) => void;
 }
 const FridgeItem: React.FC<FridgeItemProps> = ({
   item,
+  isNew = false,
   onFinish,
 }) => {
   const { currentUser, getFamilyMemberName } = useFridge();
@@ -103,7 +105,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   };
   return (
     <article
-      className={`rounded-2xl bg-white p-4 text-gray-800 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5`}
+      className={`rounded-2xl bg-white p-4 text-gray-800 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 ${isNew ? 'motion-safe:animate-item-added' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

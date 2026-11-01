@@ -20,10 +20,7 @@ const TabSkeleton = () => (
     </div>
     <div className="grid grid-cols-2 gap-4">
       {[1, 2, 3, 4].map(i => (
-        <div
-          key={i}
-          className="h-40 animate-pulse rounded-xl bg-gray-200"
-        />
+        <div key={i} className="h-40 animate-pulse rounded-xl bg-gray-200" />
       ))}
     </div>
   </div>
@@ -130,7 +127,11 @@ export default function PageClient() {
       case 'healthAnalysis':
         return <HealthAnalysisPage />;
       case 'fridge':
-        return <FridgeBoard />;
+        return (
+          <FridgeBoard
+            onGoToShoppingList={() => handleTabChange('shoppingList')}
+          />
+        );
       case 'ingredients':
         return <IngredientsBoard />;
       case 'shoppingList':
@@ -138,7 +139,11 @@ export default function PageClient() {
       case 'settings':
         return <SettingsPage isOpen={isSettingsOpen} onClose={closeSettings} />;
       default:
-        return <FridgeBoard />;
+        return (
+          <FridgeBoard
+            onGoToShoppingList={() => handleTabChange('shoppingList')}
+          />
+        );
     }
   };
 

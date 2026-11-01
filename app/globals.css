@@ -11,6 +11,20 @@
   --color-foreground: var(--foreground);
   --font-sans: "Nanum Gothic", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --animate-item-added: item-added 900ms ease-out;
+
+  @keyframes item-added {
+    from {
+      background-color: #f1edfa;
+      transform: translateY(-4px);
+    }
+    30% {
+      transform: translateY(0);
+    }
+    to {
+      background-color: #ffffff;
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
