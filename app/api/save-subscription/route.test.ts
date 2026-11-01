@@ -58,6 +58,10 @@ describe('POST /api/save-subscription', () => {
 
   it.each([
     ['https가 아닌 주소', { ...subscription, endpoint: 'http://localhost/x' }],
+    [
+      '푸시 서비스가 아닌 주소',
+      { ...subscription, endpoint: 'https://example.com/x' },
+    ],
     ['키 누락', { endpoint: subscription.endpoint }],
     ['JSON이 아닌 본문', 'not-json'],
   ])('%s는 400이고 저장하지 않는다', async (_, body) => {
