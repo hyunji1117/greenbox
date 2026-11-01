@@ -11,6 +11,7 @@
   --color-foreground: var(--foreground);
   --font-sans: "Nanum Gothic", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --animate-tab-fade: tab-fade 200ms ease-out;
   --animate-item-added: item-added 900ms ease-out;
 
   @keyframes item-added {
@@ -23,6 +24,17 @@
     }
     to {
       background-color: #ffffff;
+    }
+  }
+
+  @keyframes tab-fade {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }

@@ -7,6 +7,7 @@ import { useItems } from '@/app/lib/items/useItems';
 import { useFinishWithUndo } from '@/app/lib/items/useFinishWithUndo';
 import type { Category } from '@/app/lib/schemas/item';
 import ActionToast from '@/app/components/common/ActionToast';
+import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import FridgeQuickAdd from '@/app/components/fridge/FridgeQuickAdd';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
@@ -27,9 +28,6 @@ const CATEGORY_TABS = [
 interface FridgeBoardProps {
   onGoToShoppingList?: () => void;
 }
-
-const SURFACE =
-  'rounded-2xl bg-white shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5';
 
 const FridgeBoard: React.FC<FridgeBoardProps> = ({ onGoToShoppingList }) => {
   const { data: items = [], isPending, error, refetch } = useItems();
@@ -57,41 +55,18 @@ const FridgeBoard: React.FC<FridgeBoardProps> = ({ onGoToShoppingList }) => {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">우리집 냉장고</h1>
       </div>
-      <div className="mb-6 flex gap-2 sm:gap-4">
-        <button
-          onClick={() => {
-            setActiveCategory('fridge');
-            setNewItemId(null);
-          }}
-          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'fridge' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
-        >
-          <RefrigeratorIcon size={20} />
-          <span className="font-medium">냉장실</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveCategory('freezer');
-            setNewItemId(null);
-          }}
-          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'freezer' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
-        >
-          <SnowflakeIcon size={20} />
-          <span className="font-medium">냉동실</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveCategory('pantry');
-            setNewItemId(null);
-          }}
-          className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center text-sm shadow-md focus:ring-gray-300 sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${activeCategory === 'pantry' ? 'bg-[#6B46C1] text-white' : 'bg-white'}`}
-        >
-          <PackageIcon size={20} />
-          <span className="font-medium">식료품 저장고</span>
-        </button>
-      </div>
+      <SegmentedTabs
+        tabs={CATEGORY_TABS}
+        activeId={activeCategory}
+        onChange={id => {
+          setActiveCategory(id);
+          setNewItemId(null);
+        }}
+        className="mb-4"
+      />
       <div className="-mx-2 flex-1 overflow-y-auto px-2 pt-1">
         {/* 칸을 바꿀 때 내용이 갑자기 바뀌지 않도록 살짝 나타나게 한다 */}
-        <div key={activeCategory} className="">
+        <div key={activeCategory} className="motion-safe:animate-tab-fade">
           {isPending ? (
             <div className={`px-4 py-12 text-center ${SURFACE}`}>
               <p className="text-sm text-gray-500">불러오는 중...</p>
