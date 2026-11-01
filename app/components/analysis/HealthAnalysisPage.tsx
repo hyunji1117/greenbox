@@ -22,8 +22,6 @@ import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 // ---------- 아이콘 ----------
 import {
   Plus,
-  ListIcon,
-  GridIcon,
   BellIcon,
   InfoIcon,
   ChevronDownIcon,
@@ -202,7 +200,6 @@ const HealthAnalysisPage: React.FC = () => {
 
   // ---------- 카테고리 및 뷰 상태 ----------
   const [activeCategory, setActiveCategory] = useState<string>('vegetables');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredItems, setFilteredItems] = useState<FridgeItem[]>(mockItems);
 
   // ---------- UI 토글 상태 ----------
@@ -646,7 +643,7 @@ const HealthAnalysisPage: React.FC = () => {
     <div className="relative flex h-full flex-col p-4 pb-24 sm:p-6 sm:pb-24">
       {/* ---------- 헤더 ---------- */}
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">AI 건강분석</h1>
+        <h1 className="text-xl font-semibold">건강 분석</h1>
       </div>
 
       {/* ---------- 카테고리 탭 ---------- */}
@@ -662,26 +659,6 @@ const HealthAnalysisPage: React.FC = () => {
         <div className="text-sm text-gray-500">
           총 {mockItems.filter(item => item.category === activeCategory).length}
           개 식재료
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setViewMode('grid')}
-            aria-label="격자로 보기"
-            aria-pressed={viewMode === 'grid'}
-            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${viewMode === 'grid' ? 'bg-[#F1EDFA] text-[#553C9A]' : 'text-gray-500 hover:bg-white'}`}
-          >
-            <GridIcon size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('list')}
-            aria-label="목록으로 보기"
-            aria-pressed={viewMode === 'list'}
-            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${viewMode === 'list' ? 'bg-[#F1EDFA] text-[#553C9A]' : 'text-gray-500 hover:bg-white'}`}
-          >
-            <ListIcon size={18} />
-          </button>
         </div>
       </div>
 
@@ -778,9 +755,12 @@ const HealthAnalysisPage: React.FC = () => {
 
       {/* ---------- 소비 현황 차트 ---------- */}
       <div className={`mb-4 p-4 ${SURFACE}`}>
-        <h2 className="mb-3 text-base font-semibold">
-          식재료 소비 현황 (주간)
-        </h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">식재료 소비 현황 (주간)</h2>
+          <span className="shrink-0 rounded-full bg-[#F4F4F8] px-2.5 py-1 text-xs font-medium text-gray-500">
+            샘플
+          </span>
+        </div>
         <div className="h-48 md:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
