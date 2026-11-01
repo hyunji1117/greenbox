@@ -46,6 +46,21 @@ class ShoppingListStorage {
     return [];
   }
 
+  // 다른 화면에서 품목 담기. 이미 있으면 수량만 늘린다
+  addToShoppingList(name: string, quantity = 1): void {
+    const list = this.loadShoppingList();
+    const existing = list.find(item => item.name === name);
+    this.saveShoppingList(
+      existing
+        ? list.map(item =>
+            item === existing
+              ? { ...item, quantity: item.quantity + quantity }
+              : item,
+          )
+        : [...list, { id: Date.now(), name, quantity, completed: false }],
+    );
+  }
+
   // 즐겨찾기 저장
   saveFavorites(favorites: FavoriteItem[]): void {
     try {

@@ -19,6 +19,7 @@ export interface FinishNotice {
   subject?: string;
   message: string;
   canUndo: boolean;
+  goToList?: boolean;
 }
 
 export function useFinishWithUndo() {
@@ -86,5 +87,5 @@ export function useFinishWithUndo() {
     }
   }, [mutateAsync, show]);
 
-  return { notice, isNoticeVisible, finish, undo };
+  return { notice, isNoticeVisible, finish, undo, notify: show };
 }
