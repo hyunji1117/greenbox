@@ -3,22 +3,21 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ShoppingBasket,
-  Star,
-  SquarePlus,
   Check,
   MinusIcon,
   PlusIcon,
+  ShoppingBasket,
+  Star,
+  Trash2,
   XIcon,
 } from 'lucide-react';
-import Button from '@/app/components/common/Button';
-import AddItemForm from '@/app/components/grocery-list/AddItemForm';
-import Toast from '@/app/components/common/Toast';
+import ActionToast from '@/app/components/common/ActionToast';
+import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { useFridge } from '@/app/context/FridgeContext';
 import { useAddPurchasedItems } from '@/app/lib/items/useItems';
-import { QUANTITY_MAX } from '@/app/lib/schemas/item';
+import { ITEM_NAME_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
@@ -35,11 +34,20 @@ interface FavoriteItem {
   items: Array<{ id: number; name: string; quantity: number }>;
 }
 
+const VIEW_TABS = [
+  { id: 'list', label: '장볼 리스트', Icon: ShoppingBasket },
+  { id: 'favorites', label: '즐겨찾기', Icon: Star },
+] as const;
+
+const TOAST_MS = 2200;
+const UNDO_TOAST_MS = 5000;
+
 const GroceryListPage: React.FC = () => {
   const { currentUser } = useFridge();
   const addPurchasedItems = useAddPurchasedItems();
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeView, setActiveView] = useState<'list' | 'favorites'>('list');
+  const [newItemName, setNewItemName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() =>
     shoppingListStorage.loadShoppingList(),
   );
@@ -47,18 +55,25 @@ const GroceryListPage: React.FC = () => {
     shoppingListStorage.loadFavorites(),
   );
 
-  const totalItems = useMemo(
-    () => shoppingList.reduce((sum, i) => sum + i.quantity, 0),
-    [shoppingList],
-  );
+  const completedCount = shoppingList.filter(i => i.completed).length;
 
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
-  const toast = (msg: string) => {
+  const [undoAction, setUndoAction] = useState<(() => void) | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const toast = (msg: string, onUndo?: () => void) => {
+    clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
+    setUndoAction(onUndo ? () => onUndo : null);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setShowToast(false),
+      onUndo ? UNDO_TOAST_MS : TOAST_MS,
+    );
   };
+  useEffect(() => () => clearTimeout(toastTimerRef.current), []);
 
   useEffect(() => {
     shoppingListStorage.saveShoppingList(shoppingList);
@@ -68,7 +83,6 @@ const GroceryListPage: React.FC = () => {
     shoppingListStorage.saveFavorites(favorites);
   }, [favorites]);
 
-  const onToggleFavorites = () => setShowFavorites(v => !v);
   const onToggleCompletion = (id: number) => {
     setShoppingList(prev =>
       prev.map(i => (i.id === id ? { ...i, completed: !i.completed } : i)),
@@ -82,14 +96,18 @@ const GroceryListPage: React.FC = () => {
     );
   };
   const onDeleteItem = (id: number) => {
-    const item = shoppingList.find(i => i.id === id);
+    const previous = shoppingList;
+    const item = previous.find(i => i.id === id);
     setShoppingList(prev => prev.filter(i => i.id !== id));
-    if (item) toast(`'${item.name}'이(가) 삭제되었어요`);
+    if (item) {
+      toast(`${item.name} 지웠어요`, () => setShoppingList(previous));
+    }
   };
   const onClearAll = () => {
     if (shoppingList.length === 0) return toast('삭제할 항목이 없습니다');
+    const previous = shoppingList;
     setShoppingList([]);
-    toast('모든 항목을 삭제했어요');
+    toast('리스트를 비웠어요', () => setShoppingList(previous));
   };
   const onClearCompleted = async () => {
     const completed = shoppingList.filter(i => i.completed);
@@ -138,7 +156,7 @@ const GroceryListPage: React.FC = () => {
     const fav = favorites.find(f => f.id === favoriteId);
     if (!fav) return;
     setShoppingList(fav.items.map(i => ({ ...i, completed: false })));
-    setShowFavorites(false);
+    setActiveView('list');
     toast(`'${fav.name}' 목록을 불러왔어요`);
   };
   // 즐겨찾기 추가
@@ -166,211 +184,244 @@ const GroceryListPage: React.FC = () => {
     toast(`'${fav.name}' 즐겨찾기를 저장했어요`);
   };
 
-  const onDirectAdd = () => setShowAddForm(true);
-  const handleAddToShoppingList = (name: string, quantity = 1) => {
+  const trimmedNewItemName = newItemName.trim();
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trimmedNewItemName) return;
     setShoppingList(prev => {
-      const existing = prev.find(i => i.name === name);
+      const existing = prev.find(i => i.name === trimmedNewItemName);
       if (existing) {
         return prev.map(i =>
-          i.name === name ? { ...i, quantity: i.quantity + quantity } : i,
+          i === existing ? { ...i, quantity: i.quantity + 1 } : i,
         );
       }
-      return [...prev, { id: Date.now(), name, quantity, completed: false }];
+      return [
+        ...prev,
+        {
+          id: Date.now(),
+          name: trimmedNewItemName,
+          quantity: 1,
+          completed: false,
+        },
+      ];
     });
-    toast(`'${name}'을(를) 추가했어요`);
+    setNewItemName('');
+    inputRef.current?.focus();
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-[#F2F2F6] p-5 pb-20">
-      {/* 헤더 */}
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">장보기 리스트</h1>
-        <Button
-          onClick={onDirectAdd}
-          variant="secondary"
-          className="w-auto gap-1 px-3.5"
-        >
-          <SquarePlus size={22} strokeWidth={2} />
-          직접 추가
-        </Button>
+    <div className="flex h-full flex-col overflow-y-auto bg-[#F2F2F6] p-4 pb-24 sm:p-6 sm:pb-24">
+      <div className="mb-4">
+        <h1 className="text-xl font-semibold">장보기 리스트</h1>
+        <p className="mt-1 text-sm text-balance text-gray-500">
+          구매를 완료하면 냉장고에 들어가고 구매 기록에 남아요
+        </p>
       </div>
 
-      {/* 탭 스위치 */}
-      <div className="mb-4 flex justify-evenly border-b">
-        <button
-          onClick={onToggleFavorites}
-          className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${
-            !showFavorites
-              ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]'
-              : 'text-gray-500'
-          }`}
-        >
-          <ShoppingBasket size={20} className="mr-1" />
-          장볼 리스트
-        </button>
-        <button
-          onClick={onToggleFavorites}
-          className={`flex flex-grow items-center justify-center px-4 py-2 text-base font-semibold ${
-            showFavorites
-              ? 'border-b-2 border-[#6B46C1] text-[#6B46C1]'
-              : 'text-gray-500'
-          }`}
-        >
-          <Star size={20} className="mr-1" />
-          즐겨찾기
-        </button>
-      </div>
+      <SegmentedTabs
+        tabs={VIEW_TABS}
+        activeId={activeView}
+        onChange={setActiveView}
+        className="mb-4"
+      />
 
-      {/* 본문 */}
-      {!showFavorites ? (
-        <>
-          {shoppingList.length === 0 ? (
-            <div className="mt-10 text-center text-lg text-gray-500">
-              <p>장볼 재료가 없어요</p>
-              <p className="mt-2 text-base">
-                장보기 전{' '}
-                <span className="rounded-sm bg-amber-200 px-0.5 py-0.5 font-semibold text-[#6B46C1]">
-                  식재료 탭
-                </span>
-                에서 추가해주세요
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {shoppingList.map(item => (
-                <li
-                  key={item.id}
-                  className="flex items-center justify-between border-b p-2"
-                >
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => onToggleCompletion(item.id)}
-                      className={`mr-2 rounded-full border ${
-                        item.completed
-                          ? 'border-[#6B46C1] bg-[#6B46C1]'
-                          : 'border-gray-300'
-                      } p-1`}
-                    >
-                      {item.completed && <Check size={12} color="white" />}
-                    </button>
-                    <span
-                      className={
-                        item.completed ? 'text-gray-400 line-through' : ''
-                      }
-                    >
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => onUpdateQuantity(item.id, -1)}
-                      className="p-1 text-gray-500 hover:text-gray-700"
-                      disabled={item.quantity <= 1}
-                    >
-                      <MinusIcon size={14} />
-                    </button>
-                    <span className="mx-2 w-5 text-center">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => onUpdateQuantity(item.id, 1)}
-                      className="p-1 text-gray-500 hover:text-gray-700"
-                    >
-                      <PlusIcon size={14} />
-                    </button>
-                    <button
-                      onClick={() => onDeleteItem(item.id)}
-                      className="ml-2 p-1 text-red-500 hover:text-red-700"
-                    >
-                      <XIcon size={14} />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* 하단 액션 */}
-          <div className="mt-5 space-y-2">
-            {shoppingList.length > 0 && (
+      <div key={activeView} className="motion-safe:animate-tab-fade">
+        {activeView === 'list' ? (
+          <>
+            <form
+              onSubmit={handleAddSubmit}
+              className="flex h-12 items-center gap-1 rounded-2xl bg-white pr-1 pl-4 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 transition-shadow duration-200 focus-within:shadow-[0_0_0_4px_rgba(107,70,193,0.12)] focus-within:ring-[#A794D6]"
+            >
+              {/* iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 text-base를 유지한다 */}
+              <input
+                ref={inputRef}
+                type="text"
+                value={newItemName}
+                onChange={e => setNewItemName(e.target.value)}
+                aria-label="살 식재료 이름"
+                placeholder="살 식재료 이름"
+                maxLength={ITEM_NAME_MAX}
+                enterKeyHint="done"
+                className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"
+              />
               <button
-                onClick={onShowFavoriteInput}
-                className="flex w-full items-center justify-center rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
+                type="submit"
+                aria-label="리스트에 담기"
+                onMouseDown={e => e.preventDefault()}
+                disabled={!trimmedNewItemName}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#6B46C1] text-white transition-colors duration-200 hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
               >
-                <Star size={16} className="mr-1" />
-                즐겨찾기 추가
+                <PlusIcon size={20} />
               </button>
-            )}
-            {shoppingList.length > 0 && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={onClearCompleted}
-                  className="flex-1 rounded-lg bg-[#6B46C1] py-2 text-sm text-white hover:bg-[#603fad]"
-                >
-                  장보기 완료
-                </button>
-                <button
-                  onClick={onClearAll}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  전체 삭제
-                </button>
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <div className="flex-1 overflow-y-auto">
-          {favorites.length === 0 ? (
-            <div className="mt-10 text-center text-gray-500">
-              <p>저장된 즐겨찾기가 없습니다</p>
-              <p className="mt-2 text-sm">쇼핑 목록을 저장해보세요</p>
-            </div>
-          ) : (
-            // 즐겨찾기 목록
-            <ul className="relative space-y-2">
-              {favorites.map(favorite => (
-                <li
-                  key={favorite.id}
-                  className="cursor-pointer rounded-lg border p-3 hover:bg-gray-50"
-                  onClick={() => onLoadFavorite(favorite.id)}
-                >
-                  <div>
-                    <div className="font-medium">{favorite.name}</div>
-                    <div className="mt-1 text-sm text-gray-500">
-                      {favorite.items.length}개 항목
-                    </div>
-                  </div>
-                  <button
-                    onClick={e => {
-                      e.stopPropagation(); // Prevent triggering onClick for the list item
-                      setFavorites(prev =>
-                        prev.filter(fav => fav.id !== favorite.id),
-                      );
-                      toast(`'${favorite.name}' 즐겨찾기를 삭제했어요`);
-                    }}
-                    className="absolute top-2 right-2 p-1 text-gray-700 hover:text-black"
-                  >
-                    <XIcon size={14} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+            </form>
 
-      {/* 직접추가 모달 */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-          <AddItemForm
-            onClose={() => setShowAddForm(false)}
-            onAddToShoppingList={handleAddToShoppingList}
-            mode="simple"
-          />
-        </div>
-      )}
-      <Toast message={toastMessage} isVisible={showToast} />
+            {shoppingList.length === 0 ? (
+              <div className="px-1 pt-10 text-center">
+                <p className="text-base font-semibold text-gray-800">
+                  아직 담은 식재료가 없어요
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  살 것을 적거나 즐겨찾기를 불러와 주세요
+                </p>
+              </div>
+            ) : (
+              <>
+                <ul className="mt-4 space-y-2">
+                  {shoppingList.map(item => (
+                    <li
+                      key={item.id}
+                      className={`flex items-center gap-1 p-2 transition-colors ${SURFACE}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => onToggleCompletion(item.id)}
+                        aria-pressed={item.completed}
+                        aria-label={`${item.name} 구매 표시`}
+                        className="flex h-11 w-9 shrink-0 items-center justify-center"
+                      >
+                        <span
+                          className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                            item.completed
+                              ? 'bg-[#6B46C1] text-white'
+                              : 'bg-white ring-1 ring-gray-300'
+                          }`}
+                        >
+                          {item.completed && <Check size={14} />}
+                        </span>
+                      </button>
+                      <span
+                        className={`min-w-0 flex-1 text-sm font-medium transition-colors ${
+                          item.completed
+                            ? 'text-gray-400 line-through'
+                            : 'text-gray-800'
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                      <div className="flex h-9 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity(item.id, -1)}
+                          aria-label={`${item.name} 수량 줄이기`}
+                          disabled={item.quantity <= 1}
+                          className="flex h-9 w-8 items-center justify-center rounded-l-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
+                        >
+                          <MinusIcon size={14} />
+                        </button>
+                        <span className="min-w-5 text-center text-sm font-semibold">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity(item.id, 1)}
+                          aria-label={`${item.name} 수량 늘리기`}
+                          className="flex h-9 w-8 items-center justify-center rounded-r-xl transition-colors hover:bg-gray-200"
+                        >
+                          <PlusIcon size={14} />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteItem(item.id)}
+                        aria-label={`${item.name} 지우기`}
+                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                      >
+                        <XIcon size={16} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={onClearCompleted}
+                  disabled={addPurchasedItems.isPending}
+                  className="mt-4 h-12 w-full rounded-2xl bg-[#6B46C1] text-sm font-semibold text-white transition-colors hover:bg-[#603fad] disabled:opacity-60"
+                >
+                  {addPurchasedItems.isPending
+                    ? '냉장고에 넣는 중...'
+                    : completedCount > 0
+                      ? `구매 완료 ${completedCount}개 냉장고에 넣기`
+                      : '산 품목을 체크해 주세요'}
+                </button>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-medium text-gray-600">
+                  <button
+                    type="button"
+                    onClick={onShowFavoriteInput}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-white"
+                  >
+                    <Star size={16} />
+                    즐겨찾기로 저장
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClearAll}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-white"
+                  >
+                    <Trash2 size={16} />
+                    전체 지우기
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        ) : favorites.length === 0 ? (
+          <div className="px-1 pt-10 text-center">
+            <p className="text-base font-semibold text-gray-800">
+              저장한 즐겨찾기가 없어요
+            </p>
+            <p className="mt-1 text-sm text-balance text-gray-500">
+              자주 사는 묶음을 저장하면 한 번에 불러올 수 있어요
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {favorites.map(favorite => (
+              <li
+                key={favorite.id}
+                className={`flex items-center gap-1 p-2 ${SURFACE}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onLoadFavorite(favorite.id)}
+                  className="min-h-11 min-w-0 flex-1 rounded-xl px-2 py-1 text-left transition-colors hover:bg-[#F4F4F8]"
+                >
+                  <span className="block text-sm font-semibold text-gray-800">
+                    {favorite.name}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-gray-500">
+                    {favorite.items.length}개 항목
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFavorites(prev =>
+                      prev.filter(fav => fav.id !== favorite.id),
+                    );
+                    toast(`'${favorite.name}' 즐겨찾기를 지웠어요`);
+                  }}
+                  aria-label={`${favorite.name} 즐겨찾기 지우기`}
+                  className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                >
+                  <XIcon size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <ActionToast
+        isVisible={showToast}
+        message={toastMessage}
+        actionLabel={undoAction ? '되돌리기' : undefined}
+        onAction={() => {
+          undoAction?.();
+          clearTimeout(toastTimerRef.current);
+          setShowToast(false);
+        }}
+      />
     </div>
   );
 };
