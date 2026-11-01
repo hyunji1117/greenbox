@@ -15,8 +15,8 @@ import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 // ---------- 컴포넌트 ----------
 import PurchaseStats from '@/app/components/fridge/PurchaseStats';
 import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
-import Toast from '@/app/components/common/Toast';
-import Button from '@/app/components/common/Button';
+import ActionToast from '@/app/components/common/ActionToast';
+import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 
 // ---------- 아이콘 ----------
@@ -183,6 +183,13 @@ const getDietaryRecommendations = (profile: UserProfile): string[] => {
 // ==========================================
 //            컴포넌트 메인
 // ==========================================
+
+const CATEGORY_TABS = [
+  { id: 'vegetables', label: '채소' },
+  { id: 'fruits', label: '과일' },
+  { id: 'meat', label: '고기' },
+  { id: 'seafood', label: '해산물' },
+] as const;
 
 const HealthAnalysisPage: React.FC = () => {
   // 디바운스용 ref 추가
@@ -636,61 +643,42 @@ const HealthAnalysisPage: React.FC = () => {
   // ==========================================
 
   return (
-    <div className="relative flex h-full flex-col p-6 md:p-6">
+    <div className="relative flex h-full flex-col p-4 pb-24 sm:p-6 sm:pb-24">
       {/* ---------- 헤더 ---------- */}
-      <div className="mb-4 flex items-center justify-between md:mb-6">
+      <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">AI 건강분석</h1>
       </div>
 
       {/* ---------- 카테고리 탭 ---------- */}
-      <div className="mt-2 mb-2 flex overflow-x-auto">
-        <div className="flex min-w-full space-x-2">
-          {['vegetables', 'fruits', 'meat', 'seafood'].map(category => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`flex min-h-[40px] min-w-[80px] flex-1 items-center justify-center rounded-xl shadow-sm ${
-                activeCategory === category
-                  ? category === 'vegetables'
-                    ? 'border border-green-300 bg-green-100 text-green-700'
-                    : category === 'fruits'
-                      ? 'border border-red-300 bg-red-100 text-red-700'
-                      : category === 'meat'
-                        ? 'border border-orange-300 bg-orange-100 text-orange-700'
-                        : 'border border-blue-300 bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 hover:bg-gray-200'
-              }`}
-            >
-              <span className="text-sm">
-                {category === 'vegetables'
-                  ? '채소'
-                  : category === 'fruits'
-                    ? '과일'
-                    : category === 'meat'
-                      ? '고기'
-                      : '해산물'}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <SegmentedTabs
+        tabs={CATEGORY_TABS}
+        activeId={activeCategory}
+        onChange={setActiveCategory}
+        className="mb-3"
+      />
 
       {/* ---------- 뷰 모드 선택 ---------- */}
       <div className="mb-2 flex items-center justify-between">
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="text-sm text-gray-500">
           총 {mockItems.filter(item => item.category === activeCategory).length}
           개 식재료
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setViewMode('grid')}
-            className={`rounded-xl p-1 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+            aria-label="격자로 보기"
+            aria-pressed={viewMode === 'grid'}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${viewMode === 'grid' ? 'bg-[#F1EDFA] text-[#553C9A]' : 'text-gray-500 hover:bg-white'}`}
           >
             <GridIcon size={18} />
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('list')}
-            className={`rounded-xl p-1 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+            aria-label="목록으로 보기"
+            aria-pressed={viewMode === 'list'}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${viewMode === 'list' ? 'bg-[#F1EDFA] text-[#553C9A]' : 'text-gray-500 hover:bg-white'}`}
           >
             <ListIcon size={18} />
           </button>
@@ -698,8 +686,8 @@ const HealthAnalysisPage: React.FC = () => {
       </div>
 
       {/* ---------- 식재료 리스트 ---------- */}
-      <div className="overflow-x-auto pb-4">
-        <div className="flex space-x-4" style={{ minWidth: 'min-content' }}>
+      <div className="-mx-4 overflow-x-auto px-4 pt-1 pb-4 sm:-mx-6 sm:px-6">
+        <div className="flex gap-3" style={{ minWidth: 'min-content' }}>
           {filteredItems.map((item, index) => {
             const listItem = shoppingList.find(
               listItem => listItem.name === item.name,
@@ -709,7 +697,7 @@ const HealthAnalysisPage: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="w-[180px] flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
+                className={`w-[168px] flex-shrink-0 overflow-hidden ${SURFACE}`}
               >
                 <div className="relative">
                   <div
@@ -731,7 +719,7 @@ const HealthAnalysisPage: React.FC = () => {
                     />
 
                     {purchaseCount > 0 && (
-                      <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
+                      <div className="absolute top-2 left-2 rounded-full bg-[#6B46C1] px-2.5 py-1 text-xs font-semibold text-white">
                         구매 {purchaseCount}회
                       </div>
                     )}
@@ -754,15 +742,18 @@ const HealthAnalysisPage: React.FC = () => {
 
                   <button
                     onClick={() => openNotificationSetting(item.id)}
-                    className="absolute -top-1 -right-0.5 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1]"
+                    aria-label={`${item.name} 유통기한 알림 설정`}
+                    className="absolute top-1.5 right-1.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/95 text-[#6B46C1] shadow-sm"
                   >
                     <BellIcon size={18} />
                   </button>
 
-                  <div className="flex items-center justify-between p-3">
-                    <h3 className="text-sm font-medium">{item.name}</h3>
+                  <div className="flex items-center justify-between gap-2 p-3">
+                    <h3 className="min-w-0 text-sm font-semibold">
+                      {item.name}
+                    </h3>
                     <div
-                      className={`text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
+                      className={`shrink-0 text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
                     >
                       {formatExpiryDate(item.expiryDate)}
                     </div>
@@ -786,8 +777,8 @@ const HealthAnalysisPage: React.FC = () => {
       <PurchaseStats />
 
       {/* ---------- 소비 현황 차트 ---------- */}
-      <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:mb-8 md:p-4">
-        <h2 className="mb-3 text-lg font-semibold md:mb-4">
+      <div className={`mb-4 p-4 ${SURFACE}`}>
+        <h2 className="mb-3 text-base font-semibold">
           식재료 소비 현황 (주간)
         </h2>
         <div className="h-48 md:h-64">
@@ -864,7 +855,7 @@ const HealthAnalysisPage: React.FC = () => {
       )}
 
       {/* ---------- 토스트 ---------- */}
-      <Toast message={toastMessage} isVisible={showToast} />
+      <ActionToast isVisible={showToast} message={toastMessage} />
     </div>
   );
 };
@@ -914,18 +905,18 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
   // activityOptions,
   // sleepOptions,
 }) => (
-  <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm md:p-4">
-    <h2 className="mb-3 text-lg font-semibold md:mb-4">건강 분석 및 추천</h2>
+  <div className={`mb-4 p-4 ${SURFACE}`}>
+    <h2 className="mb-3 text-base font-semibold">건강 분석 및 추천</h2>
 
     {/* 프로필 선택 드롭다운 */}
-    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mb-6 md:grid-cols-3 md:gap-4">
+    <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
       {/* 성별 드롭다운 */}
       <div className="dropdown-container relative">
-        <label className="mb-1 block text-sm font-medium text-gray-600">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
           성별
         </label>
         <div
-          className={`flex w-full cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-white p-2 shadow-sm ${!isDropdownEnabled('gender') ? 'cursor-not-allowed opacity-50' : ''}`}
+          className={`flex h-11 w-full cursor-pointer items-center justify-between rounded-xl bg-[#F4F4F8] px-3 text-sm text-gray-700 ${!isDropdownEnabled('gender') ? 'cursor-not-allowed opacity-50' : ''}`}
           onClick={() =>
             isDropdownEnabled('gender') && toggleDropdown('gender')
           }
@@ -940,10 +931,12 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
           <ChevronDownIcon size={16} />
         </div>
         {activeDropdown === 'gender' && (
-          <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-300 bg-white shadow-lg">
+          <div
+            className={`absolute z-10 mt-1 w-full overflow-hidden ${SURFACE}`}
+          >
             <ul>
               <li
-                className="cursor-pointer rounded-t-xl px-4 py-3 text-gray-400 hover:bg-gray-100"
+                className="cursor-pointer px-4 py-3 text-sm text-gray-400 hover:bg-[#F4F4F8]"
                 onClick={() => {
                   updateTempProfile('gender', '-- 선택 --');
                   toggleDropdown('');
@@ -954,7 +947,7 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
               {genderOptions.map(option => (
                 <li
                   key={option}
-                  className={`cursor-pointer px-4 py-3 hover:bg-gray-100 ${tempProfile.gender === option ? 'bg-purple-50 text-purple-700' : ''}`}
+                  className={`cursor-pointer px-4 py-3 text-sm hover:bg-[#F4F4F8] ${tempProfile.gender === option ? 'bg-[#F1EDFA] text-[#553C9A]' : ''}`}
                   onClick={() => {
                     updateTempProfile('gender', option);
                     toggleDropdown('');
@@ -973,29 +966,20 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
     </div>
 
     {/* 적용 버튼 */}
-    <div className="mb-4 flex justify-end md:mb-6">
-      <Button
-        onClick={applyProfileChanges}
-        variant="primary"
-        className="px-3 py-3 transition-colors"
-        disabled={!hasUnsavedChanges}
-      >
-        적용하기
-      </Button>
-    </div>
+    <button
+      type="button"
+      onClick={applyProfileChanges}
+      disabled={!hasUnsavedChanges}
+      className="mb-4 h-11 w-full rounded-xl bg-[#6B46C1] text-sm font-semibold text-white transition-colors hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
+    >
+      적용하기
+    </button>
 
     {/* 건강 통계 카드 */}
-    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mb-6 md:gap-4">
-      <div className="rounded-xl bg-[#796AFF] p-4 text-[#28272C] shadow-sm md:p-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="rounded-2xl border border-[#28272c] px-3.5 py-1 text-sm font-medium">
-            영양소 점수
-          </h3>
-          <button className="bg-opacity-20 rounded-full bg-white p-1">
-            <ChevronDownIcon size={16} color="#121212" />
-          </button>
-        </div>
-        <div className="mb-2 text-7xl font-extralight md:text-6xl">
+    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="rounded-2xl bg-[#6B46C1] p-4 text-white">
+        <h3 className="text-sm font-medium text-white/80">영양소 점수</h3>
+        <div className="mt-1 text-5xl font-semibold">
           {healthStats.nutrientScore}%
         </div>
       </div>
@@ -1004,11 +988,11 @@ const HealthAnalysisSection: React.FC<HealthAnalysisSectionProps> = ({
 
     {/* 추천 사항 */}
     <div className="mt-4">
-      <h3 className="text-md mb-3 flex items-center font-medium">
+      <h3 className="mb-2 flex items-center text-sm font-semibold">
         <InfoIcon size={16} className="mr-1 text-[#6B46C1]" />
         건강한 식이를 위한 추천
       </h3>
-      <ul className="space-y-1 text-sm">
+      <ul className="space-y-1 text-sm text-gray-700">
         {getDietaryRecommendations().map((recommendation, index) => (
           <li key={index} className="flex items-start">
             <span className="mr-2 flex-shrink-0 text-[#6B46C1]">•</span>
@@ -1035,8 +1019,8 @@ const FavoriteNameModal: React.FC<FavoriteNameModalProps> = ({
   onCancel,
 }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-xs rounded-lg bg-white p-5 sm:max-w-sm">
-      <h3 className="mb-3 text-lg font-medium">즐겨찾기에 추가</h3>
+    <div className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-lg sm:max-w-sm">
+      <h3 className="mb-1 text-base font-semibold">즐겨찾기에 추가</h3>
       <p className="mb-3 text-sm text-gray-500">
         장바구니 목록 이름을 작성하세요.
       </p>
@@ -1044,20 +1028,20 @@ const FavoriteNameModal: React.FC<FavoriteNameModalProps> = ({
         type="text"
         value={favoriteName}
         onChange={e => onNameChange(e.target.value)}
-        className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2"
+        className="mb-4 h-11 w-full rounded-xl bg-[#F4F4F8] px-3 text-base focus:ring-1 focus:ring-[#A794D6] focus:outline-none"
         placeholder="예: 주간 장보기, 파티 준비 등"
         autoFocus
       />
       <div className="flex justify-end space-x-2">
         <button
           onClick={onCancel}
-          className="px-4 py-2 text-gray-500 hover:text-gray-700"
+          className="h-11 rounded-xl px-4 text-sm font-medium text-gray-600 hover:bg-gray-100"
         >
           취소
         </button>
         <button
           onClick={onSave}
-          className="rounded-lg bg-[#6B46C1] px-4 py-2 text-white hover:bg-[#603fad]"
+          className="h-11 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold text-white hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
           disabled={favoriteName.trim() === ''}
         >
           저장

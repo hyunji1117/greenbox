@@ -5,6 +5,7 @@ import { TrendingUp, ListFilterIcon } from 'lucide-react';
 import Image from 'next/image';
 // mockData 파일에서 itemImageMap import
 import { itemImageMap } from '@/app/data/mockItems';
+import { SURFACE } from '@/app/components/common/SegmentedTabs';
 
 interface TopItem {
   itemName: string;
@@ -118,15 +119,15 @@ const PurchaseStats: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="h-48 animate-pulse rounded-xl bg-gray-200"></div>;
+    return <div className="h-48 animate-pulse rounded-2xl bg-white"></div>;
   }
 
   return (
     <>
       {/* TOP 5 섹션 */}
-      <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm">
-        <h2 className="mb-3 flex items-center text-lg font-semibold">
-          <TrendingUp size={20} className="mr-2 text-purple-600" />
+      <div className={`mb-4 p-4 ${SURFACE}`}>
+        <h2 className="mb-3 flex items-center text-base font-semibold">
+          <TrendingUp size={20} className="mr-2 text-[#6B46C1]" />
           자주 구매하는 식재료 TOP 5
         </h2>
         {topItems.length === 0 ? (
@@ -136,13 +137,13 @@ const PurchaseStats: React.FC = () => {
             {topItems.map((item, index) => (
               <div
                 key={item.itemName}
-                className="flex items-center justify-between rounded-lg bg-white p-2"
+                className="flex items-center justify-between rounded-xl bg-[#F4F4F8] px-3 py-2.5"
               >
                 <div className="flex items-center">
-                  <span className="mr-3 text-lg font-bold text-purple-600">
+                  <span className="mr-3 text-sm font-bold text-[#6B46C1]">
                     {index + 1}
                   </span>
-                  <span className="font-medium">{item.itemName}</span>
+                  <span className="text-sm font-medium">{item.itemName}</span>
                 </div>
                 <div className="text-sm text-gray-600">
                   구매 {item.purchaseCount}회
@@ -155,24 +156,26 @@ const PurchaseStats: React.FC = () => {
 
       {/* 필터 섹션 */}
       {allPurchaseHistory.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">구매 이력 필터</h2>
+            <h2 className="text-base font-semibold">구매 이력 필터</h2>
             <div className="relative">
               <button
                 onClick={toggleSortOptions}
-                className="flex items-center space-x-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm hover:bg-gray-200"
+                className="flex h-9 items-center gap-1 rounded-xl bg-white px-3 text-sm font-medium text-gray-700 ring-1 ring-black/5 transition-colors hover:bg-[#F4F4F8]"
               >
                 <ListFilterIcon size={16} />
                 <span>필터</span>
               </button>
               {showSortOptions && (
-                <div className="absolute top-full right-0 z-10 mt-1 w-48 rounded-md border bg-white shadow-md">
+                <div
+                  className={`absolute top-full right-0 z-10 mt-1 w-48 overflow-hidden ${SURFACE}`}
+                >
                   <ul>
                     <li>
                       <button
                         onClick={() => applySortOption('most-purchased')}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                        className={`w-full px-4 py-3 text-left text-sm hover:bg-[#F4F4F8] ${
                           sortOption === 'most-purchased'
                             ? 'bg-gray-100 font-medium'
                             : ''
@@ -184,7 +187,7 @@ const PurchaseStats: React.FC = () => {
                     <li>
                       <button
                         onClick={() => applySortOption('least-purchased')}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                        className={`w-full px-4 py-3 text-left text-sm hover:bg-[#F4F4F8] ${
                           sortOption === 'least-purchased'
                             ? 'bg-gray-100 font-medium'
                             : ''
@@ -196,7 +199,7 @@ const PurchaseStats: React.FC = () => {
                     <li>
                       <button
                         onClick={() => applySortOption('first-purchase')}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                        className={`w-full px-4 py-3 text-left text-sm hover:bg-[#F4F4F8] ${
                           sortOption === 'first-purchase'
                             ? 'bg-gray-100 font-medium'
                             : ''
@@ -208,7 +211,7 @@ const PurchaseStats: React.FC = () => {
                     <li>
                       <button
                         onClick={() => applySortOption('recent-purchase')}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                        className={`w-full px-4 py-3 text-left text-sm hover:bg-[#F4F4F8] ${
                           sortOption === 'recent-purchase'
                             ? 'bg-gray-100 font-medium'
                             : ''
@@ -224,7 +227,7 @@ const PurchaseStats: React.FC = () => {
           </div>
 
           {/* 필터링된 아이템 보드 */}
-          <div className="mb-2 rounded-xl border border-gray-200 bg-gray-50 px-4 pt-4 pb-1 shadow-sm">
+          <div className={`mb-2 px-4 pt-4 pb-2 ${SURFACE}`}>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700">
                 {sortOption === 'most-purchased' && '가장 많이 구매한 식재료'}
@@ -246,7 +249,7 @@ const PurchaseStats: React.FC = () => {
 
                   return (
                     <div key={item.itemName} className="w-24 flex-shrink-0">
-                      <div className="relative mb-2 h-24 w-24 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                      <div className="relative mb-2 h-24 w-24 overflow-hidden rounded-xl ring-1 ring-black/5">
                         {imageUrl ? (
                           <Image
                             src={imageUrl}
@@ -257,7 +260,7 @@ const PurchaseStats: React.FC = () => {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-100 to-purple-200">
-                            <span className="text-2xl font-bold text-purple-600">
+                            <span className="text-2xl font-bold text-[#6B46C1]">
                               {item.itemName.charAt(0)}
                             </span>
                           </div>
@@ -265,7 +268,7 @@ const PurchaseStats: React.FC = () => {
 
                         {/* 순위 표시 */}
                         {/* <div className="absolute top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm">
-                          <span className="text-xs font-bold text-purple-600">
+                          <span className="text-xs font-bold text-[#6B46C1]">
                             {index + 1}
                           </span>
                         </div> */}
@@ -273,11 +276,11 @@ const PurchaseStats: React.FC = () => {
                         {/* 정렬 옵션에 따른 배지 표시 */}
                         {sortOption === 'most-purchased' ||
                         sortOption === 'least-purchased' ? (
-                          <div className="absolute right-0 bottom-0 rounded-tl-md bg-[#6B46C1] px-1.5 py-0.5 text-xs text-white">
+                          <div className="absolute right-0 bottom-0 rounded-tl-lg bg-[#6B46C1] px-1.5 py-0.5 text-xs text-white">
                             {item.purchaseCount}회
                           </div>
                         ) : (
-                          <div className="absolute right-0 bottom-0 rounded-tl-md bg-gray-700 px-1.5 py-0.5 text-xs text-white">
+                          <div className="absolute right-0 bottom-0 rounded-tl-lg bg-gray-700 px-1.5 py-0.5 text-xs text-white">
                             {sortOption === 'first-purchase' &&
                             item.firstPurchaseDate
                               ? formatDate(item.firstPurchaseDate)
