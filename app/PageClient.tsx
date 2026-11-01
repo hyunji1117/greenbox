@@ -133,7 +133,9 @@ export default function PageClient() {
           />
         );
       case 'ingredients':
-        return <IngredientsBoard />;
+        return (
+          <IngredientsBoard onGoToFridge={() => handleTabChange('fridge')} />
+        );
       case 'shoppingList':
         return <GroceryListPage />;
       case 'settings':
