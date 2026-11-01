@@ -3,11 +3,8 @@
 
 import React, { useState } from 'react';
 import { useFridge } from '@/app/context/FridgeContext';
-import {
-  useAddComment,
-  useFinishItem,
-  useUpdateItem,
-} from '@/app/lib/items/useItems';
+import { useAddComment, useUpdateItem } from '@/app/lib/items/useItems';
+import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import {
   daysUntilExpiry,
   EXPIRY_SOON_DAYS,
@@ -39,11 +36,14 @@ interface FridgeItemProps {
     finished: boolean;
     expiryDate?: string;
   };
+  onFinish: (kind: FinishKind) => void;
 }
-const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
+const FridgeItem: React.FC<FridgeItemProps> = ({
+  item,
+  onFinish,
+}) => {
   const { currentUser, getFamilyMemberName } = useFridge();
   const updateItem = useUpdateItem(item.id);
-  const { finishItem, isError: isFinishError } = useFinishItem(item.id);
   const addComment = useAddComment();
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -101,13 +101,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       return `${Math.floor(diffInSeconds / 3600)}시간 전`;
     return `${Math.floor(diffInSeconds / 86400)}일 전`;
   };
-  // 현재로서는 다 먹음과 동일한 동작을 사용합니다.
-  // 추후 애플리케이션에서 "버림"과 "다 먹음"을 다르게 추적 예정.
-  const handleTrashItem = () => {
-    finishItem(item.id);
-  };
   return (
-    <article className="rounded-2xl bg-white p-4 text-gray-800 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5">
+    <article
+      className={`rounded-2xl bg-white p-4 text-gray-800 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-lg leading-snug font-semibold">{item.name}</h3>
@@ -136,7 +133,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             value={expiryDraft ?? item.expiryDate ?? ''}
             onChange={handleExpiryChange}
             onBlur={() => setExpiryDraft(null)}
-            className="mt-1 block h-10 w-full min-w-0 rounded-xl bg-[#F4F4F8] px-2 text-sm font-normal text-gray-700 focus:ring-2 focus:ring-[#6B46C1] focus:outline-none"
+            className="mt-1 block h-10 w-full min-w-0 rounded-xl bg-[#F4F4F8] px-2 text-base font-normal text-gray-700 focus:ring-1 focus:ring-[#A794D6] focus:outline-none"
           />
         </label>
         <div className="flex h-10 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
@@ -178,21 +175,21 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
         </button>
         <button
           type="button"
-          onClick={() => finishItem(item.id)}
+          onClick={() => onFinish('eaten')}
           className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
         >
           <CircleCheckBig size={18} />다 먹음
         </button>
         <button
           type="button"
-          onClick={handleTrashItem}
+          onClick={() => onFinish('discarded')}
           className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
         >
           <Trash2 size={18} />
           버림
         </button>
       </div>
-      {(updateItem.isError || isFinishError) && (
+      {updateItem.isError && (
         <p className="mt-2 text-xs text-red-500">
           저장하지 못해 이전 상태로 되돌렸어요.
         </p>
