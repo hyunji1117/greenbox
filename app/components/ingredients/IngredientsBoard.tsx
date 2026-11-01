@@ -5,9 +5,13 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Plus, ListIcon, GridIcon, BellIcon, ScanLine } from 'lucide-react';
+import { BellIcon, ChevronRightIcon, Plus } from 'lucide-react';
+import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import ExpiryDateSetting from '@/app/components/fridge/ExpiryDateSetting';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
+import { EXPIRY_SOON_DAYS, expiryLabel } from '@/app/lib/items/expiry';
+import { summarizeItems } from '@/app/lib/items/summary';
+import { useItems } from '@/app/lib/items/useItems';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
 export interface ShoppingListItem {
@@ -21,10 +25,42 @@ interface IngredientsBoardProps {
   shoppingList?: ShoppingListItem[];
   addToShoppingList?: (name: string, quantity?: number) => void;
   itemPurchaseCounts?: Map<string, number>;
+  onGoToFridge?: () => void;
 }
 
+const CATEGORY_TABS = [
+  { id: 'vegetables', label: '채소' },
+  { id: 'fruits', label: '과일' },
+  { id: 'meat', label: '고기' },
+  { id: 'seafood', label: '해산물' },
+] as const;
+
+const LOCATION_CARDS = [
+  {
+    id: 'fridge',
+    name: '냉장실',
+    image:
+      'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=720&q=80',
+  },
+  {
+    id: 'freezer',
+    name: '냉동실',
+    image:
+      'https://images.unsplash.com/photo-1580915411954-282cb1b0d780?auto=format&fit=crop&w=720&q=80',
+  },
+  {
+    id: 'pantry',
+    name: '저장고',
+    image:
+      'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=720&q=80',
+  },
+] as const;
+
 const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
-  const { shoppingList, addToShoppingList, itemPurchaseCounts } = props;
+  const { shoppingList, addToShoppingList, itemPurchaseCounts, onGoToFridge } =
+    props;
+  const { data: items = [], isPending, error } = useItems();
+  const summary = summarizeItems(items);
 
   // 프롭이 없을 때를 위한 내부 fallback 상태
   const [internalList, setInternalList] = useState<ShoppingListItem[]>(
@@ -60,7 +96,6 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
 
   // ===== 기존 UI 상태들 =====
   const [activeCategory, setActiveCategory] = useState<string>('vegetables');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const filteredItems = useMemo<FridgeItem[]>(
     () => mockItems.filter(i => i.category === activeCategory),
     [activeCategory],
@@ -80,22 +115,6 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
     },
     [safeAdd],
   );
-
-  const formatExpiryDate = (date: Date) => {
-    const now = new Date();
-    const diffDays = Math.ceil((date.getTime() - now.getTime()) / 86400000);
-    return diffDays > 0 ? `${diffDays}일 남음` : '오늘 만료';
-  };
-
-  const getExpiryStatusColor = (expiryDate: Date) => {
-    const now = new Date();
-    const diffDays = Math.ceil(
-      (expiryDate.getTime() - now.getTime()) / 86400000,
-    );
-    if (diffDays <= 2) return 'text-red-500';
-    if (diffDays <= 4) return 'text-yellow-500';
-    return 'text-green-500';
-  };
 
   const openNotificationSetting = (itemId: number) => {
     setSelectedItemId(itemId);
@@ -121,7 +140,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
     if (imageErrors.has(item.id)) {
       return '/images/placeholder.jpg';
     }
-    
+
     // URL 디코딩 처리
     try {
       const decodedUrl = decodeURIComponent(item.imageUrl);
@@ -131,244 +150,164 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
     }
   };
 
-  const quickGrabItems = [
-    { name: '바나나', emoji: '🍌', count: 4 },
-    { name: '아이스크림', emoji: '🍨', count: 5 },
-    { name: '육포', emoji: '🥩', count: 8 },
-  ];
-
-  const locationCards = [
-    {
-      name: '팬트리',
-      count: 56,
-      image:
-        'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=720&q=80',
-    },
-    {
-      name: '냉장고',
-      count: 37,
-      image:
-        'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=720&q=80',
-    },
-    {
-      name: '냉동실',
-      count: 37,
-      image:
-        'https://images.unsplash.com/photo-1580915411954-282cb1b0d780?auto=format&fit=crop&w=720&q=80',
-    },
-  ];
+  const summaryText = isPending
+    ? '불러오는 중...'
+    : error
+      ? '품목을 불러오지 못했어요'
+      : `품목 ${summary.total}개, 유통기한 임박 ${summary.expiringSoonCount}개`;
 
   return (
-    <>
-      <section className="mx-4 mt-5 mb-2 rounded-[28px] bg-[#f7f7fa] px-4 py-4 sm:mx-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-[28px] font-semibold sm:text-[34px] leading-none tracking-[-0.02em] text-[#2f2f35]">
-              식료품
-            </h2>
-            <p className="mt-2 text-[15px] leading-snug text-[#888892] sm:text-[22px] sm:leading-none">
-              품목 33개, 유통기한 임박 5개
-            </p>
-          </div>
+    <div className="p-4 pb-24 sm:p-6 sm:pb-24">
+      <h1 className="text-xl font-semibold">우리집 식료품</h1>
+      <p className="mt-1 mb-4 text-sm text-gray-500">{summaryText}</p>
+
+      <section className={`mb-4 p-4 ${SURFACE}`}>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold">바로 꺼내기</h2>
           <button
-            className="mt-1 flex h-12 w-12 shrink-0 items-center sm:h-14 sm:w-14 justify-center rounded-full bg-[#cff2d8] text-[#4b2f8c]"
-            aria-label="식료품 스캔"
+            type="button"
+            onClick={onGoToFridge}
+            className="flex h-9 shrink-0 items-center text-sm font-medium text-[#6B46C1]"
           >
-            <ScanLine size={24} />
+            전체 보기
+            <ChevronRightIcon size={16} />
           </button>
         </div>
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_2fr]">
-          <div>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-[24px] sm:text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
-                바로 꺼내기
-              </h3>
-              <button className="shrink-0 text-[15px] font-medium whitespace-nowrap text-[#6ab2a7] sm:text-[20px]">
-                전체 보기
-              </button>
-            </div>
-            <div className="space-y-2">
-              {quickGrabItems.map(item => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between rounded-2xl bg-white/85 px-3 py-2.5"
+        {summary.expiringFirst.length === 0 ? (
+          <p className="rounded-xl bg-[#F4F4F8] px-3 py-4 text-center text-sm text-balance text-gray-500">
+            냉장고에 유통기한을 넣으면 먼저 먹을 품목을 알려 드려요
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {summary.expiringFirst.map(({ item, days }) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-xl bg-[#F4F4F8] px-3 py-2.5"
+              >
+                <span className="min-w-0 truncate text-sm font-semibold text-gray-800">
+                  {item.name}
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    days <= EXPIRY_SOON_DAYS
+                      ? 'bg-red-50 text-red-600'
+                      : 'bg-[#F1EDFA] text-[#553C9A]'
+                  }`}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f3f7] text-2xl">
-                      {item.emoji}
-                    </div>
-                    <span className="truncate text-[18px] font-semibold leading-none text-[#323238] sm:text-[24px]">
-                      {item.name}
-                    </span>
-                  </div>
-                  <span className="text-[20px] font-medium leading-none text-[#76767f] sm:text-[28px]">
-                    {item.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-[24px] sm:text-[34px] font-semibold leading-none tracking-[-0.02em] text-[#2f2f35]">
-              보관 위치
-            </h3>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {locationCards.map(card => (
-                <div
-                  key={card.name}
-                  className="relative h-[130px] overflow-hidden sm:h-[170px] rounded-2xl bg-cover bg-center"
-                  style={{ backgroundImage: `url(${card.image})` }}
-                >
-                  <div className="absolute inset-0 bg-black/20" />
-                  <div className="absolute inset-x-1 bottom-3 text-center text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
-                    <p className="text-[26px] font-semibold leading-none sm:text-[36px]">
-                      {card.count}
-                    </p>
-                    <p className="mt-1 truncate text-[15px] font-semibold leading-none sm:text-[24px]">
-                      {card.name}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                  {expiryLabel(days)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
-      {/* 카테고리 탭, 뷰 토글 영역 동일 */}
-      <div className="mt-2 mb-2 flex overflow-x-auto px-4 py-4 sm:p-6">
-        <div className="flex min-w-full space-x-2">
-          {['vegetables', 'fruits', 'meat', 'seafood'].map(category => (
+      <section className="mb-6">
+        <h2 className="mb-2 text-base font-semibold">보관 위치</h2>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {LOCATION_CARDS.map(card => (
             <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`flex min-h-[40px] min-w-[64px] flex-1 whitespace-nowrap items-center justify-center rounded-xl shadow-sm ${
-                activeCategory === category
-                  ? category === 'vegetables'
-                    ? 'border border-green-300 bg-green-100 text-green-700'
-                    : category === 'fruits'
-                      ? 'border border-red-300 bg-red-100 text-red-700'
-                      : category === 'meat'
-                        ? 'border border-orange-300 bg-orange-100 text-orange-700'
-                        : 'border border-blue-300 bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              key={card.id}
+              type="button"
+              onClick={onGoToFridge}
+              aria-label={`${card.name} ${summary.byCategory[card.id]}개, 냉장고 탭으로 이동`}
+              className="relative h-28 overflow-hidden rounded-2xl bg-cover bg-center sm:h-36"
+              style={{ backgroundImage: `url(${card.image})` }}
             >
-              <span className="text-sm">
-                {category === 'vegetables'
-                  ? '채소'
-                  : category === 'fruits'
-                    ? '과일'
-                    : category === 'meat'
-                      ? '고기'
-                      : '해산물'}
+              <span className="absolute inset-0 bg-black/30" />
+              <span className="absolute inset-x-1 bottom-3 text-center text-white">
+                <span className="block text-2xl leading-none font-semibold">
+                  {summary.byCategory[card.id]}
+                </span>
+                <span className="mt-1 block truncate text-sm font-medium">
+                  {card.name}
+                </span>
               </span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="mb-2 flex items-center justify-between px-4 sm:px-6">
-        <div className="text-sm text-gray-500">
-          총 {filteredItems.length}개 식재료
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`rounded-xl p-1 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-            aria-pressed={viewMode === 'grid'}
+      <section>
+        <h2 className="text-base font-semibold">장볼 식재료 고르기</h2>
+        <p className="mt-0.5 mb-3 text-sm text-gray-500">
+          사진을 누르면 리스트에 담겨요
+        </p>
+        <SegmentedTabs
+          tabs={CATEGORY_TABS}
+          activeId={activeCategory}
+          onChange={setActiveCategory}
+          className="mb-3"
+        />
+        <div className="-mx-4 overflow-x-auto px-4 pt-1 pb-4 sm:-mx-6 sm:px-6">
+          <div
+            key={activeCategory}
+            className="motion-safe:animate-tab-fade flex gap-3"
+            style={{ minWidth: 'min-content' }}
           >
-            <GridIcon size={18} />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`rounded-xl p-1 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-            aria-pressed={viewMode === 'list'}
-          >
-            <ListIcon size={18} />
-          </button>
-        </div>
-      </div>
+            {filteredItems.map((item, index) => {
+              const listItem = (list ?? []).find(s => s.name === item.name);
+              const purchaseCount = counts.get(item.name) || 0;
 
-      {/* ▶ 여기서 list 가 항상 배열이 되도록 보장됨 */}
-      <div className="overflow-x-auto px-4 pb-4 sm:px-6">
-        <div className="flex space-x-4" style={{ minWidth: 'min-content' }}>
-          {filteredItems.map((item, index) => {
-            const listItem = (list ?? []).find(s => s.name === item.name);
-            const purchaseCount = counts.get(item.name) || 0;
+              return (
+                <div
+                  key={item.id}
+                  className={`w-[168px] flex-shrink-0 overflow-hidden ${SURFACE}`}
+                >
+                  <div className="relative">
+                    <button
+                      type="button"
+                      aria-label={`${item.name} 리스트에 담기`}
+                      className="relative block aspect-[180/128] w-full cursor-pointer"
+                      onClick={() => handleItemClick(item.name)}
+                    >
+                      <Image
+                        src={getImageUrl(item)}
+                        alt=""
+                        className="object-cover"
+                        fill
+                        sizes="168px"
+                        priority={index < 4}
+                        quality={75}
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
+                        onError={() => handleImageError(item.id)}
+                        style={{ touchAction: 'manipulation' }}
+                      />
 
-            return (
-              <div
-                key={item.id}
-                className="w-[180px] flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="relative">
-                  <div
-                    className="relative aspect-[180/128] w-full cursor-pointer"
-                    onClick={() => handleItemClick(item.name)}
-                  >
-                    <Image
-                      src={getImageUrl(item)}
-                      alt={item.name}
-                      className="object-cover"
-                      fill
-                      sizes="(max-width: 640px) 180px, (max-width: 768px) 180px, 180px"
-                      priority={index < 4}
-                      quality={75}
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
-                      onError={() => handleImageError(item.id)}
-                      style={{
-                        touchAction: 'manipulation',
-                      }}
-                    />
+                      {purchaseCount > 0 && (
+                        <span className="absolute top-2 left-2 rounded-full bg-[#6B46C1] px-2.5 py-1 text-xs font-semibold text-white">
+                          구매 {purchaseCount}회
+                        </span>
+                      )}
 
-                    {purchaseCount > 0 && (
-                      <div className="absolute top-0 left-0 rounded-br-md bg-[#6B46C1] px-2 py-1 text-xs font-medium text-white">
-                        구매 {purchaseCount}회
-                      </div>
-                    )}
-
-                    {listItem && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <div className="flex items-center space-x-0">
-                          <Plus
-                            size={35}
-                            className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                            strokeWidth={2}
-                          />
-                          <span className="text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                      {listItem && (
+                        <span className="absolute inset-0 flex items-center justify-center bg-[#4B2F8C]/55 text-white">
+                          <Plus size={28} strokeWidth={2} />
+                          <span className="text-3xl font-semibold">
                             {listItem.quantity}
                           </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                        </span>
+                      )}
+                    </button>
 
-                  <button
-                    onClick={() => openNotificationSetting(item.id)}
-                    className="absolute -top-1 -right-0.5 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-bl-md bg-white/95 pt-1 pr-0.5 text-[#6B46C1]"
-                    aria-label={`${item.name} 알림 설정`}
-                  >
-                    <BellIcon size={18} />
-                  </button>
-
-                  <div className="flex items-center justify-between p-3">
-                    <h3 className="text-sm font-medium">{item.name}</h3>
-                    <div
-                      className={`text-xs font-medium ${getExpiryStatusColor(item.expiryDate)}`}
+                    <button
+                      type="button"
+                      onClick={() => openNotificationSetting(item.id)}
+                      className="absolute top-1.5 right-1.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/95 text-[#6B46C1] shadow-sm"
+                      aria-label={`${item.name} 알림 설정`}
                     >
-                      {formatExpiryDate(item.expiryDate)}
-                    </div>
+                      <BellIcon size={18} />
+                    </button>
+
+                    <h3 className="p-3 text-sm font-semibold">{item.name}</h3>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </section>
 
       <ExpiryDateSetting
         isOpen={showBottomSheet}
@@ -376,7 +315,7 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = props => {
         itemId={selectedItemId}
         itemName={getSelectedItemName()}
       />
-    </>
+    </div>
   );
 };
 
