@@ -4,6 +4,8 @@
 import React, { useState } from 'react';
 import { ApiSchemaError } from '@/app/lib/api/apiFetch';
 import { useItems } from '@/app/lib/items/useItems';
+import { useFinishWithUndo } from '@/app/lib/items/useFinishWithUndo';
+import ActionToast from '@/app/components/common/ActionToast';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import AddItemForm from '@/app/components/grocery-list/AddItemForm';
 import { RefrigeratorIcon, SnowflakeIcon, PackageIcon } from 'lucide-react';
@@ -13,6 +15,7 @@ const FridgeBoard: React.FC = () => {
     'fridge' | 'freezer' | 'pantry'
   >('fridge');
   const [showAddForm, setShowAddForm] = useState(false);
+  const { notice, isNoticeVisible, finish, undo } = useFinishWithUndo();
   const filteredItems = items.filter(
     item => item.category === activeCategory && !item.finished,
   );
@@ -72,11 +75,22 @@ const FridgeBoard: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {filteredItems.map(item => (
-              <FridgeItem key={item.id} item={item} />
+              <FridgeItem
+                key={item.id}
+                item={item}
+                onFinish={kind => finish(item, kind)}
+              />
             ))}
           </div>
         )}
       </div>
+      <ActionToast
+        isVisible={isNoticeVisible}
+        subject={notice?.subject}
+        message={notice?.message ?? ''}
+        actionLabel={notice?.canUndo ? '되돌리기' : undefined}
+        onAction={undo}
+      />
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
