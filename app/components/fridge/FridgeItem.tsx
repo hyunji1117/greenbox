@@ -13,6 +13,7 @@ import {
 } from '@/app/lib/items/expiry';
 import { COMMENT_TEXT_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import {
+  CalendarDaysIcon,
   CircleCheckBig,
   MessageCircleIcon,
   MinusIcon,
@@ -51,6 +52,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   const [newComment, setNewComment] = useState('');
   // 날짜를 입력하는 도중의 값. 저장 전이거나 저장에 실패하면 서버 값과 다를 수 있다
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
+  const expiryValue = expiryDraft ?? item.expiryDate ?? '';
   const expiryDays =
     item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
   const handleAddComment = (e: React.FormEvent) => {
@@ -130,13 +132,22 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
       <div className="mt-3 flex items-end gap-2">
         <label className="min-w-0 flex-1 text-xs font-medium text-gray-500">
           유통기한
-          <input
-            type="date"
-            value={expiryDraft ?? item.expiryDate ?? ''}
-            onChange={handleExpiryChange}
-            onBlur={() => setExpiryDraft(null)}
-            className="mt-1 block h-10 w-full min-w-0 rounded-xl bg-[#F4F4F8] px-2 text-base font-normal text-gray-700 focus:ring-1 focus:ring-[#A794D6] focus:outline-none"
-          />
+          {/* iOS Safari의 날짜 입력은 폭과 정렬을 따르지 않아, 보이는 값은 직접 그리고 입력은 투명하게 덮는다 */}
+          <span className="relative mt-1 flex h-10 items-center justify-between gap-1 rounded-xl bg-[#F4F4F8] px-3 text-sm font-normal focus-within:ring-1 focus-within:ring-[#A794D6]">
+            <span
+              className={`truncate ${expiryValue ? 'text-gray-700' : 'text-gray-400'}`}
+            >
+              {expiryValue ? expiryValue.replaceAll('-', '. ') : '날짜 선택'}
+            </span>
+            <CalendarDaysIcon size={16} className="shrink-0 text-gray-500" />
+            <input
+              type="date"
+              value={expiryValue}
+              onChange={handleExpiryChange}
+              onBlur={() => setExpiryDraft(null)}
+              className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            />
+          </span>
         </label>
         <div className="flex h-10 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
           <button
