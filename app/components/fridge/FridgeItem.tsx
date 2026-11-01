@@ -8,6 +8,12 @@ import {
   useFinishItem,
   useUpdateItem,
 } from '@/app/lib/items/useItems';
+import {
+  daysUntilExpiry,
+  EXPIRY_SOON_DAYS,
+  expiryLabel,
+  isSavableExpiryDate,
+} from '@/app/lib/items/expiry';
 import { COMMENT_TEXT_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import {
   CircleCheckBig,
@@ -32,6 +38,7 @@ interface FridgeItemProps {
       createdAt: Date;
     }>;
     finished: boolean;
+    expiryDate?: string;
   };
 }
 const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
@@ -41,6 +48,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
   const addComment = useAddComment();
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
+  // 날짜를 입력하는 도중의 값. 저장 전이거나 저장에 실패하면 서버 값과 다를 수 있다
+  const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
+  const expiryDays =
+    item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (newComment.trim() && !addComment.isPending) {
@@ -70,6 +81,16 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
       });
     }
   };
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const expiryDate = e.target.value;
+    setExpiryDraft(expiryDate);
+    if (isSavableExpiryDate(expiryDate) && expiryDate !== item.expiryDate) {
+      updateItem.mutate(
+        { id: item.id, updates: { expiryDate } },
+        { onError: () => setExpiryDraft(null) },
+      );
+    }
+  };
   const getRelativeTimeString = (date: Date): string => {
     const now = new Date();
     const diffInSeconds = Math.floor(
@@ -89,11 +110,11 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
   return (
     <div className="mt-2 rounded-xl border-l-4 border-[#6B46C1] bg-[#FBFBFF] p-4 text-base font-semibold text-gray-800 shadow-md transition-shadow">
       <div className="flex items-start justify-between rounded-xl">
-        <div className="relative flex items-center">
+        <div className="relative flex min-w-0 flex-1 items-center">
           <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600 shadow-sm">
             {item.quantity}
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="mb-2 text-lg font-semibold">{item.name}</h3>
             <div className="flex items-center">
               <p className="mr-3 text-sm text-gray-500">
@@ -103,7 +124,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             </div>
           </div>
         </div>
-        <section>
+        <section className="shrink-0">
           <div className="relative -top-1 flex space-x-2">
             <Button
               onClick={() => setShowComments(!showComments)}
@@ -154,6 +175,25 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
             </button>
           </div>
         </section>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          aria-label={`${item.name} 유통기한`}
+          value={expiryDraft ?? item.expiryDate ?? ''}
+          onChange={handleExpiryChange}
+          onBlur={() => setExpiryDraft(null)}
+          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm font-normal text-gray-600"
+        />
+        {expiryDays !== null && (
+          <span
+            className={`text-sm font-medium ${
+              expiryDays <= EXPIRY_SOON_DAYS ? 'text-red-500' : 'text-gray-500'
+            }`}
+          >
+            {expiryLabel(expiryDays)}
+          </span>
+        )}
       </div>
       {(updateItem.isError || isFinishError) && (
         <p className="mt-2 text-xs text-red-500">
