@@ -22,7 +22,6 @@ import {
   PlusIcon,
   Trash2,
 } from 'lucide-react';
-import Button from '@/app/components/common/Button';
 interface FridgeItemProps {
   item: {
     id: string;
@@ -108,92 +107,90 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
     finishItem(item.id);
   };
   return (
-    <div className="mt-2 rounded-xl border-l-4 border-[#6B46C1] bg-[#FBFBFF] p-4 text-base font-semibold text-gray-800 shadow-md transition-shadow">
-      <div className="flex items-start justify-between rounded-xl">
-        <div className="relative flex min-w-0 flex-1 items-center">
-          <div className="absolute -top-6 -left-5 flex h-6 w-6 items-center justify-center rounded-full border border-[#9E9E9E] bg-white text-sm font-medium text-gray-600 shadow-sm">
-            {item.quantity}
-          </div>
-          <div className="min-w-0">
-            <h3 className="mb-2 text-lg font-semibold">{item.name}</h3>
-            <div className="flex items-center">
-              <p className="mr-3 text-sm text-gray-500">
-                {getFamilyMemberName(item.addedBy)}가{' '}
-                {getRelativeTimeString(item.addedAt)} 추가
-              </p>
-            </div>
-          </div>
+    <article className="rounded-2xl bg-white p-4 text-gray-800 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-lg leading-snug font-semibold">{item.name}</h3>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {getFamilyMemberName(item.addedBy)}가{' '}
+            {getRelativeTimeString(item.addedAt)} 추가
+          </p>
         </div>
-        <section className="shrink-0">
-          <div className="relative -top-1 flex space-x-2">
-            <Button
-              onClick={() => setShowComments(!showComments)}
-              variant="secondary"
-              className="relative rounded-full border border-gray-300 bg-[#F2F2F6] p-1"
-              title="댓글"
-            >
-              <MessageCircleIcon size={20} />
-              {item.comments.length > 0 && (
-                <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-400 text-xs text-white">
-                  {item.comments.length}
-                </span>
-              )}
-            </Button>
-            <Button
-              onClick={() => finishItem(item.id)}
-              variant="secondary"
-              className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
-              title="다 먹음"
-            >
-              <CircleCheckBig size={20} />
-            </Button>
-            <Button
-              onClick={handleTrashItem}
-              variant="secondary"
-              className="rounded-full p-1 text-[#6B7280] shadow-sm hover:bg-gray-100"
-              title="버림"
-            >
-              <Trash2 size={20} />
-            </Button>
-          </div>
-          <div className="mt-2 flex max-w-35 items-center justify-around overflow-hidden rounded-xl bg-gray-100 shadow-sm">
-            <button
-              onClick={decrementQuantity}
-              className="px-2 py-0.5 text-[#6B7280] transition-colors hover:bg-gray-200"
-              disabled={item.quantity <= 1}
-            >
-              <MinusIcon size={16} />
-            </button>
-            <span className="px-3 py-0.5 text-sm font-medium text-[#6B7280]">
-              {item.quantity}
-            </span>
-            <button
-              onClick={incrementQuantity}
-              className="px-2 py-0.5 text-[#6B7280] transition-colors hover:bg-gray-200"
-            >
-              <PlusIcon size={16} />
-            </button>
-          </div>
-        </section>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <input
-          type="date"
-          aria-label={`${item.name} 유통기한`}
-          value={expiryDraft ?? item.expiryDate ?? ''}
-          onChange={handleExpiryChange}
-          onBlur={() => setExpiryDraft(null)}
-          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm font-normal text-gray-600"
-        />
         {expiryDays !== null && (
           <span
-            className={`text-sm font-medium ${
-              expiryDays <= EXPIRY_SOON_DAYS ? 'text-red-500' : 'text-gray-500'
+            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+              expiryDays <= EXPIRY_SOON_DAYS
+                ? 'bg-red-50 text-red-600'
+                : 'bg-[#F1EDFA] text-[#553C9A]'
             }`}
           >
             {expiryLabel(expiryDays)}
           </span>
         )}
+      </div>
+      <div className="mt-3 flex items-end gap-2">
+        <label className="min-w-0 flex-1 text-xs font-medium text-gray-500">
+          유통기한
+          <input
+            type="date"
+            value={expiryDraft ?? item.expiryDate ?? ''}
+            onChange={handleExpiryChange}
+            onBlur={() => setExpiryDraft(null)}
+            className="mt-1 block h-10 w-full min-w-0 rounded-xl bg-[#F4F4F8] px-2 text-sm font-normal text-gray-700 focus:ring-2 focus:ring-[#6B46C1] focus:outline-none"
+          />
+        </label>
+        <div className="flex h-10 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
+          <button
+            type="button"
+            onClick={decrementQuantity}
+            aria-label={`${item.name} 수량 줄이기`}
+            disabled={item.quantity <= 1}
+            className="flex h-10 w-9 items-center justify-center rounded-l-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
+          >
+            <MinusIcon size={16} />
+          </button>
+          <span
+            aria-label={`수량 ${item.quantity}`}
+            className="min-w-6 text-center text-sm font-semibold"
+          >
+            {item.quantity}
+          </span>
+          <button
+            type="button"
+            onClick={incrementQuantity}
+            aria-label={`${item.name} 수량 늘리기`}
+            disabled={item.quantity >= QUANTITY_MAX}
+            className="flex h-10 w-9 items-center justify-center rounded-r-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
+          >
+            <PlusIcon size={16} />
+          </button>
+        </div>
+      </div>
+      <div className="mt-3 -mb-3 grid grid-cols-3 gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-gray-600">
+        <button
+          type="button"
+          onClick={() => setShowComments(!showComments)}
+          aria-expanded={showComments}
+          className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
+        >
+          <MessageCircleIcon size={18} />
+          댓글{item.comments.length > 0 && ` ${item.comments.length}`}
+        </button>
+        <button
+          type="button"
+          onClick={() => finishItem(item.id)}
+          className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
+        >
+          <CircleCheckBig size={18} />다 먹음
+        </button>
+        <button
+          type="button"
+          onClick={handleTrashItem}
+          className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
+        >
+          <Trash2 size={18} />
+          버림
+        </button>
       </div>
       {(updateItem.isError || isFinishError) && (
         <p className="mt-2 text-xs text-red-500">
@@ -245,7 +242,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({ item }) => {
           )}
         </div>
       )}
-    </div>
+    </article>
   );
 };
 export default FridgeItem;
