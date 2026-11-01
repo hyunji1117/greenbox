@@ -18,6 +18,14 @@ function urlBase64ToUint8Array(base64String: string) {
   return output;
 }
 
+function saveSubscription(sub: PushSubscription) {
+  return fetch('/api/save-subscription', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sub),
+  });
+}
+
 export default function PushSubscriber() {
   useEffect(() => {
     (async () => {
@@ -33,9 +41,12 @@ export default function PushSubscriber() {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return;
 
-        // 이미 구독되어 있으면 재사용
+        // 이미 구독되어 있으면 재사용. 로그인 전에 구독했을 수 있어 저장은 다시 한다
         const existing = await reg.pushManager.getSubscription();
-        if (existing) return;
+        if (existing) {
+          await saveSubscription(existing);
+          return;
+        }
 
         // 새 구독
         // const res = await fetch('/api/public-vapid-key');
@@ -66,11 +77,7 @@ export default function PushSubscriber() {
         // console.log('VAPID public key length:', key.length, publicKey);
 
         // 서버에 구독 정보 저장
-        await fetch('/api/save-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(sub),
-        });
+        await saveSubscription(sub);
       } catch (e) {
         console.error('푸시 구독 실패:', e);
       }
