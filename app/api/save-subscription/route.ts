@@ -1,55 +1,20 @@
 // app/api/save-subscription/route.ts
-// PWA 푸시 알림 구독 정보 저장 API
+// 서버 푸시를 보낼 기기 정보 저장
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { invalidRequest, requireUser } from '@/app/api/items/guard';
+import { savePushSubscription } from '@/app/lib/push/store';
+import { PushSubscriptionSchema } from '@/app/lib/schemas/pushSubscription';
 
-// ==========================================
-//            구독 저장 API 핸들러
-// ==========================================
+export async function POST(request: Request) {
+  const { userId, response } = await requireUser();
+  if (response) return response;
 
-export async function POST(request: NextRequest) {
-  try {
-    // 클라이언트로부터 구독 정보 수신
-    const subscription = await request.json();
+  // 본문이 JSON이 아니어도 스키마 검증에서 400으로 처리한다
+  const body = await request.json().catch(() => null);
+  const parsed = PushSubscriptionSchema.safeParse(body);
+  if (!parsed.success) return invalidRequest(parsed.error);
 
-    console.log('=== 구독 정보 저장 시작 ===');
-    console.log(JSON.stringify(subscription, null, 2));
-
-    // ==========================================
-    //              DB 저장 로직
-    // ==========================================
-    // TODO: Supabase 또는 다른 DB에 구독 정보 저장
-    // 예정:
-    // const { data, error } = await supabase
-    //   .from('push_subscriptions')
-    //   .insert({
-    //     endpoint: subscription.endpoint,
-    //     keys: subscription.keys,
-    //     created_at: new Date().toISOString(),
-    //   });
-    //
-    // if (error) throw error;
-
-    // ==========================================
-    //              성공 응답
-    // ==========================================
-    return NextResponse.json({
-      success: true,
-      message: '구독 정보가 성공적으로 저장되었습니다',
-    });
-  } catch (error) {
-    // ==========================================
-    //              에러 처리
-    // ==========================================
-    console.error('❌ 구독 저장 실패:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to save subscription',
-        message: '구독 정보 저장 중 오류가 발생했습니다',
-      },
-      { status: 500 },
-    );
-  }
+  await savePushSubscription(userId, parsed.data);
+  return new NextResponse(null, { status: 204 });
 }
