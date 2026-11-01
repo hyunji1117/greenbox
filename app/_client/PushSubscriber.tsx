@@ -4,19 +4,7 @@
 'use client';
 
 import { useEffect } from 'react';
-
-function urlBase64ToUint8Array(base64String: string) {
-  // URL-safe base64 → Uint8Array 변환
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw =
-    typeof window !== 'undefined'
-      ? window.atob(base64)
-      : Buffer.from(base64, 'base64').toString('binary');
-  const output = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; ++i) output[i] = raw.charCodeAt(i);
-  return output;
-}
+import { isSameKey, urlBase64ToUint8Array } from '@/app/lib/push/key';
 
 function saveSubscription(sub: PushSubscription) {
   return fetch('/api/save-subscription', {
@@ -41,40 +29,25 @@ export default function PushSubscriber() {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return;
 
-        // 이미 구독되어 있으면 재사용. 로그인 전에 구독했을 수 있어 저장은 다시 한다
+        // 서버에서 env 값 전달
+        const res = await fetch('/api/public-vapid-key');
+        const { publicKey } = await res.json();
+        const key = urlBase64ToUint8Array(publicKey);
+
+        // 현재 키로 구독되어 있으면 재사용. 로그인 전에 구독했을 수 있어 저장은 다시 한다
         const existing = await reg.pushManager.getSubscription();
-        if (existing) {
+        if (existing && isSameKey(existing.options.applicationServerKey, key)) {
           await saveSubscription(existing);
           return;
         }
 
-        // 새 구독
-        // const res = await fetch('/api/public-vapid-key');
-        const res = await fetch('/api/public-vapid-key');
-        // 서버에서 env 값 전달
-        const { publicKey } = await res.json();
-        const key = urlBase64ToUint8Array(publicKey);
-        console.log('VAPID length:', key.length); // 기대 65
+        // 키가 바뀐 구독은 그대로 쓸 수 없고, 해제해야 새 키로 구독할 수 있다
+        await existing?.unsubscribe();
 
-        const state = await reg.pushManager.permissionState({
+        const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: key,
         });
-        console.log('push permissionState:', state); // 'granted' | 'prompt' | 'denied'
-
-        const sub = await reg.pushManager
-          .subscribe({ userVisibleOnly: true, applicationServerKey: key })
-          .catch(err => {
-            console.error('subscribe 실패:', err.name, err.message);
-            throw err;
-          });
-
-        console.log('구독 성공:', sub?.endpoint); // 여기가 찍히면 성공
-
-        // 서버에서 env 값 전달
-        // const { publicKey } = await res.json();
-        // const key = urlBase64ToUint8Array(publicKey);
-        // console.log('VAPID public key length:', key.length, publicKey);
 
         // 서버에 구독 정보 저장
         await saveSubscription(sub);
