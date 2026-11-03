@@ -13,9 +13,13 @@ const pwaConfig = withPWAInit({
   dest: 'public',
   register: true,
   disable: process.env.NODE_ENV === 'development',
+  // 첫 화면 HTML에 로그인 사용자의 품목이 담기므로 서비스 워커에 캐싱하지 않는다
+  // 런타임 캐싱 경로는 dynamicStartUrl이 만들어서 함께 꺼야 사라진다
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
   workboxOptions: {
     skipWaiting: true,
-    runtimeCaching: [], // 기존과 동일: 추가 런타임 캐싱 없음(start-url만 자동 캐싱)
+    runtimeCaching: [], // 추가 런타임 캐싱 없음
   },
 });
 

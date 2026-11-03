@@ -1,14 +1,12 @@
 // app/PageClient.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import BottomNavigation, {
-  Tab,
-} from '@/app/components/layout/BottomNavigation';
+import { useSearchParams } from 'next/navigation';
+import BottomNavigation from '@/app/components/layout/BottomNavigation';
 import { FridgeProvider } from '@/app/context/FridgeContext';
-import Loading from '@/app/components/layout/Loading';
+import { goToTab, paramToTab } from '@/app/lib/navigation/tabs';
 
 // 탭 콘텐츠 로딩 중 깜빡임 방지용 경량 스켈레톤
 // (하단 네비게이션은 이미 렌더링돼 있으므로 콘텐츠 영역만 표시)
@@ -28,7 +26,7 @@ const TabSkeleton = () => (
 
 // 각 탭을 동적 import로 분리 → 해당 탭을 열 때만 청크 로드.
 // recharts를 쓰는 HealthAnalysisPage(363KB)가 메인 첫 로드에서 빠지는 게 핵심.
-// 전부 클라이언트 전용 화면이라 ssr: false.
+// 첫 탭이 냉장고면 서버가 그린 fridgeSlot을 쓰고, 나머지 경우는 클라이언트에서 불러온다.
 const FridgeBoard = dynamic(
   () => import('@/app/components/fridge/FridgeBoard'),
   { ssr: false, loading: () => <TabSkeleton /> },
@@ -50,117 +48,36 @@ const SettingsPage = dynamic(
   { ssr: false, loading: () => <TabSkeleton /> },
 );
 
-import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
-import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
+interface PageClientProps {
+  // 첫 탭이 냉장고일 때 서버에서 렌더링해 스트리밍하는 화면
+  fridgeSlot?: React.ReactNode;
+}
 
-const paramToTab = (v: string | null): Tab => {
-  switch (v) {
-    case 'healthAnalysis':
-    case 'fridge':
-    case 'shoppingList':
-    case 'ingredients':
-    case 'settings':
-      return v;
-    default:
-      return 'fridge';
-  }
-};
-
-export default function PageClient() {
-  const [bootProgress, setBootProgress] = useState(0);
-  const [bootDone, setBootDone] = useState(false);
-
-  const router = useRouter();
-  const pathname = usePathname();
+export default function PageClient({ fridgeSlot }: PageClientProps) {
   const searchParams = useSearchParams();
-
-  const [activeTab, setActiveTab] = useState<Tab>(
-    paramToTab(searchParams.get('tab')),
-  );
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  // 실제 비동기 작업들을 Promise 배열로 관리
-  useEffect(() => {
-    const initPurchaseStorage = purchaseStorage.init().catch(err => {
-      console.error('purchaseStorage init failed', err);
-    });
-
-    const preloadGroceryData = Promise.resolve().then(() => {
-      shoppingListStorage.loadShoppingList();
-      shoppingListStorage.loadFavorites();
-    });
-
-    const tasks: Promise<unknown>[] = [initPurchaseStorage, preloadGroceryData];
-
-    tasks.forEach(promise => {
-      promise.then(() => {
-        setBootProgress(prev => {
-          const next = prev + 100 / tasks.length;
-          return next > 100 ? 100 : next;
-        });
-      });
-    });
-
-    Promise.all(tasks).then(() => {
-      setBootProgress(100);
-      setTimeout(() => setBootDone(true), 300);
-    });
-  }, []);
-
-  // URL 변경 → activeTab 동기화 (부팅 완료 후에만)
-  useEffect(() => {
-    if (!bootDone) return;
-    setActiveTab(paramToTab(searchParams.get('tab')));
-  }, [searchParams, bootDone]);
-
-  const handleTabChange = (tab: Tab) => {
-    const sp = new URLSearchParams(searchParams.toString());
-    sp.set('tab', tab);
-    router.push(`${pathname}?${sp.toString()}`, { scroll: false });
-    setActiveTab(tab);
-  };
-
-  const closeSettings = () => setIsSettingsOpen(false);
+  const activeTab = paramToTab(searchParams.get('tab'));
 
   const renderContent = () => {
     switch (activeTab) {
       case 'healthAnalysis':
         return <HealthAnalysisPage />;
-      case 'fridge':
-        return (
-          <FridgeBoard
-            onGoToShoppingList={() => handleTabChange('shoppingList')}
-          />
-        );
       case 'ingredients':
-        return (
-          <IngredientsBoard onGoToFridge={() => handleTabChange('fridge')} />
-        );
+        return <IngredientsBoard onGoToFridge={() => goToTab('fridge')} />;
       case 'shoppingList':
         return <GroceryListPage />;
       case 'settings':
-        return <SettingsPage isOpen={isSettingsOpen} onClose={closeSettings} />;
+        return <SettingsPage isOpen={false} onClose={() => {}} />;
       default:
-        return (
-          <FridgeBoard
-            onGoToShoppingList={() => handleTabChange('shoppingList')}
-          />
-        );
+        return fridgeSlot ?? <FridgeBoard />;
     }
   };
 
-  // 부팅 중이면 로딩 화면
-  if (!bootDone) {
-    return <Loading progress={bootProgress} />;
-  }
-
-  // 부팅 완료 후 메인 UI
   return (
     <FridgeProvider>
       <div className="flex h-screen bg-white">
         <BottomNavigation
           activeTab={activeTab}
-          setActiveTab={handleTabChange}
+          setActiveTab={goToTab}
           onSettingsClick={() => {}}
         />
         <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">

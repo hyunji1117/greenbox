@@ -1,4 +1,6 @@
 // app/context/FridgeContext.tsx
+'use client';
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { toDisplayName, type MyProfile } from '@/app/lib/user/displayName';
 
@@ -65,6 +67,30 @@ const initialAssignments: Assignment[] = [
   },
 ];
 
+// 다른 가족 구성원은 가족 기능을 만들기 전까지 목업 이름
+function resolveFamilyMemberName(
+  member: string,
+  currentUser: FamilyMember,
+  myProfile: MyProfile | null,
+): string {
+  if (member === currentUser) {
+    const myName = toDisplayName(myProfile);
+    if (myName) return myName;
+  }
+  switch (member) {
+    case 'mom':
+      return '먐무';
+    case 'dad':
+      return '빙빵';
+    case 'bigKid':
+      return '낭농';
+    case 'littleKid':
+      return '떡자';
+    default:
+      return member;
+  }
+}
+
 export const FridgeProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
@@ -105,25 +131,8 @@ export const FridgeProvider: React.FC<{
     setActivities([newActivity, ...activities]);
   };
 
-  // 다른 가족 구성원은 가족 기능을 만들기 전까지 목업 이름
-  const getFamilyMemberName = (member: string): string => {
-    if (member === currentUser) {
-      const myName = toDisplayName(myProfile);
-      if (myName) return myName;
-    }
-    switch (member) {
-      case 'mom':
-        return '먐무';
-      case 'dad':
-        return '빙빵';
-      case 'bigKid':
-        return '낭농';
-      case 'littleKid':
-        return '떡자';
-      default:
-        return member;
-    }
-  };
+  const getFamilyMemberName = (member: string): string =>
+    resolveFamilyMemberName(member, currentUser, myProfile);
 
   return (
     <FridgeContext.Provider
@@ -140,6 +149,25 @@ export const FridgeProvider: React.FC<{
     >
       {children}
     </FridgeContext.Provider>
+  );
+};
+
+// 서버에서 조회한 프로필을 첫 렌더링부터 쓴다. 이후 프로필이 불러와지거나 바뀌면 그 값을 따른다
+export const ServerProfileBoundary: React.FC<{
+  profile: MyProfile | null;
+  children: React.ReactNode;
+}> = ({ profile, children }) => {
+  const context = useFridge();
+  const value = context.myProfile
+    ? context
+    : {
+        ...context,
+        myProfile: profile,
+        getFamilyMemberName: (member: string) =>
+          resolveFamilyMemberName(member, context.currentUser, profile),
+      };
+  return (
+    <FridgeContext.Provider value={value}>{children}</FridgeContext.Provider>
   );
 };
 
