@@ -2,11 +2,24 @@
 // RootLayout 컴포넌트에 PWA 설정 추가
 
 import type { Metadata } from 'next';
+import { Nanum_Gothic } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
+
+// 외부 CSS로 불러오면 글꼴 CSS를 받을 때까지 화면이 멈추고, 글꼴이 올 때까지 글자가 보이지 않는다.
+// 빌드할 때 내려받아 같은 도메인에서 제공하고, 크기를 맞춘 대체 글꼴로 먼저 그려 글꼴 교체 때 화면이 밀리지 않게 한다.
+// 앱은 400과 700(font-bold, font-semibold는 700, font-medium은 400으로 그려짐)만 쓴다
+// 한글은 글자 범위별 조각 파일 수십 개로 나뉘어 있어 미리 받지 않고, 화면에 쓰인 글자의 조각만 받게 둔다
+const nanumGothic = Nanum_Gothic({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-nanum-gothic',
+});
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
@@ -23,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={nanumGothic.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#4b2f8c" />
