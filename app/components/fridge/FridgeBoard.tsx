@@ -1,9 +1,12 @@
 // app/components/fridge/FridgeBoard.tsx
 // 냉장고 보드 컴포넌트
 
+'use client';
+
 import React, { useState } from 'react';
 import { ApiSchemaError } from '@/app/lib/api/apiFetch';
 import { useItems } from '@/app/lib/items/useItems';
+import { goToTab } from '@/app/lib/navigation/tabs';
 import { useFinishWithUndo } from '@/app/lib/items/useFinishWithUndo';
 import type { Category } from '@/app/lib/schemas/item';
 import ActionToast from '@/app/components/common/ActionToast';
@@ -25,11 +28,9 @@ const CATEGORY_TABS = [
   { id: 'pantry', label: '저장고', Icon: PackageIcon },
 ] as const;
 
-interface FridgeBoardProps {
-  onGoToShoppingList?: () => void;
-}
+const goToShoppingList = () => goToTab('shoppingList');
 
-const FridgeBoard: React.FC<FridgeBoardProps> = ({ onGoToShoppingList }) => {
+const FridgeBoard: React.FC = () => {
   const { data: items = [], isPending, error, refetch } = useItems();
   const [activeCategory, setActiveCategory] = useState<Category>('fridge');
   const { notice, isNoticeVisible, finish, undo, notify } = useFinishWithUndo();
@@ -109,7 +110,7 @@ const FridgeBoard: React.FC<FridgeBoardProps> = ({ onGoToShoppingList }) => {
               {/* 새로 산 품목이 리스트를 거쳐야 구매 기록이 쌓이므로 등록 입력 바로 아래에서 안내한다 */}
               <button
                 type="button"
-                onClick={onGoToShoppingList}
+                onClick={goToShoppingList}
                 className="mt-3 flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-2xl bg-[#F1EDFA] px-4 py-2 text-center transition-colors hover:bg-[#E6DFF7]"
               >
                 <span className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap text-[#553C9A]">
@@ -146,7 +147,7 @@ const FridgeBoard: React.FC<FridgeBoardProps> = ({ onGoToShoppingList }) => {
               ? '리스트 보기'
               : undefined
         }
-        onAction={notice?.canUndo ? undo : onGoToShoppingList}
+        onAction={notice?.canUndo ? undo : goToShoppingList}
       />
     </div>
   );

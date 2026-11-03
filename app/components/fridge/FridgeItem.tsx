@@ -112,7 +112,8 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-lg leading-snug font-semibold">{item.name}</h3>
-          <p className="mt-0.5 text-xs text-gray-500">
+          {/* 상대 시간은 서버가 그린 시점과 브라우저 시점 사이에 달라질 수 있다 */}
+          <p suppressHydrationWarning className="mt-0.5 text-xs text-gray-500">
             {getFamilyMemberName(item.addedBy)}가{' '}
             {getRelativeTimeString(item.addedAt)} 추가
           </p>
