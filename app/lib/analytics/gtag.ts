@@ -1,5 +1,5 @@
 // app/lib/analytics/gtag.ts
-// GA4로 보내는 모든 호출이 이곳을 지난다. 테스트 트래픽 표시도 한 곳에서 붙인다.
+// GA4로 보내는 모든 호출이 이곳을 지난다. 테스트 기기 표시도 한 곳에서 붙인다.
 // 이벤트 이름은 '대상_행동' 형태로 쓰고, 값은 정해진 선택지만 보낸다(품목 이름 같은 직접 입력값은 보내지 않는다)
 
 'use client';
@@ -29,11 +29,11 @@ export type EventName = keyof EventParams;
 export const INTERNAL_FLAG_KEY = 'greenbox_internal_traffic';
 
 export interface TrafficParams {
-  traffic_type?: 'internal';
   debug_mode?: true;
 }
 
-// 개발 환경과 표시한 기기는 내부 트래픽으로 보내 보고서에서 걸러지게 하고, DebugView에서는 바로 보이게 한다
+// 개발 환경과 표시한 기기는 개발자 트래픽(debug_mode)으로 보내 보고서에서는 빠지고 DebugView에서는 보이게 한다.
+// 내부 트래픽(traffic_type=internal)은 DebugView까지 지워 이벤트 확인이 안 되므로 사무실 IP 규칙에만 맡긴다
 export function resolveTrafficParams(
   search: string,
   storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null,
@@ -48,7 +48,7 @@ export function resolveTrafficParams(
   } catch {
     // 저장소를 막은 브라우저는 표시 없이 일반 트래픽으로 둔다
   }
-  return isDev || flagged ? { traffic_type: 'internal', debug_mode: true } : {};
+  return isDev || flagged ? { debug_mode: true } : {};
 }
 
 declare global {
@@ -81,8 +81,7 @@ export function initAnalytics(gaId: string): void {
     process.env.NODE_ENV === 'development',
   );
   gtag('js', new Date());
-  // set은 자동 수집 이벤트(스크롤 등)까지 표시를 붙이고, debug_mode는 설정에 있어야 DebugView에 잡힌다
-  if (traffic.traffic_type) gtag('set', traffic);
+  // debug_mode는 설정에 넣어야 자동 수집 이벤트(스크롤 등)까지 함께 표시된다
   gtag('config', gaId, { send_page_view: false, ...traffic });
 }
 
