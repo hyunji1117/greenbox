@@ -28,7 +28,7 @@ export class ApiSchemaError extends Error {
 }
 
 interface ApiFetchOptions {
-  method?: 'GET' | 'POST' | 'PATCH';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
 }

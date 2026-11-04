@@ -1,7 +1,11 @@
 // app/lib/user/displayName.test.ts
 
 import { describe, expect, it } from 'vitest';
-import { personLabel, withSubjectParticle } from './displayName';
+import {
+  personLabel,
+  withObjectParticle,
+  withSubjectParticle,
+} from './displayName';
 
 describe('personLabel', () => {
   it('구성원은 이름, 나간 구성원은 표시를 붙이고, 탈퇴하면 이름 없이 표시한다', () => {
@@ -20,5 +24,13 @@ describe('withSubjectParticle', () => {
     expect(withSubjectParticle('엄마')).toBe('엄마가');
     expect(withSubjectParticle('현진')).toBe('현진이');
     expect(withSubjectParticle('Eve')).toBe('Eve가');
+  });
+});
+
+describe('withObjectParticle', () => {
+  it('받침에 따라 을/를을 고른다', () => {
+    expect(withObjectParticle('본가 냉장고')).toBe('본가 냉장고를');
+    expect(withObjectParticle('현지님의 냉장고')).toBe('현지님의 냉장고를');
+    expect(withObjectParticle('자취방')).toBe('자취방을');
   });
 });

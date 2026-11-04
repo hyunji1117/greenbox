@@ -2,7 +2,7 @@
 // app/auth/actions.ts
 // 로그인, 동의, 로그아웃 서버 액션
 
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth, signIn, signOut, unstable_update } from '@/auth';
 import { recordConsents } from '@/app/lib/consent/record';
@@ -10,6 +10,41 @@ import { setFamilyNickname } from '@/app/lib/user/profile';
 import { registerWithConsents } from '@/app/lib/user/registration';
 import { FAMILY_NICKNAME_MAX } from '@/app/lib/user/displayName';
 import { hasAllRequired, isConsentType } from '@/app/lib/consent/policies';
+import { INVITE_CODE_PATTERN } from '@/app/lib/schemas/fridge';
+
+// 초대 링크로 들어와 로그인이나 동의를 거치는 동안 어느 링크였는지 기억한다
+const JOIN_COOKIE = 'greenbox_join_code';
+
+async function rememberJoinCode(code: string): Promise<void> {
+  (await cookies()).set(JOIN_COOKIE, code, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60,
+  });
+}
+
+// 동의를 마친 뒤 돌아갈 곳. 기억한 초대 링크가 있으면 그 참여 화면
+async function takeRedirectAfterConsent(): Promise<string> {
+  const store = await cookies();
+  const code = store.get(JOIN_COOKIE)?.value;
+  store.delete(JOIN_COOKIE);
+  return code && INVITE_CODE_PATTERN.test(code) ? `/join/${code}` : '/';
+}
+
+// 참여 화면: 로그인하지 않았으면 구글로 이동하고, 돌아오면 같은 참여 화면을 연다
+export async function startJoinLogin(code: string): Promise<void> {
+  if (!INVITE_CODE_PATTERN.test(code)) redirect('/login');
+  await rememberJoinCode(code);
+  await signIn('google', { redirectTo: `/join/${code}` });
+}
+
+// 참여 화면: 로그인은 했지만 동의 전이면 동의 화면으로 보낸다. 동의하면 참여 화면으로 돌아온다
+export async function continueJoinToConsent(code: string): Promise<void> {
+  if (INVITE_CODE_PATTERN.test(code)) await rememberJoinCode(code);
+  redirect('/consent');
+}
 
 type ActionResult = { error: string } | undefined;
 
@@ -28,7 +63,8 @@ export async function agreeToCurrentPolicy(
   if (!session?.user) redirect('/login');
 
   const types = input.filter(isConsentType);
-  if (!hasAllRequired(types)) return { error: '필수 항목에 모두 동의해 주세요' };
+  if (!hasAllRequired(types))
+    return { error: '필수 항목에 모두 동의해 주세요' };
 
   const userAgent = (await headers()).get('user-agent');
   if (session.registered) {
@@ -48,7 +84,7 @@ export async function agreeToCurrentPolicy(
     );
   }
   await unstable_update({}); // 쿠키(JWT)의 가입 여부와 동의 버전을 DB 기준으로 갱신
-  redirect('/');
+  redirect(await takeRedirectAfterConsent());
 }
 
 // 동의 화면에서 동의하지 않음: 로그아웃만 한다

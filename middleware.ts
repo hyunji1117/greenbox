@@ -10,8 +10,9 @@ export default NextAuth(authConfig).auth;
 export const config = {
   // 로그인 없이 열려야 하는 경로는 제외한다
   // api: 각 API가 직접 처리 / privacy: 동의 전에 읽어야 함 / install: PWA 설치 안내
+  // join: 초대 링크. 로그인 전에도 열려야 하고, 화면이 로그인과 동의 상태를 직접 확인한다
   // 그 외 PWA 파일(manifest, 서비스워커)과 정적 파일
   matcher: [
-    '/((?!api|_next/static|_next/image|privacy|install|manifest\\.json|sw\\.js|workbox-|worker-|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|txt|xml)$).*)',
+    '/((?!api|_next/static|_next/image|privacy|install|join/|manifest\\.json|sw\\.js|workbox-|worker-|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|txt|xml)$).*)',
   ],
 };

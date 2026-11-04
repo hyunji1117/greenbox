@@ -20,7 +20,25 @@ type EventParams = {
   item_finish_undone: undefined;
   comment_added: undefined;
   push_permission_result: { result: PushStatus | 'error' };
+  // 냉장고 함께 쓰기. 냉장고 이름이나 사람 이름은 보내지 않는다
+  invite_link_created: undefined;
+  invite_link_shared: { method: 'share' | 'copy' };
+  join_page_viewed: { state: JoinPageState };
+  join_requested: { result: 'pending' | 'member' };
+  join_approved: undefined;
+  join_rejected: undefined;
+  member_removed: undefined;
+  fridge_left: undefined;
+  fridge_switched: undefined;
+  fridge_renamed: undefined;
 };
+
+export type JoinPageState =
+  | 'invalid'
+  | 'signed_out'
+  | 'needs_consent'
+  | 'member'
+  | 'can_request';
 
 export type EventName = keyof EventParams;
 
