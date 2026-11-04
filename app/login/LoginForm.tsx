@@ -4,6 +4,7 @@
 
 import React, { useTransition } from 'react';
 import { startGoogleLogin } from '@/app/auth/actions';
+import { track } from '@/app/lib/analytics/gtag';
 
 // 구글 브랜드 가이드의 "G" 로고 (색상 변경 금지)
 const GoogleLogo = () => (
@@ -32,6 +33,7 @@ const LoginForm: React.FC = () => {
 
   const handleContinue = () => {
     if (isPending) return;
+    track('login_started');
     startTransition(async () => {
       await startGoogleLogin();
     });

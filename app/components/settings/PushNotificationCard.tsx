@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
+import { track } from '@/app/lib/analytics/gtag';
 import {
   enablePush,
   getPushStatus,
@@ -32,9 +33,12 @@ const PushNotificationCard: React.FC = () => {
     setIsEnabling(true);
     setHasError(false);
     try {
-      setStatus(await enablePush());
+      const result = await enablePush();
+      track('push_permission_result', { result });
+      setStatus(result);
     } catch (e) {
       console.error('푸시 구독 실패:', e);
+      track('push_permission_result', { result: 'error' });
       setHasError(true);
     } finally {
       setIsEnabling(false);

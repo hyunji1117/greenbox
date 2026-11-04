@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useUpdateItem } from '@/app/lib/items/useItems';
+import { track } from '@/app/lib/analytics/gtag';
 
 export type FinishKind = 'eaten' | 'discarded';
 
@@ -58,6 +59,7 @@ export function useFinishWithUndo() {
         canUndo: true,
       });
       void saved.then(ok => {
+        if (ok) track('item_finished', { kind });
         if (!ok) {
           show({
             message: '저장하지 못했어요. 다시 눌러 주세요',
@@ -79,6 +81,7 @@ export function useFinishWithUndo() {
     if (!(await last.saved)) return;
     try {
       await mutateAsync({ id: last.id, updates: { finished: false } });
+      track('item_finish_undone');
     } catch {
       show({
         message: '되돌리지 못했어요. 잠시 후 다시 확인해 주세요',

@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import { Nanum_Gothic } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import Analytics from './_client/Analytics';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
 
@@ -50,8 +50,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content={APP_SHORT_NAME} />
       </head>
       <body>
-        {/* Google Analytics (공식 지원 방식) */}
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+        <Analytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
 
         <PushSubscriber />
         <QueryProvider>{children}</QueryProvider>

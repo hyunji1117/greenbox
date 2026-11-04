@@ -28,7 +28,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   initialCategory = 'fridge',
 }) => {
   const { currentUser } = useFridge();
-  const createItem = useCreateItem();
+  const createItem = useCreateItem('add_form');
   const formRef = useRef<HTMLFormElement>(null);
 
   // 상태 관리

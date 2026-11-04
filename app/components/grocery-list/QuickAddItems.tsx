@@ -29,7 +29,7 @@ interface CategoryItem {
 const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
   const { currentUser } = useFridge();
   const { data: items = [] } = useItems();
-  const createItem = useCreateItem();
+  const createItem = useCreateItem('quick_add_items');
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<
     'vegetables' | 'fruits' | 'meat' | 'seafood' | 'others'

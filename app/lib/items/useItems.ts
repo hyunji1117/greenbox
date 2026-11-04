@@ -10,6 +10,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import { apiFetch } from '@/app/lib/api/apiFetch';
+import { track, type ItemAddSource } from '@/app/lib/analytics/gtag';
 import { itemKeys } from '@/app/lib/query/keys';
 import {
   CommentSchema,
@@ -32,12 +33,16 @@ export function useItems() {
   });
 }
 
-export function useCreateItem() {
+// source: 어느 화면에서 추가했는지 사용 기록에 남긴다
+export function useCreateItem(source: ItemAddSource) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateItemInput) =>
       apiFetch(ITEMS_URL, ItemSchema, { method: 'POST', body: input }),
-    onSuccess: () => invalidateList(queryClient),
+    onSuccess: () => {
+      track('item_added', { source, count: 1 });
+      return invalidateList(queryClient);
+    },
   });
 }
 
@@ -53,7 +58,11 @@ export function useAddPurchasedItems() {
       );
       return results.map(result => result.status === 'fulfilled');
     },
-    onSuccess: () => invalidateList(queryClient),
+    onSuccess: saved => {
+      const count = saved.filter(Boolean).length;
+      if (count > 0) track('item_added', { source: 'purchase', count });
+      return invalidateList(queryClient);
+    },
   });
 }
 
@@ -125,6 +134,7 @@ export function useAddComment() {
         body: input,
       }),
     onSuccess: (comment, { itemId }) => {
+      track('comment_added');
       queryClient.setQueryData<Item[]>(itemKeys.list(), items =>
         items?.map(item =>
           item.id === itemId

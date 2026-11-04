@@ -36,7 +36,7 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   onRebuy,
 }) => {
   const { currentUser } = useFridge();
-  const createItem = useCreateItem();
+  const createItem = useCreateItem('fridge_quick_add');
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [isFocused, setIsFocused] = useState(false);

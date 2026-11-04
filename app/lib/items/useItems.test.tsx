@@ -88,7 +88,7 @@ describe('useCreateItem', () => {
     seedCache();
     fetchMock.mockImplementation(async () => jsonResponse(itemJson('3'), 201));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-    const { result } = renderHook(() => useCreateItem(), { wrapper });
+    const { result } = renderHook(() => useCreateItem('fridge_quick_add'), { wrapper });
 
     await act(() =>
       result.current.mutateAsync({
