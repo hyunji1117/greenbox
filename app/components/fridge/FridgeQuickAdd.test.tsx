@@ -8,9 +8,6 @@ import FridgeQuickAdd from './FridgeQuickAdd';
 
 const mutate = vi.hoisted(() => vi.fn());
 
-vi.mock('@/app/context/FridgeContext', () => ({
-  useFridge: () => ({ currentUser: 'mom' }),
-}));
 vi.mock('@/app/lib/items/useItems', () => ({
   useCreateItem: () => ({ mutate, isPending: false, isError: false }),
 }));
@@ -38,7 +35,6 @@ describe('FridgeQuickAdd', () => {
       name: '만두',
       category: 'freezer',
       quantity: 1,
-      addedBy: 'mom',
     });
     expect(input()).toHaveProperty('value', '');
     expect(onAdded).toHaveBeenCalledWith('9');

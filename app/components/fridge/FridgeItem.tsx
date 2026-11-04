@@ -2,7 +2,6 @@
 // 냉장고 아이템 컴포넌트
 
 import React, { useState } from 'react';
-import { useFridge } from '@/app/context/FridgeContext';
 import { useAddComment, useUpdateItem } from '@/app/lib/items/useItems';
 import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import {
@@ -11,7 +10,12 @@ import {
   expiryLabel,
   isSavableExpiryDate,
 } from '@/app/lib/items/expiry';
-import { COMMENT_TEXT_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
+import {
+  COMMENT_TEXT_MAX,
+  QUANTITY_MAX,
+  type Person,
+} from '@/app/lib/schemas/item';
+import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
 import {
   CalendarDaysIcon,
   CircleCheckBig,
@@ -26,12 +30,12 @@ interface FridgeItemProps {
     name: string;
     category: 'fridge' | 'freezer' | 'pantry';
     quantity: number;
-    addedBy: string;
+    addedBy: Person;
     addedAt: Date;
     comments: Array<{
       id: string;
       text: string;
-      author: string;
+      author: Person;
       createdAt: Date;
     }>;
     finished: boolean;
@@ -45,7 +49,6 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   isNew = false,
   onFinish,
 }) => {
-  const { currentUser, getFamilyMemberName } = useFridge();
   const updateItem = useUpdateItem(item.id);
   const addComment = useAddComment();
   const [showComments, setShowComments] = useState(false);
@@ -62,7 +65,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
       addComment.mutate(
         {
           itemId: item.id,
-          input: { text: newComment, author: currentUser },
+          input: { text: newComment },
         },
         { onSuccess: () => setNewComment('') },
       );
@@ -114,7 +117,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
           <h3 className="text-lg leading-snug font-semibold">{item.name}</h3>
           {/* 상대 시간은 서버가 그린 시점과 브라우저 시점 사이에 달라질 수 있다 */}
           <p suppressHydrationWarning className="mt-0.5 text-xs text-gray-500">
-            {getFamilyMemberName(item.addedBy)}가{' '}
+            {withSubjectParticle(personLabel(item.addedBy))}{' '}
             {getRelativeTimeString(item.addedAt)} 추가
           </p>
         </div>
@@ -218,7 +221,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
                 <div key={comment.id} className="mb-2 last:mb-0">
                   <div className="flex items-center">
                     <span className="text-sm font-semibold">
-                      {getFamilyMemberName(comment.author)}
+                      {personLabel(comment.author)}
                     </span>
                     <span className="ml-2 text-xs text-gray-400">
                       {getRelativeTimeString(comment.createdAt)}

@@ -5,6 +5,7 @@
 
 import { getPool } from '@/app/lib/db';
 import { recordConsents } from '@/app/lib/consent/record';
+import { ensureOwnFridge } from '@/app/lib/fridges/store';
 import type { ConsentType } from '@/app/lib/consent/policies';
 
 export interface GoogleProfile {
@@ -56,6 +57,8 @@ export async function registerWithConsents(
          VALUES ($1, 'oidc', 'google', $2)`,
         [userId, profile.googleId],
       );
+      // 가입과 함께 내 냉장고를 만든다. 실패하면 가입 전체가 되돌아간다
+      await ensureOwnFridge(String(userId), client);
     }
 
     await recordConsents(String(userId), types, userAgent, client);

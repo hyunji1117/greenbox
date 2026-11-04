@@ -6,9 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 import GroceryListPage from './GroceryListPage';
 
-vi.mock('@/app/context/FridgeContext', () => ({
-  useFridge: () => ({ currentUser: 'mom' }),
-}));
 vi.mock('@/app/lib/items/useItems', () => ({
   useAddPurchasedItems: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));

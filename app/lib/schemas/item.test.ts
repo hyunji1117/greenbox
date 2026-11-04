@@ -8,13 +8,13 @@ const validItemJson = {
   name: '우유',
   category: 'fridge',
   quantity: 1,
-  addedBy: 'mom',
+  addedBy: { id: '7', name: '현지', isMember: true },
   addedAt: '2026-10-30T03:00:00.000Z',
   comments: [
     {
       id: '101',
       text: '이거 내일 아침에 먹을거야~',
-      author: 'littleKid',
+      author: { id: null, name: null, isMember: false },
       createdAt: '2026-10-30T04:00:00.000Z',
     },
   ],
@@ -48,7 +48,6 @@ describe('CreateItemSchema (요청)', () => {
       name: '   ',
       category: 'fridge',
       quantity: 0,
-      addedBy: 'mom',
     });
 
     expect(result.success).toBe(false);

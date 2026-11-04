@@ -54,7 +54,8 @@ export interface ExpiringUser {
   itemNames: string[];
 }
 
-// 한국 날짜 기준으로 오늘부터 며칠 안에 끝나는 품목. 지난 품목은 매일 다시 알리지 않는다
+// 한국 날짜 기준으로 오늘부터 며칠 안에 끝나는 품목을 그 냉장고 구성원마다 묶는다
+// 지난 품목은 매일 다시 알리지 않는다. 구성원별 알림 수준은 알림 설정 작업에서 더한다
 export async function listExpiringUsers(
   withinDays: number,
 ): Promise<ExpiringUser[]> {
@@ -62,12 +63,13 @@ export async function listExpiringUsers(
     user_id: number;
     item_names: string[];
   }>(
-    `SELECT user_id, array_agg(name ORDER BY expiry_date, id) AS item_names
-     FROM items
-     WHERE NOT finished
-       AND expiry_date BETWEEN (now() AT TIME ZONE 'Asia/Seoul')::date
+    `SELECT m.user_id, array_agg(i.name ORDER BY i.expiry_date, i.id) AS item_names
+     FROM items i
+     JOIN fridge_members m ON m.fridge_id = i.fridge_id
+     WHERE NOT i.finished
+       AND i.expiry_date BETWEEN (now() AT TIME ZONE 'Asia/Seoul')::date
          AND (now() AT TIME ZONE 'Asia/Seoul')::date + $1::integer
-     GROUP BY user_id`,
+     GROUP BY m.user_id`,
     [withinDays],
   );
   return rows.map(row => ({

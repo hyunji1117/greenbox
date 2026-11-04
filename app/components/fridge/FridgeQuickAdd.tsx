@@ -4,7 +4,6 @@
 
 import React, { useRef, useState } from 'react';
 import { Loader2Icon, PlusIcon, ShoppingBasket } from 'lucide-react';
-import { useFridge } from '@/app/context/FridgeContext';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import {
   getHomeSuggestions,
@@ -35,7 +34,6 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   onAdded,
   onRebuy,
 }) => {
-  const { currentUser } = useFridge();
   const createItem = useCreateItem('fridge_quick_add');
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
@@ -50,7 +48,7 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const add = (itemName: string, onSuccess?: () => void) => {
     if (createItem.isPending) return;
     createItem.mutate(
-      { name: itemName, category, quantity: 1, addedBy: currentUser },
+      { name: itemName, category, quantity: 1 },
       {
         onSuccess: item => {
           onSuccess?.();

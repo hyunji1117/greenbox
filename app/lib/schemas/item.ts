@@ -4,7 +4,6 @@
 
 import { z } from 'zod';
 
-export const FamilyMemberSchema = z.enum(['mom', 'dad', 'bigKid', 'littleKid']);
 export const CategorySchema = z.enum(['fridge', 'freezer', 'pantry']);
 
 // DB 제약(0004_items.sql)과 같은 범위
@@ -15,10 +14,17 @@ export const COMMENT_TEXT_MAX = 200;
 const isoDateTime = z.iso.datetime().transform(value => new Date(value));
 
 // ---------- 응답 ----------
+// 품목을 넣은 사람과 댓글 작성자. 탈퇴하면 id와 이름이 비고, 냉장고에서 나갔으면 isMember가 false
+export const PersonSchema = z.object({
+  id: z.string().nullable(),
+  name: z.string().nullable(),
+  isMember: z.boolean(),
+});
+
 export const CommentSchema = z.object({
   id: z.string(),
   text: z.string(),
-  author: FamilyMemberSchema,
+  author: PersonSchema,
   createdAt: isoDateTime,
 });
 
@@ -27,7 +33,7 @@ export const ItemSchema = z.object({
   name: z.string(),
   category: CategorySchema,
   quantity: z.number().int().min(1),
-  addedBy: FamilyMemberSchema,
+  addedBy: PersonSchema,
   addedAt: isoDateTime,
   comments: z.array(CommentSchema),
   finished: z.boolean(),
@@ -43,17 +49,22 @@ export const ItemListSchema = z.array(ItemSchema);
 // ---------- 요청 ----------
 // BIGINT 범위를 넘는 값이 DB 오류가 되지 않도록 자릿수를 제한한다
 export const ItemIdSchema = z.string().regex(/^\d{1,18}$/);
+export const FridgeIdSchema = ItemIdSchema;
 
+// 넣은 사람과 작성자는 받지 않는다. 서버가 로그인 사용자로 기록한다 (보내도 무시)
 export const CreateItemSchema = z.object({
   name: z.string().trim().min(1).max(ITEM_NAME_MAX),
   category: CategorySchema,
   quantity: z.number().int().min(1).max(QUANTITY_MAX),
-  addedBy: FamilyMemberSchema,
   expiryDate: z.iso.date().optional(),
 });
 
-export const UpdateItemSchema = CreateItemSchema.omit({ addedBy: true })
-  .partial()
+// 어느 냉장고에 넣을지는 요청마다 밝힌다. 다른 탭에서 냉장고를 바꿔도 보던 냉장고에 들어가게 한다
+export const CreateItemRequestSchema = CreateItemSchema.extend({
+  fridgeId: FridgeIdSchema,
+});
+
+export const UpdateItemSchema = CreateItemSchema.partial()
   .extend({ finished: z.boolean().optional() })
   .refine(value => Object.keys(value).length > 0, {
     message: '바꿀 항목이 없습니다',
@@ -61,13 +72,13 @@ export const UpdateItemSchema = CreateItemSchema.omit({ addedBy: true })
 
 export const CreateCommentSchema = z.object({
   text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),
-  author: FamilyMemberSchema,
 });
 
-export type FamilyMember = z.infer<typeof FamilyMemberSchema>;
+export type Person = z.output<typeof PersonSchema>;
 export type Category = z.infer<typeof CategorySchema>;
 export type Comment = z.output<typeof CommentSchema>;
 export type Item = z.output<typeof ItemSchema>;
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
+export type CreateItemRequest = z.infer<typeof CreateItemRequestSchema>;
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 export type CreateCommentInput = z.infer<typeof CreateCommentSchema>;
