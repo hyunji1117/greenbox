@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import ActionToast from '@/app/components/common/ActionToast';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
-import { useFridge } from '@/app/context/FridgeContext';
 import { useAddPurchasedItems } from '@/app/lib/items/useItems';
 import { ITEM_NAME_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
@@ -43,7 +42,6 @@ const TOAST_MS = 2200;
 const UNDO_TOAST_MS = 5000;
 
 const GroceryListPage: React.FC = () => {
-  const { currentUser } = useFridge();
   const addPurchasedItems = useAddPurchasedItems();
   const [activeView, setActiveView] = useState<'list' | 'favorites'>('list');
   const [newItemName, setNewItemName] = useState('');
@@ -122,7 +120,6 @@ const GroceryListPage: React.FC = () => {
           name: i.name,
           category: 'fridge' as const,
           quantity: Math.min(i.quantity, QUANTITY_MAX),
-          addedBy: currentUser,
         })),
       );
     } catch (e) {

@@ -6,6 +6,7 @@ import type { ZodError } from 'zod';
 import { z } from 'zod';
 import { auth } from '@/auth';
 import { currentPolicyVersion } from '@/app/lib/consent/policies';
+import { getFridgeRole, type FridgeRole } from '@/app/lib/fridges/store';
 
 type Guarded =
   | { userId: string; response?: never }
@@ -28,6 +29,22 @@ export async function requireUser(): Promise<Guarded> {
     };
   }
   return { userId: session.user.id };
+}
+
+export const notFound = () =>
+  NextResponse.json({ error: 'not_found' }, { status: 404 });
+
+type FridgeGuarded =
+  | { role: FridgeRole; response?: never }
+  | { role?: never; response: NextResponse };
+
+// 냉장고 권한 확인은 모두 이 함수를 거친다. 구성원이 아니면 냉장고가 있는지도 알리지 않도록 404
+export async function requireFridgeMember(
+  userId: string,
+  fridgeId: string,
+): Promise<FridgeGuarded> {
+  const role = await getFridgeRole(userId, fridgeId);
+  return role ? { role } : { response: notFound() };
 }
 
 export function invalidRequest(error: ZodError): NextResponse {

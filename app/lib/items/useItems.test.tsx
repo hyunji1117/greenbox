@@ -4,7 +4,7 @@ import React from 'react';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { itemKeys } from '@/app/lib/query/keys';
+import { fridgeKeys, itemKeys } from '@/app/lib/query/keys';
 import type { Item } from '@/app/lib/schemas/item';
 import {
   useAddComment,
@@ -15,12 +15,16 @@ import {
   useUpdateItem,
 } from './useItems';
 
+const FRIDGE_ID = '5';
+const me = { id: '7', name: '현지', isMember: true };
+const LIST_KEY = itemKeys.list(FRIDGE_ID);
+
 const itemJson = (id: string, overrides = {}) => ({
   id,
   name: `품목${id}`,
   category: 'fridge',
   quantity: 1,
-  addedBy: 'mom',
+  addedBy: me,
   addedAt: '2026-10-30T03:00:00.000Z',
   comments: [],
   finished: false,
@@ -46,12 +50,10 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const cachedItem = (id: string) =>
-  queryClient
-    .getQueryData<Item[]>(itemKeys.list())
-    ?.find(item => item.id === id);
+  queryClient.getQueryData<Item[]>(LIST_KEY)?.find(item => item.id === id);
 
 function seedCache() {
-  queryClient.setQueryData<Item[]>(itemKeys.list(), [
+  queryClient.setQueryData<Item[]>(LIST_KEY, [
     { ...itemJson('1'), addedAt: new Date(), expiryDate: undefined } as Item,
     { ...itemJson('2'), addedAt: new Date(), expiryDate: undefined } as Item,
   ]);
@@ -59,7 +61,17 @@ function seedCache() {
 
 beforeEach(() => {
   queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    // 미리 넣어 둔 냉장고 정보를 다시 요청하지 않도록 캐시를 오래 둔다
+    defaultOptions: {
+      queries: { retry: false, staleTime: Infinity },
+      mutations: { retry: false },
+    },
+  });
+  queryClient.setQueryData(fridgeKeys.current(), {
+    id: FRIDGE_ID,
+    name: '내 냉장고',
+    role: 'owner',
+    members: [],
   });
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
@@ -81,6 +93,28 @@ describe('useItems', () => {
     expect(second.result.current.data?.[0].addedAt).toBeInstanceOf(Date);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('지금 보고 있는 냉장고 번호로 목록을 요청한다', async () => {
+    fetchMock.mockImplementation(async () => jsonResponse([]));
+
+    const { result } = renderHook(() => useItems(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/items?fridgeId=5');
+  });
+
+  it('냉장고를 불러오지 못하면 품목을 요청하지 않고 실패를 알린다', async () => {
+    queryClient.removeQueries({ queryKey: fridgeKeys.current() });
+    fetchMock.mockImplementation(async () =>
+      jsonResponse({ error: 'server' }, 500),
+    );
+
+    const { result } = renderHook(() => useItems(), { wrapper });
+
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/fridges/current');
+  });
 });
 
 describe('useCreateItem', () => {
@@ -88,18 +122,25 @@ describe('useCreateItem', () => {
     seedCache();
     fetchMock.mockImplementation(async () => jsonResponse(itemJson('3'), 201));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-    const { result } = renderHook(() => useCreateItem('fridge_quick_add'), { wrapper });
+    const { result } = renderHook(() => useCreateItem('fridge_quick_add'), {
+      wrapper,
+    });
 
     await act(() =>
       result.current.mutateAsync({
         name: '우유',
         category: 'fridge',
         quantity: 1,
-        addedBy: 'mom',
       }),
     );
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: itemKeys.list() });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      name: '우유',
+      category: 'fridge',
+      quantity: 1,
+      fridgeId: FRIDGE_ID,
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY });
   });
 });
 
@@ -193,7 +234,7 @@ describe('useAddComment', () => {
         {
           id: '9',
           text: '맛있다',
-          author: 'mom',
+          author: me,
           createdAt: '2026-10-30T05:00:00.000Z',
         },
         201,
@@ -204,7 +245,7 @@ describe('useAddComment', () => {
     await act(() =>
       result.current.mutateAsync({
         itemId: '1',
-        input: { text: '맛있다', author: 'mom' },
+        input: { text: '맛있다' },
       }),
     );
 
@@ -223,7 +264,6 @@ describe('useAddPurchasedItems', () => {
     const input = {
       category: 'fridge' as const,
       quantity: 1,
-      addedBy: 'mom' as const,
     };
 
     const saved = await act(() =>

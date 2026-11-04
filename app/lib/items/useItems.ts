@@ -1,5 +1,6 @@
 // app/lib/items/useItems.ts
 // 냉장고 품목 서버 상태 훅. 화면은 fetch와 캐시를 몰라도 이 훅만 쓰면 된다.
+// 모든 훅은 지금 보고 있는 냉장고(useCurrentFridge) 기준으로 불러오고 저장한다.
 
 'use client';
 
@@ -11,6 +12,7 @@ import {
 } from '@tanstack/react-query';
 import { apiFetch } from '@/app/lib/api/apiFetch';
 import { track, type ItemAddSource } from '@/app/lib/analytics/gtag';
+import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import { itemKeys } from '@/app/lib/query/keys';
 import {
   CommentSchema,
@@ -25,23 +27,49 @@ import {
 const ITEMS_URL = '/api/items';
 const UPDATE_MUTATION_KEY = [...itemKeys.all, 'update'] as const;
 
+function useCurrentFridgeId(): string | undefined {
+  return useCurrentFridge().data?.id;
+}
+
+// 냉장고를 아직 모르면 저장할 곳이 없으므로 요청을 보내지 않고 실패로 처리한다
+function requireFridgeId(fridgeId: string | undefined): string {
+  if (!fridgeId) throw new Error('냉장고를 불러오기 전에는 저장할 수 없습니다');
+  return fridgeId;
+}
+
 export function useItems() {
-  return useQuery({
-    queryKey: itemKeys.list(),
+  const fridge = useCurrentFridge();
+  const fridgeId = fridge.data?.id;
+  const items = useQuery({
+    queryKey: itemKeys.list(fridgeId ?? ''),
     // signal을 넘기면 dev StrictMode의 재마운트가 첫 요청을 취소해 요청이 2번 나간다
-    queryFn: () => apiFetch(ITEMS_URL, ItemListSchema),
+    queryFn: () =>
+      apiFetch(
+        `${ITEMS_URL}?fridgeId=${encodeURIComponent(requireFridgeId(fridgeId))}`,
+        ItemListSchema,
+      ),
+    enabled: Boolean(fridgeId),
   });
+  // 냉장고 조회가 실패하면 품목 조회는 시작되지 않으므로 그 실패를 화면에 그대로 알린다
+  if (fridge.error) {
+    return { ...items, error: fridge.error, refetch: fridge.refetch };
+  }
+  return items;
 }
 
 // source: 어느 화면에서 추가했는지 사용 기록에 남긴다
 export function useCreateItem(source: ItemAddSource) {
   const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridgeId();
   return useMutation({
     mutationFn: (input: CreateItemInput) =>
-      apiFetch(ITEMS_URL, ItemSchema, { method: 'POST', body: input }),
+      apiFetch(ITEMS_URL, ItemSchema, {
+        method: 'POST',
+        body: { ...input, fridgeId: requireFridgeId(fridgeId) },
+      }),
     onSuccess: () => {
       track('item_added', { source, count: 1 });
-      return invalidateList(queryClient);
+      return invalidateList(queryClient, fridgeId);
     },
   });
 }
@@ -49,11 +77,16 @@ export function useCreateItem(source: ItemAddSource) {
 // 구매 완료한 품목을 한 번에 냉장고에 넣는다. 일부만 실패할 수 있어 품목별 성공 여부를 돌려준다
 export function useAddPurchasedItems() {
   const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridgeId();
   return useMutation({
     mutationFn: async (inputs: CreateItemInput[]) => {
+      const target = requireFridgeId(fridgeId);
       const results = await Promise.allSettled(
         inputs.map(input =>
-          apiFetch(ITEMS_URL, ItemSchema, { method: 'POST', body: input }),
+          apiFetch(ITEMS_URL, ItemSchema, {
+            method: 'POST',
+            body: { ...input, fridgeId: target },
+          }),
         ),
       );
       return results.map(result => result.status === 'fulfilled');
@@ -61,7 +94,7 @@ export function useAddPurchasedItems() {
     onSuccess: saved => {
       const count = saved.filter(Boolean).length;
       if (count > 0) track('item_added', { source: 'purchase', count });
-      return invalidateList(queryClient);
+      return invalidateList(queryClient, fridgeId);
     },
   });
 }
@@ -75,6 +108,8 @@ export interface UpdateItemVariables {
 // itemId를 넘기면 같은 품목의 요청을 순서대로 보내서, 늦게 도착한 요청이 최신 값을 덮어쓰지 않는다
 export function useUpdateItem(itemId?: string) {
   const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridgeId();
+  const listKey = itemKeys.list(fridgeId ?? '');
   return useMutation({
     mutationKey: UPDATE_MUTATION_KEY,
     scope: itemId ? { id: `item-update-${itemId}` } : undefined,
@@ -85,11 +120,11 @@ export function useUpdateItem(itemId?: string) {
       }),
     onMutate: async ({ id, updates }) => {
       // 진행 중인 조회가 끝나면서 낙관적 값을 덮어쓰지 않도록 취소한다
-      await queryClient.cancelQueries({ queryKey: itemKeys.list() });
+      await queryClient.cancelQueries({ queryKey: listKey });
       const previous = queryClient
-        .getQueryData<Item[]>(itemKeys.list())
+        .getQueryData<Item[]>(listKey)
         ?.find(item => item.id === id);
-      queryClient.setQueryData<Item[]>(itemKeys.list(), items =>
+      queryClient.setQueryData<Item[]>(listKey, items =>
         items?.map(item => (item.id === id ? { ...item, ...updates } : item)),
       );
       return { previous };
@@ -98,14 +133,14 @@ export function useUpdateItem(itemId?: string) {
       // 목록 전체가 아니라 실패한 품목만 되돌려서, 동시에 진행 중인 다른 변경은 그대로 둔다
       const previous = context?.previous;
       if (!previous) return;
-      queryClient.setQueryData<Item[]>(itemKeys.list(), items =>
+      queryClient.setQueryData<Item[]>(listKey, items =>
         items?.map(item => (item.id === id ? previous : item)),
       );
     },
     onSettled: () => {
       // 다른 변경이 진행 중이면 그 변경의 낙관적 값이 덮이지 않도록 마지막 것만 다시 불러온다
       if (queryClient.isMutating({ mutationKey: UPDATE_MUTATION_KEY }) === 1) {
-        return invalidateList(queryClient);
+        return invalidateList(queryClient, fridgeId);
       }
     },
   });
@@ -127,6 +162,7 @@ export interface AddCommentVariables {
 // 서버가 만든 댓글을 받아 캐시에 바로 넣는다. 재조회하지 않아 다른 변경의 낙관적 값을 건드리지 않는다
 export function useAddComment() {
   const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridgeId();
   return useMutation({
     mutationFn: ({ itemId, input }: AddCommentVariables) =>
       apiFetch(`${ITEMS_URL}/${itemId}/comments`, CommentSchema, {
@@ -135,7 +171,7 @@ export function useAddComment() {
       }),
     onSuccess: (comment, { itemId }) => {
       track('comment_added');
-      queryClient.setQueryData<Item[]>(itemKeys.list(), items =>
+      queryClient.setQueryData<Item[]>(itemKeys.list(fridgeId ?? ''), items =>
         items?.map(item =>
           item.id === itemId
             ? { ...item, comments: [...item.comments, comment] }
@@ -146,6 +182,7 @@ export function useAddComment() {
   });
 }
 
-function invalidateList(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: itemKeys.list() });
+function invalidateList(queryClient: QueryClient, fridgeId?: string) {
+  if (!fridgeId) return;
+  return queryClient.invalidateQueries({ queryKey: itemKeys.list(fridgeId) });
 }

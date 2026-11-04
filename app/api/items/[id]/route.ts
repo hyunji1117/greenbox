@@ -1,13 +1,10 @@
 // app/api/items/[id]/route.ts
-// 내 품목 수정과 소진 처리
+// 품목 수정과 소진 처리. 내가 구성원인 냉장고의 품목만 고칠 수 있다
 
 import { NextResponse } from 'next/server';
 import { updateItem } from '@/app/lib/items/store';
 import { ItemIdSchema, UpdateItemSchema } from '@/app/lib/schemas/item';
-import { invalidRequest, requireUser } from '../guard';
-
-const notFound = () =>
-  NextResponse.json({ error: 'not_found' }, { status: 404 });
+import { invalidRequest, notFound, requireUser } from '../guard';
 
 export async function PATCH(
   request: Request,
@@ -23,7 +20,7 @@ export async function PATCH(
   const parsed = UpdateItemSchema.safeParse(body);
   if (!parsed.success) return invalidRequest(parsed.error);
 
-  // 남의 품목도 없는 품목과 똑같이 404로 답해 존재 여부를 알리지 않는다
+  // 다른 냉장고의 품목도 없는 품목과 똑같이 404로 답해 존재 여부를 알리지 않는다
   const item = await updateItem(userId, id.data, parsed.data);
   if (!item) return notFound();
   return NextResponse.json(item, {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useFridge } from '@/app/context/FridgeContext';
 import { useCreateItem, useItems } from '@/app/lib/items/useItems';
 import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import {
@@ -27,7 +26,6 @@ interface CategoryItem {
   expiryDays: number;
 }
 const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
-  const { currentUser } = useFridge();
   const { data: items = [] } = useItems();
   const createItem = useCreateItem('quick_add_items');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -508,7 +506,6 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
             name: selectedItem.name,
             category: selectedItem.defaultCategory,
             quantity: quantity,
-            addedBy: currentUser,
           },
           {
             onSuccess: () => {

@@ -11,6 +11,8 @@ import PushNotificationCard from '@/app/components/settings/PushNotificationCard
 import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
+import { useQueryClient } from '@tanstack/react-query';
+import { fridgeKeys, itemKeys } from '@/app/lib/query/keys';
 
 interface SettingsPageProps {
   isOpen: boolean;
@@ -20,7 +22,6 @@ interface SettingsPageProps {
 // --------------------------------------
 // 타입 정의
 // --------------------------------------
-type UserId = 'mom' | 'dad' | 'bigKid' | 'littleKid';
 type SettingsSection = 'account' | 'app';
 
 const SECTION_TABS = [
@@ -36,13 +37,8 @@ const DANGER_BUTTON =
   'flex h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50';
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
-  const {
-    currentUser,
-    setCurrentUser,
-    myProfile,
-    setMyProfile,
-    getFamilyMemberName,
-  } = useFridge();
+  const { myProfile, setMyProfile } = useFridge();
+  const queryClient = useQueryClient();
   const [nicknameDraft, setNicknameDraft] = useState<string | null>(null);
   const [nicknameMessage, setNicknameMessage] = useState<{
     type: 'success' | 'error';
@@ -53,10 +49,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('account');
   const appVersion = '1.0.0';
-
-  const userOptions: { id: UserId; name: string }[] = (
-    ['mom', 'dad', 'bigKid', 'littleKid'] as UserId[]
-  ).map(id => ({ id, name: getFamilyMemberName(id) }));
 
   // 입력 중이 아니면 저장된 호칭을 보여준다
   const nicknameValue = nicknameDraft ?? myProfile?.familyNickname ?? '';
@@ -74,6 +66,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
         return;
       }
       setMyProfile({ ...myProfile, familyNickname: result.familyNickname });
+      // 품목과 댓글, 구성원 목록의 내 이름도 서버가 만들어 보내므로 새로 불러온다
+      void queryClient.invalidateQueries({ queryKey: itemKeys.all });
+      void queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
       setNicknameDraft(null);
       setNicknameMessage({ type: 'success', text: '호칭을 저장했어요' });
     });
@@ -185,23 +180,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                   <p className="mt-1 text-xs text-gray-400">
                     구글 계정 이메일이라 여기서 바꿀 수 없어요
                   </p>
-                </div>
-                <div>
-                  <label htmlFor="current-user" className={FIELD_LABEL}>
-                    현재 사용자
-                  </label>
-                  <select
-                    id="current-user"
-                    value={currentUser as UserId}
-                    onChange={e => setCurrentUser(e.target.value as UserId)}
-                    className={FIELD}
-                  >
-                    {userOptions.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
               <button

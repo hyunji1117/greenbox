@@ -4,7 +4,7 @@ import React from 'react';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { itemKeys } from '@/app/lib/query/keys';
+import { fridgeKeys, itemKeys } from '@/app/lib/query/keys';
 import type { Item } from '@/app/lib/schemas/item';
 import { UNDO_WINDOW_MS, useFinishWithUndo } from './useFinishWithUndo';
 
@@ -13,7 +13,7 @@ const itemJson = (finished: boolean) => ({
   name: '당근',
   category: 'fridge',
   quantity: 1,
-  addedBy: 'mom',
+  addedBy: { id: '7', name: '현지', isMember: true },
   addedAt: '2026-10-30T03:00:00.000Z',
   comments: [],
   finished,
@@ -27,7 +27,7 @@ let queryClient: QueryClient;
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
-const cached = () => queryClient.getQueryData<Item[]>(itemKeys.list())?.[0];
+const cached = () => queryClient.getQueryData<Item[]>(itemKeys.list('5'))?.[0];
 const item = { id: '1', name: '당근' };
 
 describe('useFinishWithUndo', () => {
@@ -35,9 +35,18 @@ describe('useFinishWithUndo', () => {
     vi.stubGlobal('fetch', fetchMock);
     fetchMock.mockReset();
     queryClient = new QueryClient({
-      defaultOptions: { mutations: { retry: false } },
+      defaultOptions: {
+        queries: { staleTime: Infinity },
+        mutations: { retry: false },
+      },
     });
-    queryClient.setQueryData(itemKeys.list(), [
+    queryClient.setQueryData(fridgeKeys.current(), {
+      id: '5',
+      name: '내 냉장고',
+      role: 'owner',
+      members: [],
+    });
+    queryClient.setQueryData(itemKeys.list('5'), [
       { ...itemJson(false), addedAt: new Date(), expiryDate: undefined },
     ]);
   });

@@ -20,3 +20,24 @@ export function toDisplayName(profile: MyProfile | null): string | null {
     null
   );
 }
+
+// 품목을 넣은 사람과 댓글 작성자 표시 (서버가 이름을 위 규칙대로 만들어 보낸다)
+export interface PersonLike {
+  id: string | null;
+  name: string | null;
+  isMember: boolean;
+}
+
+export function personLabel(person: PersonLike): string {
+  if (!person.id) return '탈퇴한 구성원';
+  const name = person.name ?? '이름 없는 구성원';
+  return person.isMember ? name : `나간 구성원 ${name}`;
+}
+
+// 이름 뒤 주격 조사. 마지막 글자에 받침이 있으면 '이', 없거나 한글이 아니면 '가'
+export function withSubjectParticle(name: string): string {
+  const code = name.charCodeAt(name.length - 1);
+  const isHangul = code >= 0xac00 && code <= 0xd7a3;
+  const hasFinal = isHangul && (code - 0xac00) % 28 !== 0;
+  return `${name}${hasFinal ? '이' : '가'}`;
+}

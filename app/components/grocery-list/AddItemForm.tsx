@@ -2,7 +2,6 @@
 // 식재료 추가 폼 컴포넌트
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useFridge } from '@/app/context/FridgeContext';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import { ITEM_NAME_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
 import Toast from '@/app/components/common/Toast';
@@ -27,7 +26,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   mode: initialMode = 'simple',
   initialCategory = 'fridge',
 }) => {
-  const { currentUser } = useFridge();
   const createItem = useCreateItem('add_form');
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -110,7 +108,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           category,
           quantity: finalQuantity,
           expiryDate: expiryDate || undefined,
-          addedBy: currentUser,
         });
       } catch {
         // 실패하면 폼을 닫지 않아 입력한 내용으로 다시 시도할 수 있다
