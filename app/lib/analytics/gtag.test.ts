@@ -20,11 +20,10 @@ describe('resolveTrafficParams', () => {
     expect(resolveTrafficParams('', localStorage, false)).toEqual({});
   });
 
-  it('?internal=on으로 표시하면 다음 방문에도 내부 트래픽으로 보낸다', () => {
+  it('?internal=on으로 표시하면 다음 방문에도 개발자 트래픽으로 보낸다', () => {
     resolveTrafficParams('?internal=on', localStorage, false);
     expect(localStorage.getItem(INTERNAL_FLAG_KEY)).toBe('1');
     expect(resolveTrafficParams('', localStorage, false)).toEqual({
-      traffic_type: 'internal',
       debug_mode: true,
     });
   });
@@ -36,8 +35,8 @@ describe('resolveTrafficParams', () => {
     );
   });
 
-  it('개발 환경은 표시가 없어도 내부 트래픽으로 보낸다', () => {
-    expect(resolveTrafficParams('', null, true).traffic_type).toBe('internal');
+  it('개발 환경은 표시가 없어도 개발자 트래픽으로 보내고 내부 트래픽 표시는 붙이지 않는다', () => {
+    expect(resolveTrafficParams('', null, true)).toEqual({ debug_mode: true });
   });
 
   it('저장소를 쓸 수 없어도 오류 없이 일반 트래픽으로 보낸다', () => {
