@@ -10,4 +10,9 @@ export const itemKeys = {
 export const fridgeKeys = {
   all: ['fridges'] as const,
   current: () => [...fridgeKeys.all, 'current'] as const,
+  mine: () => [...fridgeKeys.all, 'mine'] as const,
+  invite: (fridgeId: string) =>
+    [...fridgeKeys.all, 'invite', fridgeId] as const,
+  requests: (fridgeId: string) =>
+    [...fridgeKeys.all, 'requests', fridgeId] as const,
 };

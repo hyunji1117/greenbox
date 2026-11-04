@@ -41,3 +41,11 @@ export function withSubjectParticle(name: string): string {
   const hasFinal = isHangul && (code - 0xac00) % 28 !== 0;
   return `${name}${hasFinal ? '이' : '가'}`;
 }
+
+// 이름 뒤 목적격 조사. 마지막 글자에 받침이 있으면 '을', 없거나 한글이 아니면 '를'
+export function withObjectParticle(name: string): string {
+  const code = name.charCodeAt(name.length - 1);
+  const isHangul = code >= 0xac00 && code <= 0xd7a3;
+  const hasFinal = isHangul && (code - 0xac00) % 28 !== 0;
+  return `${name}${hasFinal ? '을' : '를'}`;
+}

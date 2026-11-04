@@ -18,7 +18,24 @@ export interface CurrentFridgeJson {
   id: string;
   name: string;
   role: FridgeRole;
+  // 구성원 목록에서 나를 찾기 위한 내 사용자 번호
+  myUserId: string;
   members: FridgeMemberJson[];
+  // 승인을 기다리는 참여 요청 수 (구성원에게 표시)
+  pendingRequestCount: number;
+}
+
+// 승인을 기다리는 요청도 하루가 지나면 만료
+export const REQUEST_TTL_HOURS = 24;
+
+export async function countPendingRequests(fridgeId: string): Promise<number> {
+  const { rows } = await getPool().query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM fridge_join_requests
+     WHERE fridge_id = $1 AND status = 'pending'
+       AND created_at > now() - make_interval(hours => $2)`,
+    [fridgeId, REQUEST_TTL_HOURS],
+  );
+  return rows[0].n;
 }
 
 // 화면 표시 이름 규칙(app/lib/user/displayName.ts)과 같은 순서: 가족 내 호칭 > 구글 이름 > 이메일 앞부분
@@ -28,6 +45,19 @@ export const displayNameSql = (alias: string) =>
             NULLIF(split_part(${alias}.email, '@', 1), ''))`;
 
 type Db = Pick<PoolClient, 'query'>;
+
+export const DEFAULT_FRIDGE_NAME = '내 냉장고';
+
+// 이름을 바꾸지 않은 냉장고는 만든 사람에게만 "내 냉장고"다.
+// 함께 보는 사람에게는 "OO님의 냉장고"로 보여 여러 냉장고를 구분할 수 있게 한다
+export const fridgeNameForMemberSql = (fridge: string, roleExpr: string) =>
+  `CASE WHEN ${fridge}.name = '${DEFAULT_FRIDGE_NAME}' AND ${roleExpr} = 'member'
+     THEN COALESCE(
+       (SELECT ${displayNameSql('o')} || '님의 냉장고'
+        FROM fridge_members om JOIN users o ON o.id = om.user_id
+        WHERE om.fridge_id = ${fridge}.id AND om.role = 'owner'),
+       ${fridge}.name)
+     ELSE ${fridge}.name END`;
 
 // 구성원이 아니면 null. 존재하지 않는 냉장고와 구별하지 않는다
 export async function getFridgeRole(
@@ -85,7 +115,7 @@ export async function resolveCurrentFridge(
 ): Promise<FridgeSummary> {
   const query = () =>
     getPool().query<FridgeSummary>(
-      `SELECT f.id, f.name, m.role
+      `SELECT f.id, ${fridgeNameForMemberSql('f', 'm.role')} AS name, m.role
        FROM fridge_members m
        JOIN fridges f ON f.id = m.fridge_id
        JOIN users u ON u.id = m.user_id
@@ -140,5 +170,9 @@ export async function getCurrentFridge(
   userId: string,
 ): Promise<CurrentFridgeJson> {
   const fridge = await resolveCurrentFridge(userId);
-  return { ...fridge, members: await listFridgeMembers(fridge.id) };
+  const [members, pendingRequestCount] = await Promise.all([
+    listFridgeMembers(fridge.id),
+    countPendingRequests(fridge.id),
+  ]);
+  return { ...fridge, myUserId: userId, members, pendingRequestCount };
 }
