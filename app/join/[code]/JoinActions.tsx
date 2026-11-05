@@ -8,6 +8,7 @@ import { continueJoinToConsent, startJoinLogin } from '@/app/auth/actions';
 import { track, type JoinPageState } from '@/app/lib/analytics/gtag';
 import { ApiError } from '@/app/lib/api/apiFetch';
 import {
+  useMyJoinStatus,
   useRequestJoin,
   useSwitchFridge,
 } from '@/app/lib/fridges/useFridgeSharing';
@@ -27,12 +28,23 @@ const JoinActions: React.FC<JoinActionsProps> = ({ code, state, fridgeId }) => {
   const [isMoving, startMoving] = useTransition();
   const requestJoin = useRequestJoin(code);
   const switchFridge = useSwitchFridge();
+  // 요청할 수 있는 상태에서만 내 요청 상태를 확인한다 (다시 들어와도 기다리는 화면이 보이게)
+  const joinStatus = useMyJoinStatus(code, state === 'can_request');
 
   useEffect(() => {
     track('join_page_viewed', { state });
   }, [state]);
 
   const goToFridge = () => (window.location.href = '/?tab=fridge');
+
+  // 기다리던 화면에서 승인되면 잠깐 알린 뒤 초대받은 냉장고로 바로 옮긴다
+  // (승인될 때 서버가 이 냉장고를 처음 보일 냉장고로 정해 두었다)
+  const approvedWhileWaiting = joinStatus.data?.status === 'member';
+  useEffect(() => {
+    if (!approvedWhileWaiting) return;
+    const timer = setTimeout(goToFridge, 1500);
+    return () => clearTimeout(timer);
+  }, [approvedWhileWaiting]);
 
   if (state === 'invalid') {
     return (
@@ -88,26 +100,53 @@ const JoinActions: React.FC<JoinActionsProps> = ({ code, state, fridgeId }) => {
     );
   }
 
+  // 승인되면 기다리는 화면이 바로 바뀐다 (새로고침 없이 5초마다 확인)
+  const joinedFridgeId =
+    joinStatus.data?.status === 'member' ? joinStatus.data.fridgeId : null;
+  if (joinedFridgeId || requestJoin.data?.status === 'member') {
+    const target = joinedFridgeId ?? fridgeId;
+    return (
+      <div className="space-y-3">
+        <p className="rounded-2xl bg-white p-4 text-center text-sm leading-relaxed text-gray-700">
+          참여가 승인됐어요.
+          <br />
+          {joinedFridgeId
+            ? '초대받은 냉장고로 이동할게요.'
+            : '이제 이 냉장고를 함께 볼 수 있어요.'}
+        </p>
+        <button
+          type="button"
+          disabled={switchFridge.isPending}
+          className={PRIMARY}
+          onClick={() =>
+            target
+              ? switchFridge.mutate(target, { onSettled: goToFridge })
+              : goToFridge()
+          }
+        >
+          이 냉장고 보러 가기
+        </button>
+      </div>
+    );
+  }
+
   // 요청을 보낸 뒤에는 승인을 기다린다는 안내만 남긴다
-  if (requestJoin.data?.status === 'pending') {
+  if (
+    requestJoin.data?.status === 'pending' ||
+    joinStatus.data?.status === 'pending'
+  ) {
     return (
       <div className="space-y-3">
         <p className="rounded-2xl bg-white p-4 text-center text-sm leading-relaxed text-gray-700">
           참여를 요청했어요.
           <br />
-          구성원이 승인하면 알림으로 알려 드려요. 요청은 24시간 동안 유지돼요.
+          구성원이 승인하면 이 화면이 바로 바뀌고 알림도 보내 드려요. 요청은
+          24시간 동안 유지돼요.
         </p>
         <Link href="/" className={SECONDARY}>
           내 냉장고로 가기
         </Link>
       </div>
-    );
-  }
-  if (requestJoin.data?.status === 'member') {
-    return (
-      <button type="button" className={PRIMARY} onClick={goToFridge}>
-        이 냉장고 보러 가기
-      </button>
     );
   }
 

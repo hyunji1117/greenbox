@@ -308,6 +308,12 @@ export async function decideRequest(
          VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING`,
         [fridgeId, Number(requester)],
       );
+      // 초대받아 들어온 냉장고이니 요청한 사람이 다음에 앱을 열면 이 냉장고부터 보이게 한다
+      // (지금 보고 있는 화면은 바꾸지 않는다: resolveCurrentFridge의 keepFridgeId)
+      await client.query(`UPDATE users SET last_fridge_id = $1 WHERE id = $2`, [
+        fridgeId,
+        Number(requester),
+      ]);
     }
     await client.query(
       `UPDATE fridge_join_requests
@@ -320,6 +326,37 @@ export async function decideRequest(
       requesterId: requester,
     };
   });
+}
+
+// 참여 화면에서 승인을 기다리는 동안 내 상태를 확인한다
+export type MyJoinStatus = 'member' | 'pending' | 'none';
+
+export async function getMyJoinStatus(
+  userId: string,
+  code: string,
+): Promise<{ status: MyJoinStatus; fridgeId: string } | null> {
+  if (!INVITE_CODE_PATTERN.test(code)) return null;
+  // 승인된 뒤에는 링크가 만료되거나 꺼져도 결과를 알 수 있도록 링크의 유효 여부는 보지 않는다
+  const { rows } = await getPool().query<{
+    fridge_id: string;
+    is_member: boolean;
+    is_pending: boolean;
+  }>(
+    `SELECT i.fridge_id,
+       EXISTS (SELECT 1 FROM fridge_members m
+               WHERE m.fridge_id = i.fridge_id AND m.user_id = $2) AS is_member,
+       EXISTS (SELECT 1 FROM fridge_join_requests r
+               WHERE r.fridge_id = i.fridge_id AND r.user_id = $2 AND r.status = 'pending'
+                 AND r.created_at > now() - make_interval(hours => $3)) AS is_pending
+     FROM fridge_invites i WHERE i.code = $1`,
+    [code, Number(userId), REQUEST_TTL_HOURS],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    fridgeId: row.fridge_id,
+    status: row.is_member ? 'member' : row.is_pending ? 'pending' : 'none',
+  };
 }
 
 // ---------- 내보내기와 나가기 ----------

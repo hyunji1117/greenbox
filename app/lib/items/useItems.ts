@@ -25,6 +25,7 @@ import {
 } from '@/app/lib/schemas/item';
 
 const ITEMS_URL = '/api/items';
+const ITEMS_SHARED_REFRESH_MS = 15_000;
 const UPDATE_MUTATION_KEY = [...itemKeys.all, 'update'] as const;
 
 function useCurrentFridgeId(): string | undefined {
@@ -49,6 +50,9 @@ export function useItems() {
         ItemListSchema,
       ),
     enabled: Boolean(fridgeId),
+    // 함께 쓰는 냉장고는 다른 가족이 넣거나 고친 품목이 새로고침 없이 보이도록 다시 확인한다
+    refetchInterval:
+      (fridge.data?.members.length ?? 1) > 1 ? ITEMS_SHARED_REFRESH_MS : false,
   });
   // 냉장고 조회가 실패하면 품목 조회는 시작되지 않으므로 그 실패를 화면에 그대로 알린다
   if (fridge.error) {
