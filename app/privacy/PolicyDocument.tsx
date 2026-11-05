@@ -10,6 +10,7 @@ import {
   policyDateLabel,
   upcomingPolicy,
 } from '@/app/lib/consent/policies';
+import PolicyBackButton from './PolicyBackButton';
 import { POLICY_BODIES } from './versions';
 
 interface PolicyDocumentProps {
@@ -25,8 +26,14 @@ export default function PolicyDocument({ version }: PolicyDocumentProps) {
   const others = POLICY_RELEASES.filter(r => r.version !== version).reverse();
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8">
-      <article className="mx-auto max-w-2xl space-y-8 rounded-2xl bg-white p-6 shadow-sm">
+    <main className="min-h-screen bg-gray-50 px-3 pb-8 sm:px-4">
+      {/* 긴 글을 읽는 중에도 바로 돌아갈 수 있게 위쪽에 붙여 둔다 */}
+      <nav className="sticky top-0 z-10 -mx-3 mb-2 bg-gray-50/95 px-2 pt-[env(safe-area-inset-top,0px)] backdrop-blur sm:-mx-4">
+        <div className="mx-auto flex h-14 max-w-2xl items-center">
+          <PolicyBackButton />
+        </div>
+      </nav>
+      <article className="mx-auto max-w-2xl space-y-8 rounded-2xl bg-white p-4 break-keep shadow-sm sm:p-6">
         <header className="space-y-2">
           <h1 className="text-xl font-bold text-gray-900">개인정보처리방침</h1>
           {isCurrent && upcoming && (
@@ -47,7 +54,7 @@ export default function PolicyDocument({ version }: PolicyDocumentProps) {
                 href="/privacy"
                 className="font-semibold underline underline-offset-2"
               >
-                지금 방침
+                현재 방침
               </Link>
               이 적용돼요.
             </p>
@@ -59,7 +66,7 @@ export default function PolicyDocument({ version }: PolicyDocumentProps) {
                 href="/privacy"
                 className="font-semibold underline underline-offset-2"
               >
-                지금 방침 보기
+                현재 방침 보기
               </Link>
             </p>
           )}

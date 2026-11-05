@@ -12,7 +12,7 @@ import {
 const at = (iso: string) => new Date(iso).getTime();
 
 describe('개인정보처리방침 버전', () => {
-  it('시행 시각 전에는 지금 방침을 쓰고 새 방침은 시행 예정으로 알린다', () => {
+  it('시행 시각 전에는 현재 방침을 쓰고 새 방침은 시행 예정으로 알린다', () => {
     const before = at('2026-11-11T23:59:59+09:00');
     expect(currentPolicyVersion(before)).toBe('2026-10-02');
     expect(upcomingPolicy(before)?.version).toBe('2026-11-12');

@@ -2,60 +2,43 @@
 // 2026-10-02 시행 개인정보처리방침 원문. 지난 방침 열람용이므로 고치지 않는다
 
 import { OPERATOR } from '@/app/lib/consent/operator';
-import { Section, cell } from '../PolicyParts';
+import { PolicyTable, Section } from '../PolicyParts';
 
 export default function Policy20261002() {
   return (
     <>
       <Section title="1. 수집하는 개인정보 항목과 수집 방법">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className={cell}>구분</th>
-                <th className={cell}>항목</th>
-                <th className={cell}>수집 방법</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className={cell}>필수 (구글 로그인)</td>
-                <td className={cell}>
-                  이름, 이메일 주소, 프로필 사진, 구글 계정 식별자
-                </td>
-                <td className={cell}>
-                  구글 로그인 후 필수 항목에 동의하면 저장 (구글로부터 제공받음)
-                </td>
-              </tr>
-              <tr>
-                <td className={cell}>필수 (동의 기록)</td>
-                <td className={cell}>
-                  동의 항목, 동의한 방침 버전, 동의 일시, 브라우저 정보
-                </td>
-                <td className={cell}>동의 시 자동 기록</td>
-              </tr>
-              <tr>
-                <td className={cell}>자동 수집</td>
-                <td className={cell}>
-                  접속 기록, 기기·브라우저 정보, 쿠키, 서비스 이용 통계
-                </td>
-                <td className={cell}>
-                  서비스 이용 과정에서 자동 생성 (Google Analytics 포함)
-                </td>
-              </tr>
-              <tr>
-                <td className={cell}>선택 (호칭 등록 시)</td>
-                <td className={cell}>가족 내 호칭</td>
-                <td className={cell}>이용자가 설정 화면에서 직접 입력</td>
-              </tr>
-              <tr>
-                <td className={cell}>선택 (알림 사용 시)</td>
-                <td className={cell}>푸시 알림 구독 정보</td>
-                <td className={cell}>알림 허용 시 브라우저가 생성</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <PolicyTable
+          headers={['구분', '항목', '수집 방법']}
+          columnWidths={['26%', '37%', '37%']}
+          rows={[
+            [
+              '필수 (구글 로그인)',
+              '이름, 이메일 주소, 프로필 사진, 구글 계정 식별자',
+              '구글 로그인 후 필수 항목에 동의하면 저장 (구글로부터 제공받음)',
+            ],
+            [
+              '필수 (동의 기록)',
+              '동의 항목, 동의한 방침 버전, 동의 일시, 브라우저 정보',
+              '동의 시 자동 기록',
+            ],
+            [
+              '자동 수집',
+              '접속 기록, 기기·브라우저 정보, 쿠키, 서비스 이용 통계',
+              '서비스 이용 과정에서 자동 생성 (Google Analytics 포함)',
+            ],
+            [
+              '선택 (호칭 등록 시)',
+              '가족 내 호칭',
+              '이용자가 설정 화면에서 직접 입력',
+            ],
+            [
+              '선택 (알림 사용 시)',
+              '푸시 알림 구독 정보',
+              '알림 허용 시 브라우저가 생성',
+            ],
+          ]}
+        />
         <p>
           냉장고 식재료, 장보기 목록, 구매 기록은 현재 이용자의 기기(브라우저
           저장소)에만 저장되며 운영자에게 전송되지 않습니다.
@@ -104,47 +87,30 @@ export default function Policy20261002() {
           일부 수탁자는 국외에 있습니다. 개인정보는 서비스 이용 시점에
           네트워크를 통해 전송됩니다.
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className={cell}>수탁자 (국가)</th>
-                <th className={cell}>위탁 업무</th>
-                <th className={cell}>이전 항목</th>
-                <th className={cell}>보유 기간</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className={cell}>Vultr (미국)</td>
-                <td className={cell}>
-                  회원 정보와 동의 기록 저장 (저장 위치: 대한민국 서울)
-                </td>
-                <td className={cell}>
-                  이름, 이메일 주소, 프로필 사진, 구글 계정 식별자, 가족 내
-                  호칭, 동의 기록
-                </td>
-                <td className={cell}>회원 탈퇴 또는 위탁 계약 종료 시까지</td>
-              </tr>
-              <tr>
-                <td className={cell}>Vercel Inc. (미국)</td>
-                <td className={cell}>서비스 호스팅, 서버 운영</td>
-                <td className={cell}>접속 기록, 기기·브라우저 정보</td>
-                <td className={cell}>위탁 계약 종료 시까지</td>
-              </tr>
-              <tr>
-                <td className={cell}>Google LLC (미국)</td>
-                <td className={cell}>
-                  구글 계정 로그인, 이용 통계 분석(Google Analytics)
-                </td>
-                <td className={cell}>
-                  구글 계정 정보, 접속 기록, 쿠키, 이용 통계
-                </td>
-                <td className={cell}>Google의 보관 정책에 따름</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <PolicyTable
+          headers={['수탁자 (국가)', '위탁 업무', '이전 항목', '보유 기간']}
+          columnWidths={['24%', '24%', '24%', '28%']}
+          rows={[
+            [
+              'Vultr (미국)',
+              '회원 정보와 동의 기록 저장 (저장 위치: 대한민국 서울)',
+              '이름, 이메일 주소, 프로필 사진, 구글 계정 식별자, 가족 내 호칭, 동의 기록',
+              '회원 탈퇴 또는 위탁 계약 종료 시까지',
+            ],
+            [
+              'Vercel Inc. (미국)',
+              '서비스 호스팅, 서버 운영',
+              '접속 기록, 기기·브라우저 정보',
+              '위탁 계약 종료 시까지',
+            ],
+            [
+              'Google LLC (미국)',
+              '구글 계정 로그인, 이용 통계 분석(Google Analytics)',
+              '구글 계정 정보, 접속 기록, 쿠키, 이용 통계',
+              'Google의 보관 정책에 따름',
+            ],
+          ]}
+        />
         <p>
           이용자는 국외 이전을 거부할 수 있으나, 서비스는 로그인한 이용자만
           이용할 수 있으므로 이 경우 서비스를 이용할 수 없습니다.
