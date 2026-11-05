@@ -20,8 +20,8 @@ export const POLICY_RELEASES: readonly PolicyRelease[] = [
     changes: [],
   },
   {
-    version: '2026-11-12',
-    effectiveAt: '2026-11-12T00:00:00+09:00',
+    version: '2026-11-05',
+    effectiveAt: '2026-11-05T00:00:00+09:00',
     changes: [
       '냉장고 품목과 댓글을 기기가 아닌 서버에 저장해요',
       '가족과 냉장고를 함께 쓰면 구성원끼리 이름, 사진, 품목과 댓글이 보여요',
@@ -52,7 +52,7 @@ export function findPolicy(version: string): PolicyRelease | null {
   return POLICY_RELEASES.find(r => r.version === version) ?? null;
 }
 
-// 시행일 표시: '2026-11-12' → '2026년 11월 12일' (withYear가 false면 '11월 12일')
+// 시행일 표시: '2026-11-05' → '2026년 11월 5일' (withYear가 false면 '11월 5일')
 export function policyDateLabel(version: string, withYear = true): string {
   const [y, m, d] = version.split('-').map(Number);
   return withYear ? `${y}년 ${m}월 ${d}일` : `${m}월 ${d}일`;

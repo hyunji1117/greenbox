@@ -13,14 +13,14 @@ const at = (iso: string) => new Date(iso).getTime();
 
 describe('개인정보처리방침 버전', () => {
   it('시행 시각 전에는 현재 방침을 쓰고 새 방침은 시행 예정으로 알린다', () => {
-    const before = at('2026-11-11T23:59:59+09:00');
+    const before = at('2026-11-04T23:59:59+09:00');
     expect(currentPolicyVersion(before)).toBe('2026-10-02');
-    expect(upcomingPolicy(before)?.version).toBe('2026-11-12');
+    expect(upcomingPolicy(before)?.version).toBe('2026-11-05');
   });
 
   it('한국 시간 자정이 되면 새 방침으로 바뀌고 예정 방침은 없어진다', () => {
-    const after = at('2026-11-12T00:00:00+09:00');
-    expect(currentPolicyVersion(after)).toBe('2026-11-12');
+    const after = at('2026-11-05T00:00:00+09:00');
+    expect(currentPolicyVersion(after)).toBe('2026-11-05');
     expect(upcomingPolicy(after)).toBeNull();
   });
 
@@ -41,7 +41,7 @@ describe('개인정보처리방침 버전', () => {
   });
 
   it('시행일을 읽기 쉽게 표시한다', () => {
-    expect(policyDateLabel('2026-11-12')).toBe('2026년 11월 12일');
+    expect(policyDateLabel('2026-11-05')).toBe('2026년 11월 5일');
     expect(policyDateLabel('2026-11-03', false)).toBe('11월 3일');
   });
 });
