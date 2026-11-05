@@ -26,7 +26,6 @@ const TabSkeleton = () => (
 );
 
 // 각 탭을 동적 import로 분리 → 해당 탭을 열 때만 청크 로드.
-// recharts를 쓰는 HealthAnalysisPage(363KB)가 메인 첫 로드에서 빠지는 게 핵심.
 // 첫 탭이 냉장고면 서버가 그린 fridgeSlot을 쓰고, 나머지 경우는 클라이언트에서 불러온다.
 const FridgeBoard = dynamic(
   () => import('@/app/components/fridge/FridgeBoard'),
@@ -36,10 +35,10 @@ const IngredientsBoard = dynamic(
   () => import('@/app/components/ingredients/IngredientsBoard'),
   { ssr: false, loading: () => <TabSkeleton /> },
 );
-const HealthAnalysisPage = dynamic(
-  () => import('@/app/components/analysis/HealthAnalysisPage'),
-  { ssr: false, loading: () => <TabSkeleton /> },
-);
+const StatsPage = dynamic(() => import('@/app/components/stats/StatsPage'), {
+  ssr: false,
+  loading: () => <TabSkeleton />,
+});
 const GroceryListPage = dynamic(
   () => import('@/app/components/grocery-list/GroceryListPage'),
   { ssr: false, loading: () => <TabSkeleton /> },
@@ -60,10 +59,15 @@ export default function PageClient({ fridgeSlot }: PageClientProps) {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'healthAnalysis':
-        return <HealthAnalysisPage />;
+      case 'stats':
+        return <StatsPage onGoToFridge={() => goToTab('fridge')} />;
       case 'ingredients':
-        return <IngredientsBoard onGoToFridge={() => goToTab('fridge')} />;
+        return (
+          <IngredientsBoard
+            onGoToFridge={() => goToTab('fridge')}
+            onGoToList={() => goToTab('shoppingList')}
+          />
+        );
       case 'shoppingList':
         return <GroceryListPage />;
       case 'settings':

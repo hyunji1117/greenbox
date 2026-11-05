@@ -1,5 +1,5 @@
 // app/components/grocery-list/GroceryListPage.tsx
-// 장보기 리스트 페이지 컴포넌트
+// 장보기 리스트 페이지 컴포넌트. 직접 적거나 자주 사는 식재료 사진을 눌러 담는다
 
 'use client';
 
@@ -14,11 +14,17 @@ import {
   XIcon,
 } from 'lucide-react';
 import ActionToast from '@/app/components/common/ActionToast';
+import ScrollTopButton from '@/app/components/common/ScrollTopButton';
+import FrequentItemsPicker from '@/app/components/grocery-list/FrequentItemsPicker';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { useAddPurchasedItems } from '@/app/lib/items/useItems';
-import { ITEM_NAME_MAX, QUANTITY_MAX } from '@/app/lib/schemas/item';
+import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
+import {
+  toPurchaseCounts,
+  usePurchaseHistory,
+} from '@/app/lib/storage/usePurchaseHistory';
 
 interface ShoppingListItem {
   id: number;
@@ -44,8 +50,6 @@ const UNDO_TOAST_MS = 5000;
 const GroceryListPage: React.FC = () => {
   const addPurchasedItems = useAddPurchasedItems();
   const [activeView, setActiveView] = useState<'list' | 'favorites'>('list');
-  const [newItemName, setNewItemName] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() =>
     shoppingListStorage.loadShoppingList(),
   );
@@ -54,6 +58,24 @@ const GroceryListPage: React.FC = () => {
   );
 
   const completedCount = shoppingList.filter(i => i.completed).length;
+  // 아래 식재료 사진까지 내려가면 맨 위로 버튼을 띄우는 기준
+  const headerRef = useRef<HTMLDivElement>(null);
+  const purchaseHistory = usePurchaseHistory();
+  const purchaseCounts = toPurchaseCounts(purchaseHistory.history);
+  const listQuantities = new Map(shoppingList.map(i => [i.name, i.quantity]));
+
+  // 같은 이름이 있으면 수량만 늘린다
+  const addToList = (name: string) => {
+    setShoppingList(prev => {
+      const existing = prev.find(i => i.name === name);
+      if (existing) {
+        return prev.map(i =>
+          i === existing ? { ...i, quantity: i.quantity + 1 } : i,
+        );
+      }
+      return [...prev, { id: Date.now(), name, quantity: 1, completed: false }];
+    });
+  };
 
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -143,6 +165,7 @@ const GroceryListPage: React.FC = () => {
       console.error(e);
       return toast('냉장고에 넣었지만 구매 기록은 저장하지 못했어요');
     }
+    void purchaseHistory.reload();
     toast(
       purchased.length === completed.length
         ? `${purchased.length}개 항목을 냉장고에 넣었어요`
@@ -181,34 +204,9 @@ const GroceryListPage: React.FC = () => {
     toast(`'${fav.name}' 즐겨찾기를 저장했어요`);
   };
 
-  const trimmedNewItemName = newItemName.trim();
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trimmedNewItemName) return;
-    setShoppingList(prev => {
-      const existing = prev.find(i => i.name === trimmedNewItemName);
-      if (existing) {
-        return prev.map(i =>
-          i === existing ? { ...i, quantity: i.quantity + 1 } : i,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: Date.now(),
-          name: trimmedNewItemName,
-          quantity: 1,
-          completed: false,
-        },
-      ];
-    });
-    setNewItemName('');
-    inputRef.current?.focus();
-  };
-
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#F2F2F6] p-4 pb-24 sm:p-6 sm:pb-24">
-      <div className="mb-4">
+      <div ref={headerRef} className="mb-4">
         <h1 className="text-xl font-semibold">장보기 리스트</h1>
         <p className="mt-1 text-sm text-balance text-gray-500">
           구매를 완료하면 냉장고에 들어가고 구매 기록에 남아요
@@ -225,45 +223,18 @@ const GroceryListPage: React.FC = () => {
       <div key={activeView} className="motion-safe:animate-tab-fade">
         {activeView === 'list' ? (
           <>
-            <form
-              onSubmit={handleAddSubmit}
-              className="flex h-12 items-center gap-1 rounded-2xl bg-white pr-1 pl-4 shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 transition-shadow duration-200 focus-within:shadow-[0_0_0_4px_rgba(107,70,193,0.12)] focus-within:ring-[#A794D6]"
-            >
-              {/* iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 text-base를 유지한다 */}
-              <input
-                ref={inputRef}
-                type="text"
-                value={newItemName}
-                onChange={e => setNewItemName(e.target.value)}
-                aria-label="살 식재료 이름"
-                placeholder="살 식재료 이름"
-                maxLength={ITEM_NAME_MAX}
-                enterKeyHint="done"
-                className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"
-              />
-              <button
-                type="submit"
-                aria-label="리스트에 담기"
-                onMouseDown={e => e.preventDefault()}
-                disabled={!trimmedNewItemName}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#6B46C1] text-white transition-colors duration-200 hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
-              >
-                <PlusIcon size={20} />
-              </button>
-            </form>
-
             {shoppingList.length === 0 ? (
-              <div className="px-1 pt-10 text-center">
+              <div className="px-1 pt-4 text-center">
                 <p className="text-base font-semibold text-gray-800">
                   아직 담은 식재료가 없어요
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
-                  살 것을 적거나 즐겨찾기를 불러와 주세요
+                  아래에서 찾거나 사진을 눌러 담아 주세요
                 </p>
               </div>
             ) : (
               <>
-                <ul className="mt-4 space-y-2">
+                <ul className="space-y-2">
                   {shoppingList.map(item => (
                     <li
                       key={item.id}
@@ -339,7 +310,7 @@ const GroceryListPage: React.FC = () => {
                     ? '냉장고에 넣는 중...'
                     : completedCount > 0
                       ? `구매 완료 ${completedCount}개 냉장고에 넣기`
-                      : '산 품목을 체크해 주세요'}
+                      : '장바구니에 담을 때마다 체크해 주세요'}
                 </button>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-medium text-gray-600">
                   <button
@@ -361,6 +332,11 @@ const GroceryListPage: React.FC = () => {
                 </div>
               </>
             )}
+            <FrequentItemsPicker
+              onPick={addToList}
+              quantities={listQuantities}
+              purchaseCounts={purchaseCounts}
+            />
           </>
         ) : favorites.length === 0 ? (
           <div className="px-1 pt-10 text-center">
@@ -409,6 +385,7 @@ const GroceryListPage: React.FC = () => {
         )}
       </div>
 
+      <ScrollTopButton target={headerRef} />
       <ActionToast
         isVisible={showToast}
         message={toastMessage}

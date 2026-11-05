@@ -10,7 +10,7 @@ import {
   House,
   ShoppingBasket,
   LucideIcon,
-  HeartPulse,
+  ChartColumn,
   UserRound,
 } from 'lucide-react';
 
@@ -18,7 +18,7 @@ import {
 // 공통 Tab 타입
 // --------------------------------------
 export type Tab =
-  | 'healthAnalysis'
+  | 'stats'
   | 'fridge'
   | 'shoppingList'
   | 'ingredients'
@@ -97,12 +97,7 @@ const BottomBar: React.FC<BottomBarProps> = ({
       label: '리스트',
       title: '리스트',
     },
-    {
-      id: 'healthAnalysis',
-      icon: HeartPulse,
-      label: '건강',
-      title: '건강',
-    },
+    { id: 'stats', icon: ChartColumn, label: '통계', title: '통계' },
     { id: 'settings', icon: UserRound, label: '마이', title: 'My' },
   ];
 
@@ -135,7 +130,6 @@ const BottomBar: React.FC<BottomBarProps> = ({
             >
               <div className="h-full w-full rounded-3xl bg-[#e9ddff] shadow-[0_2px_10px_rgba(75,47,140,0.22)]" />
             </div>
-
 
             {navItems.map(item => (
               <div

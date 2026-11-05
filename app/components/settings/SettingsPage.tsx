@@ -26,7 +26,7 @@ type SettingsSection = 'account' | 'app';
 
 const SECTION_TABS = [
   { id: 'account', label: '계정' },
-  { id: 'app', label: '앱' },
+  { id: 'app', label: '알림과 앱' },
 ] as const;
 
 // iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 text-base를 쓴다
