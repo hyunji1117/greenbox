@@ -44,6 +44,8 @@ export const ItemSchema = z.object({
     .date()
     .nullable()
     .transform(value => value ?? undefined),
+  // 보는 사람의 관심 품목인지 (종 버튼). 이 필드를 보내기 전의 서버 응답은 false로 읽는다
+  watched: z.boolean().default(false),
 });
 
 export const ItemListSchema = z.array(ItemSchema);

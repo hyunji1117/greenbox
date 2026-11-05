@@ -12,7 +12,7 @@ import {
 } from '@/app/lib/push/subscribe';
 
 const STATUS_TEXT: Record<PushStatus, string> = {
-  granted: '유통기한이 3일 안에 끝나는 품목을 매일 아침 알려 드려요',
+  granted: '이 기기로 알림을 받고 있어요. 받을 시각은 아래에서 정해요',
   default: '앱을 닫아도 유통기한이 가까운 품목을 알려 드려요',
   denied: '알림이 꺼져 있어요. 기기 설정에서 이 앱의 알림을 허용해 주세요',
   unsupported:
@@ -51,7 +51,7 @@ const PushNotificationCard: React.FC = () => {
     <div className={`flex gap-3 p-4 ${SURFACE}`}>
       <Bell size={20} className="mt-0.5 shrink-0 text-[#6B46C1]" />
       <div className="min-w-0 flex-1">
-        <h2 className="text-sm font-semibold text-gray-800">유통기한 알림</h2>
+        <h2 className="text-sm font-semibold text-gray-800">이 기기 알림</h2>
         <p className="mt-1 text-sm text-gray-600">{STATUS_TEXT[status]}</p>
         {status === 'default' && (
           <button

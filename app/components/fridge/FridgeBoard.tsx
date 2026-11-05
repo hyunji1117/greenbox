@@ -14,6 +14,7 @@ import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import FridgeQuickAdd from '@/app/components/fridge/FridgeQuickAdd';
 import FridgeHeader from '@/app/components/fridge/sharing/FridgeHeader';
+import NotifyFirstSheet from '@/app/components/fridge/NotifyFirstSheet';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 import {
   ChevronRightIcon,
@@ -55,6 +56,7 @@ const FridgeBoard: React.FC = () => {
   return (
     <div className="relative flex h-full flex-col p-4 sm:p-6">
       <FridgeHeader />
+      <NotifyFirstSheet />
       <SegmentedTabs
         tabs={CATEGORY_TABS}
         activeId={activeCategory}

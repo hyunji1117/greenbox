@@ -3,6 +3,8 @@
 
 import React, { useState } from 'react';
 import { useUpdateItem } from '@/app/lib/items/useItems';
+import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
+import { useToggleWatch } from '@/app/lib/notifications/useNotifications';
 import ItemComments from '@/app/components/fridge/ItemComments';
 import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import {
@@ -18,6 +20,8 @@ import {
 } from '@/app/lib/schemas/item';
 import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
 import {
+  BellIcon,
+  BellRingIcon,
   CalendarDaysIcon,
   CircleCheckBig,
   MessageCircleIcon,
@@ -36,6 +40,7 @@ interface FridgeItemProps {
     comments: Comment[];
     finished: boolean;
     expiryDate?: string;
+    watched: boolean;
   };
   isNew?: boolean;
   onFinish: (kind: FinishKind) => void;
@@ -46,6 +51,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   onFinish,
 }) => {
   const updateItem = useUpdateItem(item.id);
+  const toggleWatch = useToggleWatch(item.id);
+  // 종 버튼은 알림 수준이 "관심 품목만"일 때만 뜻이 있다 (전체 품목이면 모두 알림, 받지 않음이면 모두 안 옴)
+  const notifyLevel = useCurrentFridge().data?.myNotifyLevel ?? 'watched';
+  const showsBell = notifyLevel === 'watched';
   const [showComments, setShowComments] = useState(false);
   // 날짜를 입력하는 도중의 값. 저장 전이거나 저장에 실패하면 서버 값과 다를 수 있다
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
@@ -102,17 +111,44 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
             {getRelativeTimeString(item.addedAt)} 추가
           </p>
         </div>
-        {expiryDays !== null && (
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              expiryDays <= EXPIRY_SOON_DAYS
-                ? 'bg-red-50 text-red-600'
-                : 'bg-[#F1EDFA] text-[#553C9A]'
-            }`}
-          >
-            {expiryLabel(expiryDays)}
-          </span>
-        )}
+        <div className="-mt-1 -mr-1 flex shrink-0 items-center gap-1">
+          {expiryDays !== null && (
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                expiryDays <= EXPIRY_SOON_DAYS
+                  ? 'bg-red-50 text-red-600'
+                  : 'bg-[#F1EDFA] text-[#553C9A]'
+              }`}
+            >
+              {expiryLabel(expiryDays)}
+            </span>
+          )}
+          {showsBell && (
+            <button
+              type="button"
+              onClick={() => toggleWatch.mutate(!item.watched)}
+              aria-pressed={item.watched}
+              aria-label={
+                item.watched
+                  ? `${item.name} 알림 받는 중. 누르면 끄기`
+                  : `${item.name} 알림 받기`
+              }
+              className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-gray-100 ${
+                item.watched ? 'text-[#6B46C1]' : 'text-gray-300'
+              }`}
+            >
+              {item.watched ? (
+                <BellRingIcon
+                  size={20}
+                  fill="currentColor"
+                  fillOpacity={0.15}
+                />
+              ) : (
+                <BellIcon size={20} />
+              )}
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-3 flex items-end gap-2">
         <label className="min-w-0 flex-1 text-xs font-medium text-gray-500">

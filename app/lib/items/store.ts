@@ -35,6 +35,7 @@ export interface ItemRow {
   created_at: Date;
   finished: boolean;
   expiry_date: string | null;
+  watched: boolean;
   added_by: PersonJson;
   comments: CommentJson[];
 }
@@ -51,9 +52,13 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
   )`;
 
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
-const SELECT_ITEMS = `
+// viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
+const selectItems = (viewerParam: string) => `
   SELECT i.id, i.name, i.category, i.quantity, i.created_at, i.finished,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
+    EXISTS (
+      SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
+    ) AS watched,
     ${personSql('i.created_by', 'i.fridge_id')} AS added_by,
     COALESCE(
       (SELECT json_agg(
@@ -92,30 +97,38 @@ export function toItemJson(row: ItemRow) {
     })),
     finished: row.finished,
     expiryDate: row.expiry_date,
+    watched: row.watched,
   };
 }
 
 export type ItemJson = ReturnType<typeof toItemJson>;
 
 // 구성원 확인은 호출하는 쪽(requireFridgeMember)이 먼저 한다
-export async function listItems(fridgeId: string): Promise<ItemJson[]> {
+export async function listItems(
+  fridgeId: string,
+  viewerId: string,
+): Promise<ItemJson[]> {
   const { rows } = await getPool().query<ItemRow>(
-    `${SELECT_ITEMS} WHERE i.fridge_id = $1 ORDER BY i.created_at DESC, i.id DESC`,
-    [fridgeId],
+    `${selectItems('$2')} WHERE i.fridge_id = $1 ORDER BY i.created_at DESC, i.id DESC`,
+    [fridgeId, Number(viewerId)],
   );
   return rows.map(toItemJson);
 }
 
-async function findItem(itemId: string): Promise<ItemJson | null> {
+async function findItem(
+  itemId: string,
+  viewerId: string,
+): Promise<ItemJson | null> {
   const { rows } = await getPool().query<ItemRow>(
-    `${SELECT_ITEMS} WHERE i.id = $1`,
-    [itemId],
+    `${selectItems('$2')} WHERE i.id = $1`,
+    [itemId, Number(viewerId)],
   );
   return rows[0] ? toItemJson(rows[0]) : null;
 }
 
 // 구성원 확인은 호출하는 쪽(requireFridgeMember)이 먼저 한다
 // user_id는 이전 코드로 되돌렸을 때 넣은 사람 기준으로 보이도록 함께 채운다
+// 넣은 사람의 관심 품목으로도 함께 등록한다 (알림 수준이 "관심 품목만"이어도 내가 넣은 것은 알림이 온다)
 export async function createItem(
   fridgeId: string,
   userId: string,
@@ -134,7 +147,11 @@ export async function createItem(
       input.expiryDate ?? null,
     ],
   );
-  const item = await findItem(rows[0].id);
+  await getPool().query(
+    `INSERT INTO item_watchers (item_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [rows[0].id, Number(userId)],
+  );
+  const item = await findItem(rows[0].id, userId);
   if (!item) throw new Error('방금 추가한 품목을 찾을 수 없습니다');
   return item;
 }
@@ -164,7 +181,7 @@ export async function updateItem(
       input.finished ?? null,
     ],
   );
-  return rowCount ? findItem(itemId) : null;
+  return rowCount ? findItem(itemId, userId) : null;
 }
 
 interface CommentRow {

@@ -37,7 +37,7 @@ describe('PushNotificationCard', () => {
     fireEvent.click(button()!);
 
     await waitFor(() => expect(button()).toBeNull());
-    expect(screen.getByText(/매일 아침 알려 드려요/)).toBeTruthy();
+    expect(screen.getByText(/이 기기로 알림을 받고 있어요/)).toBeTruthy();
   });
 
   it('켜기에 실패하면 버튼을 남기고 안내한다', async () => {

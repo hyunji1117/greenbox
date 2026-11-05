@@ -21,6 +21,16 @@ type EventParams = {
   item_finish_undone: undefined;
   comment_added: undefined;
   comment_edited: undefined;
+  // 알림 설정. source: 처음 묻는 화면(first)인지 설정 화면(settings)인지
+  notify_level_selected: {
+    level: 'all' | 'watched' | 'none';
+    source: 'first' | 'settings' | 'skip';
+  };
+  summary_time_changed: {
+    kind: 'daily' | 'weekly';
+    source: 'first' | 'settings';
+  };
+  item_watch_toggled: { watched: boolean };
   push_permission_result: { result: PushStatus | 'error' };
   // 냉장고 함께 쓰기. 냉장고 이름이나 사람 이름은 보내지 않는다
   invite_link_created: undefined;

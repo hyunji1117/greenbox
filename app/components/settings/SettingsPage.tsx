@@ -8,6 +8,7 @@ import { useFridge } from '@/app/context/FridgeContext';
 import Image from 'next/image';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import PushNotificationCard from '@/app/components/settings/PushNotificationCard';
+import NotificationSettingsCard from '@/app/components/settings/NotificationSettingsCard';
 import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
@@ -202,6 +203,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
           {activeSection === 'app' && (
             <>
               <PushNotificationCard />
+              <NotificationSettingsCard />
               <div
                 className={`flex items-center justify-between p-4 ${SURFACE}`}
               >
