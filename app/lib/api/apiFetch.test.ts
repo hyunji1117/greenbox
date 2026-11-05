@@ -54,4 +54,25 @@ describe('apiFetch', () => {
       }),
     );
   });
+
+  it('방침 동의가 필요하다는 403이면 동의 화면으로 보낸다', async () => {
+    mockFetch(403, '{"error":"consent_required"}');
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+
+    const error = await apiFetch('/api/x', Schema).catch(e => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(assign).toHaveBeenCalledWith('/consent');
+  });
+
+  it('다른 이유의 403이면 이동하지 않는다', async () => {
+    mockFetch(403, '{"error":"forbidden"}');
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+
+    await apiFetch('/api/x', Schema).catch(() => null);
+
+    expect(assign).not.toHaveBeenCalled();
+  });
 });

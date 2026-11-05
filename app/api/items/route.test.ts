@@ -2,7 +2,7 @@
 // app/api/items/route.test.ts
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { POLICY_VERSION } from '@/app/lib/consent/policies';
+import { currentPolicyVersion } from '@/app/lib/consent/policies';
 import { toItemJson, type ItemRow } from '@/app/lib/items/store';
 import { ItemSchema } from '@/app/lib/schemas/item';
 import { POST as POST_COMMENT } from './[id]/comments/route';
@@ -53,7 +53,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({
     registered: true,
-    consentVersion: POLICY_VERSION,
+    consentVersion: currentPolicyVersion(),
     user: { id: '7' },
   });
 });

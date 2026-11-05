@@ -1,0 +1,308 @@
+// app/privacy/versions/Policy20261112.tsx
+// 2026-11-12 시행 개인정보처리방침
+// 바뀐 점: 냉장고 품목과 댓글의 서버 저장, 냉장고 함께 쓰기에서 보이는 정보, 사진 인식(Anthropic), 음성 검색 안내
+
+import { OPERATOR } from '@/app/lib/consent/operator';
+import { Section, cell } from '../PolicyParts';
+
+export default function Policy20261112() {
+  return (
+    <>
+      <Section title="1. 수집하는 개인정보 항목과 수집 방법">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-xs">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className={cell}>구분</th>
+                <th className={cell}>항목</th>
+                <th className={cell}>수집 방법</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={cell}>필수 (구글 로그인)</td>
+                <td className={cell}>
+                  이름, 이메일 주소, 프로필 사진, 구글 계정 식별자
+                </td>
+                <td className={cell}>
+                  구글 로그인 후 필수 항목에 동의하면 저장 (구글로부터 제공받음)
+                </td>
+              </tr>
+              <tr>
+                <td className={cell}>필수 (동의 기록)</td>
+                <td className={cell}>
+                  동의 항목, 동의한 방침 버전, 동의 일시, 브라우저 정보
+                </td>
+                <td className={cell}>동의 시 자동 기록</td>
+              </tr>
+              <tr>
+                <td className={cell}>필수 (냉장고 이용)</td>
+                <td className={cell}>
+                  냉장고 품목(이름, 보관 위치, 수량, 유통기한, 넣은 사람),
+                  품목에 남긴 댓글, 냉장고 이름
+                </td>
+                <td className={cell}>이용자가 앱에서 입력할 때 서버에 저장</td>
+              </tr>
+              <tr>
+                <td className={cell}>선택 (냉장고 함께 쓰기)</td>
+                <td className={cell}>
+                  참여한 냉장고와 역할, 초대 링크 생성 기록, 참여 요청과 승인
+                  기록, 내가 부르는 냉장고 이름
+                </td>
+                <td className={cell}>
+                  초대 링크를 만들거나 참여를 요청할 때 서버에 저장
+                </td>
+              </tr>
+              <tr>
+                <td className={cell}>선택 (사진으로 등록)</td>
+                <td className={cell}>이용자가 찍거나 고른 사진</td>
+                <td className={cell}>
+                  사진으로 등록할 때 전송하며, 식재료를 찾은 뒤 저장하지 않음
+                </td>
+              </tr>
+              <tr>
+                <td className={cell}>자동 수집</td>
+                <td className={cell}>
+                  접속 기록, 기기와 브라우저 정보, 쿠키, 서비스 이용 통계
+                </td>
+                <td className={cell}>
+                  서비스 이용 과정에서 자동 생성 (Google Analytics 포함)
+                </td>
+              </tr>
+              <tr>
+                <td className={cell}>선택 (호칭 등록 시)</td>
+                <td className={cell}>가족 내 호칭</td>
+                <td className={cell}>이용자가 설정 화면에서 직접 입력</td>
+              </tr>
+              <tr>
+                <td className={cell}>선택 (알림 사용 시)</td>
+                <td className={cell}>푸시 알림 구독 정보</td>
+                <td className={cell}>알림 허용 시 브라우저가 생성</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          장보기 목록과 구매 기록은 이용자의 기기(브라우저 저장소)에만 저장되며
+          운영자에게 전송되지 않습니다.
+        </p>
+        <p>
+          음성으로 식재료를 찾을 때는 브라우저의 음성 인식 기능을 씁니다. Chrome
+          등 일부 브라우저는 음성을 브라우저 제공자(Google 등)의 서버로 보내
+          글자로 바꾸며, 이 처리는 해당 제공자의 정책을 따릅니다. 운영자는
+          음성을 받지 않으며, 바뀐 글자는 화면의 찾기 칸에만 쓰고 저장하지
+          않습니다.
+        </p>
+      </Section>
+
+      <Section title="2. 개인정보의 수집 및 이용 목적">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>회원 식별, 로그인 및 계정 관리</li>
+          <li>개인정보 처리 동의 사실의 확인과 보관</li>
+          <li>냉장고 품목 관리, 유통기한 알림 등 서비스 기능 제공</li>
+          <li>가족 구성원과 냉장고를 함께 쓰는 기능 제공</li>
+          <li>사진 속 식재료 이름 찾기</li>
+          <li>서비스 이용 통계 분석과 품질 개선</li>
+        </ul>
+        <p>
+          구글 로그인으로 제공받는 정보(이름, 이메일 주소, 프로필 사진, 구글
+          계정 식별자)는 회원 식별과 서비스 화면의 이름 및 사진 표시에만
+          이용합니다. 이 정보를 광고에 이용하거나 판매하지 않으며, 3조, 5조,
+          6조에 적힌 경우 외에는 다른 곳에 제공하지 않습니다. 서비스는 구글
+          계정의 다른 데이터(메일, 드라이브, 연락처 등)에 접근하지 않습니다.
+        </p>
+      </Section>
+
+      <Section title="3. 냉장고를 함께 쓸 때 보이는 정보">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            같은 냉장고의 구성원에게는 서로의 이름(호칭을 정했으면 호칭), 프로필
+            사진, 냉장고 품목과 댓글, 품목을 넣은 사람이 보입니다.
+          </li>
+          <li>
+            초대 링크로 참여를 요청하면, 승인 전에도 그 냉장고 구성원에게 요청한
+            사람의 이름과 프로필 사진이 보입니다.
+          </li>
+          <li>
+            냉장고에서 나가거나 내보내지면 그 냉장고를 더 이상 볼 수 없습니다.
+            이미 넣은 품목과 댓글은 냉장고에 남아 다른 구성원이 계속 볼 수
+            있습니다.
+          </li>
+          <li>
+            초대 링크는 만든 뒤 24시간 동안 쓸 수 있고, 링크를 받은 사람은
+            누구나 참여를 요청할 수 있습니다. 링크는 함께 쓸 가족에게만 보내
+            주세요.
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="4. 보유 및 이용 기간">
+        <p>
+          회원 탈퇴 시 지체 없이 파기합니다. 다만 동의 기록은 동의 사실을
+          증명하기 위해 회원 탈퇴 시까지 보관하며, 관계 법령에 따라 보존할
+          필요가 있는 경우 해당 기간 동안 보관합니다.
+        </p>
+        <p>
+          다른 구성원과 함께 쓰는 냉장고에 넣은 품목과 댓글은 회원 탈퇴 후에도
+          남은 구성원이 쓸 수 있도록 냉장고에 남기며, 이때 넣은 사람과 작성자는
+          표시하지 않습니다.
+        </p>
+        <p>
+          사진으로 등록할 때 보낸 사진은 식재료를 찾는 데만 쓰고 운영자의 서버에
+          저장하지 않습니다.
+        </p>
+        <p>
+          회원 가입은 구글 로그인 후 필수 항목에 동의해야 완료됩니다. 동의하지
+          않으면 구글로부터 제공받은 정보를 저장하지 않습니다.
+        </p>
+      </Section>
+
+      <Section title="5. 개인정보의 제3자 제공">
+        <p>
+          운영자는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만 법령에
+          근거가 있거나 수사기관이 법령에 정해진 절차에 따라 요청하는 경우는
+          예외로 합니다. 3조에 적은 것처럼 이용자가 함께 쓰기로 한 냉장고의
+          구성원에게 정보가 보이는 것은 이용자의 선택에 따른 것입니다.
+        </p>
+      </Section>
+
+      <Section title="6. 개인정보 처리 위탁 및 국외 이전">
+        <p>
+          운영자는 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 위탁하며,
+          일부 수탁자는 국외에 있습니다. 개인정보는 서비스 이용 시점에
+          네트워크를 통해 전송됩니다.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-xs">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className={cell}>수탁자 (국가)</th>
+                <th className={cell}>위탁 업무</th>
+                <th className={cell}>이전 항목</th>
+                <th className={cell}>보유 기간</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className={cell}>Vultr (미국)</td>
+                <td className={cell}>
+                  회원 정보와 서비스 데이터 저장 (저장 위치: 대한민국 서울)
+                </td>
+                <td className={cell}>
+                  이름, 이메일 주소, 프로필 사진, 구글 계정 식별자, 가족 내
+                  호칭, 동의 기록, 냉장고 품목과 댓글, 냉장고와 구성원 정보,
+                  푸시 알림 구독 정보
+                </td>
+                <td className={cell}>회원 탈퇴 또는 위탁 계약 종료 시까지</td>
+              </tr>
+              <tr>
+                <td className={cell}>Vercel Inc. (미국)</td>
+                <td className={cell}>서비스 호스팅, 서버 운영</td>
+                <td className={cell}>접속 기록, 기기와 브라우저 정보</td>
+                <td className={cell}>위탁 계약 종료 시까지</td>
+              </tr>
+              <tr>
+                <td className={cell}>Google LLC (미국)</td>
+                <td className={cell}>
+                  구글 계정 로그인, 이용 통계 분석(Google Analytics)
+                </td>
+                <td className={cell}>
+                  구글 계정 정보, 접속 기록, 쿠키, 이용 통계
+                </td>
+                <td className={cell}>Google의 보관 정책에 따름</td>
+              </tr>
+              <tr>
+                <td className={cell}>Anthropic PBC (미국)</td>
+                <td className={cell}>사진 속 식재료 이름 찾기</td>
+                <td className={cell}>사진으로 등록할 때 보낸 사진</td>
+                <td className={cell}>
+                  운영자는 저장하지 않으며, Anthropic의 보관 정책에 따름
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          이용자는 국외 이전을 거부할 수 있으나, 서비스는 로그인한 이용자만
+          이용할 수 있으므로 이 경우 서비스를 이용할 수 없습니다. 사진으로
+          등록하기는 선택 기능이므로, 쓰지 않으면 사진이 Anthropic에 전송되지
+          않습니다.
+        </p>
+      </Section>
+
+      <Section title="7. 이용자의 권리와 행사 방법">
+        <p>
+          이용자는 언제든지 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지,
+          동의 철회를 요구할 수 있습니다. 아래 개인정보 보호책임자에게 이메일로
+          요청하면 지체 없이 조치합니다. 필수 항목에 대한 동의를 철회하면 회원
+          탈퇴로 처리됩니다.
+        </p>
+        <p>
+          회원 탈퇴도 같은 이메일로 요청할 수 있으며, 바뀐 방침의 동의 화면에
+          있는 &lsquo;탈퇴 요청하기&rsquo;로도 요청할 수 있습니다.
+        </p>
+      </Section>
+
+      <Section title="8. 개인정보의 파기">
+        <p>
+          보유 기간이 끝나거나 처리 목적이 달성된 개인정보는 지체 없이
+          파기합니다. 전자적 파일은 복구할 수 없는 방법으로 삭제합니다.
+        </p>
+      </Section>
+
+      <Section title="9. 안전성 확보 조치">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>전송 구간 암호화(HTTPS)와 저장 데이터 암호화</li>
+          <li>
+            접근 제어로 본인 데이터와 본인이 속한 냉장고의 데이터만 조회할 수
+            있도록 제한
+          </li>
+          <li>관리 권한 키의 서버 보관과 접근 권한 최소화</li>
+        </ul>
+      </Section>
+
+      <Section title="10. 만 14세 미만 아동의 개인정보">
+        <p>
+          서비스는 만 14세 미만 아동의 회원 가입을 받지 않습니다. 만 14세
+          미만임이 확인되면 해당 개인정보를 지체 없이 파기합니다.
+        </p>
+      </Section>
+
+      <Section title="11. 쿠키의 설치, 운영 및 거부">
+        <p>
+          서비스는 로그인 상태 유지와 이용 통계 분석을 위해 쿠키를 사용합니다.
+          이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있으나, 이 경우
+          로그인 상태를 유지할 수 없어 서비스를 이용할 수 없습니다.
+        </p>
+      </Section>
+
+      <Section title="12. 개인정보 보호책임자">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>성명: {OPERATOR.officer}</li>
+          <li>이메일: {OPERATOR.email}</li>
+        </ul>
+      </Section>
+
+      <Section title="13. 권익침해 구제 방법">
+        <p>
+          개인정보 침해에 대한 신고나 상담이 필요하면 아래 기관에 문의할 수
+          있습니다.
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>개인정보침해신고센터: (국번 없이) 118, privacy.kisa.or.kr</li>
+          <li>개인정보분쟁조정위원회: 1833-6972, www.kopico.go.kr</li>
+          <li>대검찰청: (국번 없이) 1301, www.spo.go.kr</li>
+          <li>경찰청: (국번 없이) 182, ecrm.police.go.kr</li>
+        </ul>
+      </Section>
+
+      <Section title="14. 방침의 변경">
+        <p>
+          이 방침을 바꾸면 시행 7일 전부터 서비스 안에서 알리고, 시행일 이후
+          처음 이용할 때 바뀐 방침에 다시 동의를 받습니다. 지난 방침은 이 페이지
+          아래에서 볼 수 있습니다.
+        </p>
+      </Section>
+    </>
+  );
+}

@@ -8,6 +8,7 @@ import { auth } from '@/auth';
 import AuthShell from '@/app/components/auth/AuthShell';
 import ConsentForm from './ConsentForm';
 import { APP_NAME } from '@/app/lib/brand';
+import { currentPolicy } from '@/app/lib/consent/policies';
 
 export const metadata: Metadata = {
   title: '이용 동의',
@@ -41,6 +42,8 @@ export default async function ConsentPage() {
       <ConsentForm
         email={session.user.email ?? null}
         isFirstLogin={isFirstLogin}
+        // 다시 동의하는 사람에게만 무엇이 바뀌었는지 보여 준다
+        changes={isFirstLogin ? [] : currentPolicy().changes}
       />
     </AuthShell>
   );

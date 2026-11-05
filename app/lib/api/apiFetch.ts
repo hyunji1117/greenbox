@@ -33,6 +33,14 @@ interface ApiFetchOptions {
   signal?: AbortSignal;
 }
 
+function isConsentRequired(body: unknown): boolean {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as { error?: unknown }).error === 'consent_required'
+  );
+}
+
 export async function apiFetch<Schema extends z.ZodType>(
   url: string,
   schema: Schema,
@@ -49,7 +57,13 @@ export async function apiFetch<Schema extends z.ZodType>(
 
   // 본문이 JSON이 아닌 응답(프록시 오류 페이지 등)도 아래에서 에러로 처리된다
   const json: unknown = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, url, json);
+  if (!res.ok) {
+    // 앱을 켜 둔 채 방침 시행 시각이 지나면 API가 동의를 요구한다. 동의 화면으로 보낸다
+    if (res.status === 403 && isConsentRequired(json)) {
+      window.location.assign('/consent');
+    }
+    throw new ApiError(res.status, url, json);
+  }
 
   const parsed = schema.safeParse(json);
   if (!parsed.success) throw new ApiSchemaError(url, parsed.error.issues);
