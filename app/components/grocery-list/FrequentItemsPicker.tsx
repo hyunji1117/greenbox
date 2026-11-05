@@ -6,10 +6,21 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Plus, SearchIcon, XIcon } from 'lucide-react';
+import { MicIcon, Plus, SearchIcon, XIcon } from 'lucide-react';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import { ITEM_NAME_MAX } from '@/app/lib/schemas/item';
+import {
+  useSpeechInput,
+  type SpeechError,
+} from '@/app/lib/speech/useSpeechInput';
+
+const SPEECH_ERROR_TEXT: Record<SpeechError, string> = {
+  denied: '마이크 사용이 막혀 있어요. 브라우저 설정에서 마이크를 허용해 주세요',
+  'no-speech': '말소리를 듣지 못했어요. 다시 눌러 말해 주세요',
+  failed: '음성으로 찾지 못했어요. 글자로 찾아 주세요',
+};
+
 const CATEGORY_TABS = [
   { id: 'vegetables', label: '채소' },
   { id: 'fruits', label: '과일' },
@@ -59,6 +70,8 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
     [keyword, activeCategory],
   );
   const hasExactMatch = items.some(item => item.name === keyword);
+  // 말한 내용을 검색어로 넣는다. 말하는 동안에도 결과가 바로 바뀐다
+  const speech = useSpeechInput(text => setQuery(text.slice(0, ITEM_NAME_MAX)));
 
   const addTyped = () => {
     if (!keyword) return;
@@ -93,7 +106,27 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
           enterKeyHint="done"
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
-        {query && (
+        {speech.isSupported && (
+          <button
+            type="button"
+            aria-label={
+              speech.isListening ? '음성 입력 멈추기' : '음성으로 찾기'
+            }
+            aria-pressed={speech.isListening}
+            onClick={speech.isListening ? speech.stop : speech.start}
+            className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+              speech.isListening
+                ? 'bg-[#6B46C1] text-white'
+                : 'text-[#6B46C1] hover:bg-[#F1EDFA]'
+            }`}
+          >
+            {speech.isListening && (
+              <span className="absolute inset-0 rounded-xl bg-[#6B46C1]/40 motion-safe:animate-ping" />
+            )}
+            <MicIcon size={18} className="relative" />
+          </button>
+        )}
+        {query && !speech.isListening && (
           <button
             type="button"
             aria-label="찾기 지우기"
@@ -107,6 +140,18 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
           </button>
         )}
       </form>
+      {/* 화면 읽기 프로그램에도 듣는 중과 오류를 알린다 */}
+      <p aria-live="polite" className="-mt-1 mb-3 px-1 text-xs empty:hidden">
+        {speech.isListening ? (
+          <span className="text-[#553C9A]">
+            듣고 있어요. 식재료 이름을 말해 주세요
+          </span>
+        ) : speech.error ? (
+          <span className="text-red-500">
+            {SPEECH_ERROR_TEXT[speech.error]}
+          </span>
+        ) : null}
+      </p>
 
       {keyword ? (
         // 사진 목록에 똑같은 이름이 없으면 적은 이름 그대로 담을 수 있게 맨 위에 둔다
