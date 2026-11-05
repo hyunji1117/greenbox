@@ -8,7 +8,8 @@ export interface MyProfile {
   familyNickname: string | null; // 가족 내 호칭
 }
 
-export const FAMILY_NICKNAME_MAX = 20;
+// 냉장고 화면 머리글에 "호칭 냉장고"가 한 줄로 들어가는 길이 (360px 폭 휴대폰에서 측정: 8자 + " 냉장고" = 212px)
+export const FAMILY_NICKNAME_MAX = 8;
 
 // 가족 내 호칭 > 구글 이름 > 이메일 앞부분 순서로 표시
 export function toDisplayName(profile: MyProfile | null): string | null {

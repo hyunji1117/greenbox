@@ -27,6 +27,9 @@ CREATE TABLE fridge_members (
   user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role      TEXT NOT NULL CHECK (role IN ('owner', 'member')),
   joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- 함께 보는 사람이 자기 화면에서만 부르는 이름 (예: 딸에게는 "엄마 냉장고")
+  -- 비어 있으면 만든 사람이 정한 냉장고 이름을 쓴다. 만든 사람은 냉장고 이름 자체를 바꾼다
+  custom_name VARCHAR(20),
   PRIMARY KEY (fridge_id, user_id)
 );
 

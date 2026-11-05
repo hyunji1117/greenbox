@@ -161,8 +161,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                       {nicknameMessage.text}
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-gray-400">
-                      호칭을 등록하면 앱에서 구글 이름 대신 호칭으로 보여요
+                    <p className="mt-1 flex justify-between gap-2 text-xs text-gray-400">
+                      <span>
+                        구글 이름 대신 호칭으로 보이고, 함께 보는 가족에게는 내
+                        냉장고가 &quot;호칭 냉장고&quot;로 보여요
+                      </span>
+                      <span className="shrink-0 tabular-nums">
+                        {nicknameValue.length}/{FAMILY_NICKNAME_MAX}
+                      </span>
                     </p>
                   )}
                 </div>

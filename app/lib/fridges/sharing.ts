@@ -10,6 +10,7 @@ import {
   displayNameSql,
   ensureOwnFridge,
   fridgeNameForMemberSql,
+  fridgeNameForViewerSql,
   REQUEST_TTL_HOURS,
   type FridgeRole,
 } from '@/app/lib/fridges/store';
@@ -57,7 +58,7 @@ export async function listMyFridges(userId: string): Promise<MyFridgeJson[]> {
     role: FridgeRole;
     member_count: number;
   }>(
-    `SELECT f.id, ${fridgeNameForMemberSql('f', 'm.role')} AS name, m.role,
+    `SELECT f.id, ${fridgeNameForViewerSql('f', 'm')} AS name, m.role,
        (SELECT count(*)::int FROM fridge_members x WHERE x.fridge_id = f.id) AS member_count
      FROM fridge_members m JOIN fridges f ON f.id = m.fridge_id
      WHERE m.user_id = $1
@@ -86,14 +87,30 @@ export async function switchCurrentFridge(
   return rowCount === 1;
 }
 
+// 만든 사람이 바꾸면 냉장고 이름이 바뀌어 따로 이름을 정하지 않은 모두에게 보인다
+// 함께 보는 사람이 바꾸면 그 사람 화면에만 보이는 이름이 바뀐다
+// 역할은 같은 문장 안에서 다시 확인해, 요청 사이에 역할이 바뀌어도 다른 사람의 이름을 바꾸지 않는다
 export async function renameFridge(
+  userId: string,
   fridgeId: string,
   name: string,
-): Promise<void> {
-  await getPool().query(`UPDATE fridges SET name = $2 WHERE id = $1`, [
-    fridgeId,
-    name,
-  ]);
+): Promise<'shared' | 'personal' | null> {
+  const { rows } = await getPool().query<{ scope: 'shared' | 'personal' }>(
+    `WITH me AS (
+       SELECT role FROM fridge_members WHERE fridge_id = $1 AND user_id = $2
+     ), shared AS (
+       UPDATE fridges SET name = $3
+       WHERE id = $1 AND (SELECT role FROM me) = 'owner'
+       RETURNING 'shared' AS scope
+     ), personal AS (
+       UPDATE fridge_members SET custom_name = $3
+       WHERE fridge_id = $1 AND user_id = $2 AND role = 'member'
+       RETURNING 'personal' AS scope
+     )
+     SELECT scope FROM shared UNION ALL SELECT scope FROM personal`,
+    [fridgeId, Number(userId), name],
+  );
+  return rows[0]?.scope ?? null;
 }
 
 // ---------- 초대 링크 ----------
@@ -446,7 +463,7 @@ export async function listOtherMemberIds(
   return rows.map(row => String(row.user_id));
 }
 
-// 알림 문구용 이름. 이름을 바꾸지 않은 냉장고는 받는 사람마다 다르게 읽히지 않도록 "OO님의 냉장고"로 부른다
+// 알림 문구용 이름. 이름을 바꾸지 않은 냉장고는 받는 사람마다 다르게 읽히지 않도록 "OO 냉장고"로 부른다
 export async function getNamesForNotice(
   fridgeId: string,
   userId: string,

@@ -12,6 +12,7 @@ import {
 import { requireUser } from '@/app/api/items/guard';
 import { ServerProfileBoundary } from '@/app/context/FridgeContext';
 import {
+  countMyFridges,
   countPendingRequests,
   listFridgeMembers,
   resolveCurrentFridge,
@@ -57,11 +58,13 @@ async function prefetchFridgeAndItems(
 ) {
   try {
     const fridge = await resolveCurrentFridge(userId);
-    const [members, pendingRequestCount, items] = await Promise.all([
-      listFridgeMembers(fridge.id),
-      countPendingRequests(fridge.id),
-      listItems(fridge.id),
-    ]);
+    const [members, pendingRequestCount, fridgeCount, items] =
+      await Promise.all([
+        listFridgeMembers(fridge.id),
+        countPendingRequests(fridge.id),
+        countMyFridges(userId),
+        listItems(fridge.id),
+      ]);
     queryClient.setQueryData(
       fridgeKeys.current(),
       CurrentFridgeSchema.parse({
@@ -69,6 +72,7 @@ async function prefetchFridgeAndItems(
         myUserId: userId,
         members,
         pendingRequestCount,
+        fridgeCount,
       }),
     );
     queryClient.setQueryData(
