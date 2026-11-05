@@ -78,8 +78,11 @@ export function useCreateItem(source: ItemAddSource) {
   });
 }
 
-// 구매 완료한 품목을 한 번에 냉장고에 넣는다. 일부만 실패할 수 있어 품목별 성공 여부를 돌려준다
-export function useAddPurchasedItems() {
+// 여러 품목을 한 번에 냉장고에 넣는다. 장보기 완료와 사진으로 찾은 품목 넣기에서 쓴다
+// 일부만 실패할 수 있어 품목별 성공 여부를 돌려준다
+export function useAddPurchasedItems(
+  source: Extract<ItemAddSource, 'purchase' | 'photo'> = 'purchase',
+) {
   const queryClient = useQueryClient();
   const fridgeId = useCurrentFridgeId();
   return useMutation({
@@ -97,7 +100,7 @@ export function useAddPurchasedItems() {
     },
     onSuccess: saved => {
       const count = saved.filter(Boolean).length;
-      if (count > 0) track('item_added', { source: 'purchase', count });
+      if (count > 0) track('item_added', { source, count });
       return invalidateList(queryClient, fridgeId);
     },
   });

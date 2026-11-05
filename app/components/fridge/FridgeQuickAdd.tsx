@@ -1,9 +1,16 @@
 // app/components/fridge/FridgeQuickAdd.tsx
 // 집에 이미 있는 품목을 이름만으로 등록한다. 유통기한과 수량은 추가한 뒤 카드에서 정한다
 // 새로 사는 품목은 구매 기록이 남도록 냉장고에 바로 넣지 않고 장보기 리스트로 보낸다
+// 카메라로 찍으면 사진 속 식재료를 찾아 골라서 한 번에 등록한다
 
 import React, { useRef, useState } from 'react';
-import { Loader2Icon, PlusIcon, ShoppingBasket } from 'lucide-react';
+import {
+  CameraIcon,
+  Loader2Icon,
+  PlusIcon,
+  ShoppingBasket,
+} from 'lucide-react';
+import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import {
   getHomeSuggestions,
@@ -38,6 +45,13 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoNotice, setPhotoNotice] = useState('');
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const openCamera = () => {
+    setPhotoNotice('');
+    cameraRef.current?.click();
+  };
   const trimmedName = name.trim();
   const homeSuggestions = getHomeSuggestions(items, category, name);
   const rebuySuggestions = getRebuySuggestions(items, category, name);
@@ -91,6 +105,28 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           maxLength={ITEM_NAME_MAX}
           enterKeyHint="done"
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={openCamera}
+          aria-label="사진으로 식재료 찾기"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#6B46C1] transition-colors hover:bg-[#F1EDFA]"
+        >
+          <CameraIcon size={20} />
+        </button>
+        {/* 휴대폰에서는 뒤쪽 카메라를 바로 열고, PC에서는 사진 파일을 고른다 */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={e => {
+            const file = e.target.files?.[0] ?? null;
+            // 같은 사진을 다시 골라도 변경으로 잡히도록 비운다
+            e.target.value = '';
+            if (file) setPhoto(file);
+          }}
         />
         <button
           type="submit"
@@ -162,6 +198,20 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           )}
         </div>
       </div>
+      <PhotoAddSheet
+        file={photo}
+        onClose={() => setPhoto(null)}
+        onRetake={openCamera}
+        onAdded={count => {
+          setPhoto(null);
+          setPhotoNotice(`사진에서 찾은 식재료 ${count}개를 넣었어요`);
+        }}
+      />
+      {photoNotice && (
+        <p role="status" className="mt-2 text-center text-xs text-[#553C9A]">
+          {photoNotice}
+        </p>
+      )}
       {createItem.isError && (
         <p role="alert" className="mt-2 text-center text-xs text-red-500">
           추가하지 못했어요. 다시 시도해 주세요.

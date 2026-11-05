@@ -11,7 +11,8 @@ export type ItemAddSource =
   | 'fridge_quick_add'
   | 'add_form'
   | 'quick_add_items'
-  | 'purchase';
+  | 'purchase'
+  | 'photo';
 
 type EventParams = {
   login_started: undefined;

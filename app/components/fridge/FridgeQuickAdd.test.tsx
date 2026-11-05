@@ -11,6 +11,8 @@ const mutate = vi.hoisted(() => vi.fn());
 vi.mock('@/app/lib/items/useItems', () => ({
   useCreateItem: () => ({ mutate, isPending: false, isError: false }),
 }));
+// 사진으로 찾기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다
+vi.mock('./PhotoAddSheet', () => ({ default: () => null }));
 
 const input = () => screen.getByLabelText('추가할 식재료 이름');
 const submit = () => fireEvent.click(screen.getByLabelText('식재료 추가'));
