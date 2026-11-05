@@ -5,7 +5,10 @@ import type { Tab } from '@/app/components/layout/BottomNavigation';
 
 export function paramToTab(value: string | null): Tab {
   switch (value) {
+    // 예전 "건강" 탭 주소(북마크, 알림 링크)는 통계 탭으로 연다
     case 'healthAnalysis':
+      return 'stats';
+    case 'stats':
     case 'fridge':
     case 'shoppingList':
     case 'ingredients':

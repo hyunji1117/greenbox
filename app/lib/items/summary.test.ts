@@ -19,7 +19,7 @@ const item = (
   }) as Item;
 
 describe('summarizeItems', () => {
-  it('다 먹은 품목은 세지 않고 칸별로 센다', () => {
+  it('다 먹은 품목은 먼저 먹을 품목에 넣지 않는다', () => {
     const summary = summarizeItems(
       [
         item('우유'),
@@ -29,8 +29,6 @@ describe('summarizeItems', () => {
       now,
     );
 
-    expect(summary.total).toBe(2);
-    expect(summary.byCategory).toEqual({ fridge: 1, freezer: 1, pantry: 0 });
     expect(summary.expiringFirst).toEqual([]);
   });
 

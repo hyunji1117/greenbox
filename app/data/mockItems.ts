@@ -1,5 +1,5 @@
 // app/data/mockItems.ts
-// 냉장고 아이템 및 소비 데이터
+// 장보기 탭 "자주 사는 식재료"의 식재료 사진 목록 (실제 냉장고 품목이 아닌 고정 목록)
 
 export interface FridgeItem {
   id: number;
@@ -497,59 +497,5 @@ export const mockItems: FridgeItem[] = [
     expiryDate: new Date(Date.now() + 540 * 24 * 60 * 60 * 1000),
     purchaseCount: 12,
     purchaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-];
-
-// mockItems로부터 자동으로 이미지 매핑 생성
-export const itemImageMap: { [key: string]: string } = mockItems.reduce(
-  (acc, item) => {
-    acc[item.name] = item.imageUrl;
-    return acc;
-  },
-  {} as { [key: string]: string },
-);
-
-// 소비 데이터
-export interface ConsumptionData {
-  week: string;
-  채소: number;
-  과일: number;
-  고기: number;
-  해산물: number;
-  기타: number;
-}
-
-export const consumptionData: ConsumptionData[] = [
-  {
-    week: '1주차',
-    채소: 12,
-    과일: 19,
-    고기: 8,
-    해산물: 5,
-    기타: 3,
-  },
-  {
-    week: '2주차',
-    채소: 15,
-    과일: 11,
-    고기: 10,
-    해산물: 8,
-    기타: 2,
-  },
-  {
-    week: '3주차',
-    채소: 8,
-    과일: 17,
-    고기: 12,
-    해산물: 6,
-    기타: 4,
-  },
-  {
-    week: '4주차',
-    채소: 14,
-    과일: 13,
-    고기: 9,
-    해산물: 7,
-    기타: 5,
   },
 ];
