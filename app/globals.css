@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
+/* 앱은 밝은 화면만 지원한다. 기기가 다크 모드여도 배경을 바꾸지 않아야
+   iOS 상태바 아래(화면 맨 위)가 검게 비치지 않는다 */
 :root {
-  --background: #ffffff;
+  --background: #f0f0f4;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -80,13 +83,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #121212;
   }
 }
 
