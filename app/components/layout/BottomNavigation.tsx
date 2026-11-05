@@ -123,20 +123,24 @@ const BottomBar: React.FC<BottomBarProps> = ({
         <div className="relative mx-auto flex h-20 max-[500px]:h-[68px] max-[353px]:h-[60px] items-center justify-between px-3 max-[500px]:px-2 max-[353px]:px-1">
           {/* 탭 버튼 */}
           <div className="relative flex h-full w-full items-center justify-between">
-            {/* 활성 탭 배경 슬라이드 인디케이터 */}
+            {/* 활성 탭 배경 슬라이드 인디케이터
+                넓은 화면에서는 칸 양옆을 조금 비워, 마우스를 올린 옆 칸 배경과 맞닿아 보이지 않게 한다 */}
             <div
               aria-hidden
-              className="absolute left-0 top-[10px] bottom-[12px] max-[500px]:top-2 max-[500px]:bottom-2 max-[353px]:top-1.5 max-[353px]:bottom-1.5 rounded-3xl bg-[#e9ddff] shadow-[0_2px_10px_rgba(75,47,140,0.22)] transition-transform duration-300 ease-out"
+              className="absolute left-0 top-[10px] bottom-[12px] max-[500px]:top-2 max-[500px]:bottom-2 max-[353px]:top-1.5 max-[353px]:bottom-1.5 md:px-1.5 transition-transform duration-300 ease-out"
               style={{
                 width: `${100 / navItems.length}%`,
                 transform: `translateX(${activeIndex * 100}%)`,
               }}
-            />
+            >
+              <div className="h-full w-full rounded-3xl bg-[#e9ddff] shadow-[0_2px_10px_rgba(75,47,140,0.22)]" />
+            </div>
+
 
             {navItems.map(item => (
               <div
                 key={item.id}
-                className="relative flex h-full flex-1 items-center justify-center"
+                className="relative flex h-full flex-1 items-center justify-center md:px-1.5"
               >
                 <NavButton
                   item={item}
