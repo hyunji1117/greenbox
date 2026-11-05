@@ -25,7 +25,7 @@ type EventParams = {
 export type EventName = keyof EventParams;
 
 // 사무실 밖(모바일 데이터 등)에서 테스트하는 기기는 주소에 ?internal=on을 한 번 붙여 열면 표시가 남는다
-// ?internal=off로 해제한다
+// ?internal=off로 해제한다. 설치한 앱처럼 주소를 바꾸기 어려우면 설정 화면의 스위치로 켜고 끈다
 export const INTERNAL_FLAG_KEY = 'greenbox_internal_traffic';
 
 export interface TrafficParams {
@@ -99,6 +99,25 @@ export function track<N extends EventName>(
 ): void {
   if (!initializedId) return;
   gtag('event', name, params[0] ?? {});
+}
+
+// 설정 화면의 테스트 기기 스위치. GA 설정은 앱을 열 때 한 번 정하므로 다음에 열 때부터 적용된다
+export function isInternalDevice(): boolean {
+  try {
+    return safeLocalStorage()?.getItem(INTERNAL_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function setInternalDevice(on: boolean): void {
+  try {
+    const storage = safeLocalStorage();
+    if (on) storage?.setItem(INTERNAL_FLAG_KEY, '1');
+    else storage?.removeItem(INTERNAL_FLAG_KEY);
+  } catch {
+    // 저장소를 막은 브라우저는 표시할 수 없다
+  }
 }
 
 function safeLocalStorage(): Storage | null {

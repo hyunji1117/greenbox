@@ -8,6 +8,7 @@ import { useFridge } from '@/app/context/FridgeContext';
 import Image from 'next/image';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import PushNotificationCard from '@/app/components/settings/PushNotificationCard';
+import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
 
@@ -225,6 +226,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                 </span>
                 <span className="text-sm text-gray-500">{appVersion}</span>
               </div>
+              <InternalDeviceToggle />
             </>
           )}
         </div>
