@@ -12,6 +12,51 @@
   --font-mono: var(--font-geist-mono);
   --animate-tab-fade: tab-fade 200ms ease-out;
   --animate-item-added: item-added 900ms ease-out;
+  /* 시트: 배경은 서서히 어두워지고, 시트는 아래에서 미끄러져 올라온다 */
+  --animate-backdrop-in: backdrop-in 240ms ease-out both;
+  --animate-backdrop-out: backdrop-out 200ms ease-in both;
+  --animate-sheet-up: sheet-up 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  --animate-sheet-down: sheet-down 220ms cubic-bezier(0.4, 0, 1, 1) both;
+  --animate-dialog-in: dialog-in 220ms ease-out both;
+  --animate-dialog-out: dialog-out 180ms ease-in both;
+
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes backdrop-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes sheet-down {
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+
+  @keyframes dialog-out {
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
 
   @keyframes item-added {
     from {
