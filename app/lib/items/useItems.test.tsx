@@ -30,6 +30,7 @@ const itemJson = (id: string, overrides = {}) => ({
   comments: [],
   finished: false,
   expiryDate: null,
+  watched: false,
   ...overrides,
 });
 

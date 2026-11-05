@@ -63,7 +63,7 @@ async function prefetchFridgeAndItems(
         listFridgeMembers(fridge.id),
         countPendingRequests(fridge.id),
         countMyFridges(userId),
-        listItems(fridge.id),
+        listItems(fridge.id, userId),
       ]);
     queryClient.setQueryData(
       fridgeKeys.current(),

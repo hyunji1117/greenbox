@@ -2,6 +2,7 @@
 // 냉장고 API 응답 계약. 서버 결과(app/lib/fridges/store.ts)가 이 스키마를 통과해야 한다
 
 import { z } from 'zod';
+import { NotifyLevelSchema } from '@/app/lib/schemas/notifications';
 
 export const FridgeRoleSchema = z.enum(['owner', 'member']);
 
@@ -17,6 +18,8 @@ export const CurrentFridgeSchema = z.object({
   name: z.string(),
   hasCustomName: z.boolean(),
   role: FridgeRoleSchema,
+  // 이 냉장고의 내 알림 수준. null이면 아직 고르지 않음 (이 필드가 없는 이전 응답도 null로 읽는다)
+  myNotifyLevel: NotifyLevelSchema.nullish().transform(value => value ?? null),
   myUserId: z.string(),
   members: z.array(FridgeMemberSchema),
   pendingRequestCount: z.number().int().min(0),

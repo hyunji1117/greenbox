@@ -1,0 +1,59 @@
+# .github/workflows/hourly-notifications.yml
+# 매시간 요약 알림 발송 API를 호출한다. 사람마다 정한 시각에 하루 요약과 주간 요약을 보내기 위해서다
+# Vercel 무료 플랜의 예약 작업은 하루 1회만 가능해 GitHub Actions로 매시간 깨운다 (docs/decisions/0004)
+# - 예약 실행은 몇 분 늦거나 드물게 건너뛸 수 있다. 서버는 정한 시각부터 2시간 안에는 아직 안 보낸 사람에게 보낸다
+# - 실행 결과(대상 수, 보낸 수, 실패 수, 늦은 분)를 실행 요약에 남긴다
+# - 호출이 실패하면 작업이 실패로 끝나 GitHub가 메일로 알린다
+# 필요한 저장소 비밀값: CRON_SECRET (Vercel의 CRON_SECRET과 같은 값)
+
+name: hourly-notifications
+
+on:
+  schedule:
+    # 정각은 실행이 몰려 늦어지기 쉬워 5분에 실행한다
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: hourly-notifications
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 요약 알림 발송 API 호출
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL || 'https://greenbox-seven.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::저장소 비밀값 CRON_SECRET이 없습니다"
+            exit 1
+          fi
+          status=$(curl -sS -o result.json -w '%{http_code}' --max-time 120 \
+            --retry 2 --retry-delay 10 --retry-all-errors \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/cron/notifications")
+          echo "HTTP $status"
+          {
+            echo "## 요약 알림 발송 결과"
+            echo ""
+            echo "HTTP $status"
+            echo ""
+            echo '```json'
+            cat result.json
+            echo ""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" != "200" ]; then
+            echo "::error::발송 API가 $status를 돌려줬습니다"
+            exit 1
+          fi
+          failed=$(jq '.daily.failed + .weekly.failed' result.json)
+          if [ "$failed" -gt 0 ]; then
+            echo "::warning::발송 실패 기기 ${failed}개"
+          fi

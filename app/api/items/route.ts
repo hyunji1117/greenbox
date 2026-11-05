@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const member = await requireFridgeMember(userId, fridgeId.data);
   if (member.response) return member.response;
 
-  const items = await listItems(fridgeId.data);
+  const items = await listItems(fridgeId.data, userId);
   return NextResponse.json(items, { headers: NO_STORE });
 }
 

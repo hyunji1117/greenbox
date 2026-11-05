@@ -16,3 +16,7 @@ export const fridgeKeys = {
   requests: (fridgeId: string) =>
     [...fridgeKeys.all, 'requests', fridgeId] as const,
 };
+
+export const notificationKeys = {
+  settings: () => ['notifications', 'settings'] as const,
+};

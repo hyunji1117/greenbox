@@ -4,6 +4,7 @@
 
 import type { PoolClient } from 'pg';
 import { getPool } from '@/app/lib/db';
+import type { NotifyLevel } from '@/app/lib/schemas/notifications';
 
 export type FridgeRole = 'owner' | 'member';
 
@@ -18,6 +19,7 @@ export interface CurrentFridgeJson {
   id: string;
   name: string;
   role: FridgeRole;
+  myNotifyLevel: NotifyLevel | null;
   // 구성원 목록에서 나를 찾기 위한 내 사용자 번호
   myUserId: string;
   members: FridgeMemberJson[];
@@ -134,6 +136,8 @@ interface FridgeSummary {
   // 아니면 이름 바꾸기 칸을 비워 둔다
   hasCustomName: boolean;
   role: FridgeRole;
+  // 이 냉장고의 내 알림 수준. 아직 고르지 않았으면 null (처음 열 때 묻는다)
+  myNotifyLevel: NotifyLevel | null;
 }
 
 // 마지막으로 본 냉장고. 그 냉장고에서 빠졌으면 가장 먼저 들어간 냉장고, 하나도 없으면 새로 만든다
@@ -146,7 +150,8 @@ export async function resolveCurrentFridge(
   const query = () =>
     getPool().query<FridgeSummary>(
       `SELECT f.id, ${fridgeNameForViewerSql('f', 'm')} AS name,
-         ${hasCustomNameSql('f', 'm')} AS "hasCustomName", m.role
+         ${hasCustomNameSql('f', 'm')} AS "hasCustomName", m.role,
+         m.notify_level AS "myNotifyLevel"
        FROM fridge_members m
        JOIN fridges f ON f.id = m.fridge_id
        JOIN users u ON u.id = m.user_id

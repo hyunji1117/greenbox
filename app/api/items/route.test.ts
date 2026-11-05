@@ -43,6 +43,7 @@ const row: ItemRow = {
   created_at: new Date('2026-10-30T03:00:00.000Z'),
   finished: false,
   expiry_date: '2026-11-05',
+  watched: true,
   comments: [
     {
       id: '101',
@@ -126,7 +127,7 @@ describe('/api/items 권한', () => {
 
     expect((await getList('5')).status).toBe(200);
     expect(mocks.getFridgeRole).toHaveBeenCalledWith('7', '5');
-    expect(mocks.listItems).toHaveBeenCalledWith('5');
+    expect(mocks.listItems).toHaveBeenCalledWith('5', '7');
   });
 
   it('구성원이 아닌 냉장고는 있는지도 알리지 않도록 404이고 조회하지 않는다', async () => {
