@@ -2,7 +2,8 @@
 // 냉장고 아이템 컴포넌트
 
 import React, { useState } from 'react';
-import { useAddComment, useUpdateItem } from '@/app/lib/items/useItems';
+import { useUpdateItem } from '@/app/lib/items/useItems';
+import ItemComments from '@/app/components/fridge/ItemComments';
 import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import {
   daysUntilExpiry,
@@ -11,8 +12,8 @@ import {
   isSavableExpiryDate,
 } from '@/app/lib/items/expiry';
 import {
-  COMMENT_TEXT_MAX,
   QUANTITY_MAX,
+  type Comment,
   type Person,
 } from '@/app/lib/schemas/item';
 import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
@@ -32,12 +33,7 @@ interface FridgeItemProps {
     quantity: number;
     addedBy: Person;
     addedAt: Date;
-    comments: Array<{
-      id: string;
-      text: string;
-      author: Person;
-      createdAt: Date;
-    }>;
+    comments: Comment[];
     finished: boolean;
     expiryDate?: string;
   };
@@ -50,27 +46,12 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   onFinish,
 }) => {
   const updateItem = useUpdateItem(item.id);
-  const addComment = useAddComment();
   const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
   // 날짜를 입력하는 도중의 값. 저장 전이거나 저장에 실패하면 서버 값과 다를 수 있다
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
   const expiryValue = expiryDraft ?? item.expiryDate ?? '';
   const expiryDays =
     item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newComment.trim() && !addComment.isPending) {
-      // 실패하면 입력한 내용을 지우지 않아 다시 보낼 수 있다
-      addComment.mutate(
-        {
-          itemId: item.id,
-          input: { text: newComment },
-        },
-        { onSuccess: () => setNewComment('') },
-      );
-    }
-  };
   const incrementQuantity = () => {
     if (item.quantity < QUANTITY_MAX) {
       updateItem.mutate({
@@ -212,49 +193,11 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
         </p>
       )}
       {showComments && (
-        <div className="mt-4">
-          <div className="max-h-32 overflow-y-auto rounded-lg bg-gray-50 p-3">
-            {item.comments.length === 0 ? (
-              <p className="text-sm text-gray-500">댓글이 없습니다.</p>
-            ) : (
-              item.comments.map(comment => (
-                <div key={comment.id} className="mb-2 last:mb-0">
-                  <div className="flex items-center">
-                    <span className="text-sm font-semibold">
-                      {personLabel(comment.author)}
-                    </span>
-                    <span className="ml-2 text-xs text-gray-400">
-                      {getRelativeTimeString(comment.createdAt)}
-                    </span>
-                  </div>
-                  <p className="text-sm">{comment.text}</p>
-                </div>
-              ))
-            )}
-          </div>
-          <form onSubmit={handleAddComment} className="mt-2 flex">
-            <input
-              type="text"
-              value={newComment}
-              onChange={e => setNewComment(e.target.value)}
-              placeholder="댓글 추가..."
-              maxLength={COMMENT_TEXT_MAX}
-              className="flex-1 rounded-l-xl border border-gray-300 px-3 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={addComment.isPending}
-              className="rounded-r-xl bg-indigo-500 px-3 py-1 text-sm text-white hover:bg-indigo-600 disabled:opacity-50"
-            >
-              추가
-            </button>
-          </form>
-          {addComment.isError && (
-            <p className="mt-1 text-xs text-red-500">
-              댓글을 저장하지 못했어요. 다시 시도해 주세요.
-            </p>
-          )}
-        </div>
+        <ItemComments
+          itemId={item.id}
+          comments={item.comments}
+          relativeTime={getRelativeTimeString}
+        />
       )}
     </article>
   );

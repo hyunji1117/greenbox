@@ -9,6 +9,7 @@ import type { Item } from '@/app/lib/schemas/item';
 import {
   useAddComment,
   useAddPurchasedItems,
+  useEditComment,
   useCreateItem,
   useFinishItem,
   useItems,
@@ -71,7 +72,8 @@ beforeEach(() => {
     id: FRIDGE_ID,
     name: '내 냉장고',
     role: 'owner',
-    members: [],
+    myUserId: '7',
+    members: [{ userId: '7', name: '현지', image: null, role: 'owner' }],
   });
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
@@ -226,31 +228,143 @@ describe('같은 품목의 연속 변경', () => {
   });
 });
 
+const commentJson = (overrides = {}) => ({
+  id: '9',
+  text: '맛있다',
+  author: me,
+  createdAt: '2026-10-30T05:00:00.000Z',
+  editedAt: null,
+  ...overrides,
+});
+
 describe('useAddComment', () => {
-  it('서버가 만든 댓글을 해당 품목 캐시에 넣는다', async () => {
+  it('보내자마자 댓글을 그리고, 저장되면 서버가 만든 댓글로 바꾼다', async () => {
     seedCache();
-    fetchMock.mockImplementation(async () =>
-      jsonResponse(
-        {
-          id: '9',
-          text: '맛있다',
-          author: me,
-          createdAt: '2026-10-30T05:00:00.000Z',
-        },
-        201,
-      ),
-    );
+    const response = deferredResponse();
+    fetchMock.mockReturnValue(response.promise);
+    const { result } = renderHook(() => useAddComment(), { wrapper });
+
+    act(() => {
+      result.current.mutate({ itemId: '1', input: { text: ' 맛있다 ' } });
+    });
+
+    await waitFor(() => expect(cachedItem('1')?.comments).toHaveLength(1));
+    expect(cachedItem('1')?.comments[0]).toMatchObject({
+      text: '맛있다',
+      author: me,
+    });
+    expect(cachedItem('2')?.comments).toHaveLength(0);
+
+    response.resolve(jsonResponse(commentJson(), 201));
+
+    await waitFor(() => expect(cachedItem('1')?.comments[0].id).toBe('9'));
+    expect(cachedItem('1')?.comments).toHaveLength(1);
+    expect(cachedItem('1')?.comments[0].createdAt).toBeInstanceOf(Date);
+  });
+
+  it('저장에 실패하면 먼저 그린 댓글을 지운다', async () => {
+    seedCache();
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'server' }, 500));
     const { result } = renderHook(() => useAddComment(), { wrapper });
 
     await act(() =>
-      result.current.mutateAsync({
-        itemId: '1',
-        input: { text: '맛있다' },
-      }),
+      result.current
+        .mutateAsync({ itemId: '1', input: { text: '맛있다' } })
+        .catch(() => null),
     );
 
-    expect(cachedItem('1')?.comments[0].createdAt).toBeInstanceOf(Date);
-    expect(cachedItem('2')?.comments).toHaveLength(0);
+    expect(cachedItem('1')?.comments).toHaveLength(0);
+  });
+
+  it('그사이 목록을 다시 불러와 먼저 그린 댓글이 사라져도 저장된 댓글은 남는다', async () => {
+    seedCache();
+    const response = deferredResponse();
+    fetchMock.mockReturnValue(response.promise);
+    const { result } = renderHook(() => useAddComment(), { wrapper });
+
+    act(() => {
+      result.current.mutate({ itemId: '1', input: { text: '맛있다' } });
+    });
+    await waitFor(() => expect(cachedItem('1')?.comments).toHaveLength(1));
+    seedCache();
+    response.resolve(jsonResponse(commentJson(), 201));
+
+    await waitFor(() => expect(cachedItem('1')?.comments[0]?.id).toBe('9'));
+    expect(cachedItem('1')?.comments).toHaveLength(1);
+  });
+});
+
+describe('useEditComment', () => {
+  function seedWithComment() {
+    seedCache();
+    queryClient.setQueryData<Item[]>(LIST_KEY, items =>
+      items?.map(item =>
+        item.id === '1'
+          ? {
+              ...item,
+              comments: [
+                {
+                  ...commentJson(),
+                  createdAt: new Date('2026-10-30T05:00:00.000Z'),
+                  editedAt: null,
+                },
+              ],
+            }
+          : item,
+      ),
+    );
+  }
+
+  it('고친 내용을 바로 보여 주고, 서버가 돌려준 고친 시각으로 맞춘다', async () => {
+    seedWithComment();
+    const response = deferredResponse();
+    fetchMock.mockReturnValue(response.promise);
+    const { result } = renderHook(() => useEditComment(), { wrapper });
+
+    act(() => {
+      result.current.mutate({
+        itemId: '1',
+        commentId: '9',
+        input: { text: '아주 맛있다' },
+      });
+    });
+
+    await waitFor(() =>
+      expect(cachedItem('1')?.comments[0].text).toBe('아주 맛있다'),
+    );
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/items/1/comments/9');
+
+    response.resolve(
+      jsonResponse(
+        commentJson({
+          text: '아주 맛있다',
+          editedAt: '2026-10-30T06:00:00.000Z',
+        }),
+      ),
+    );
+
+    await waitFor(() =>
+      expect(cachedItem('1')?.comments[0].editedAt).toEqual(
+        new Date('2026-10-30T06:00:00.000Z'),
+      ),
+    );
+  });
+
+  it('실패하면 원래 내용으로 되돌린다', async () => {
+    seedWithComment();
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'not_found' }, 404));
+    const { result } = renderHook(() => useEditComment(), { wrapper });
+
+    await act(() =>
+      result.current
+        .mutateAsync({ itemId: '1', commentId: '9', input: { text: '고침' } })
+        .catch(() => null),
+    );
+
+    expect(cachedItem('1')?.comments[0]).toMatchObject({
+      text: '맛있다',
+      editedAt: null,
+    });
   });
 });
 

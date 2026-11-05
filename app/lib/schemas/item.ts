@@ -26,6 +26,8 @@ export const CommentSchema = z.object({
   text: z.string(),
   author: PersonSchema,
   createdAt: isoDateTime,
+  // 고친 적이 없으면 null. 이 필드를 보내기 전의 서버 응답도 받을 수 있게 비어 있어도 된다
+  editedAt: isoDateTime.nullish().transform(value => value ?? null),
 });
 
 export const ItemSchema = z.object({
@@ -74,6 +76,10 @@ export const CreateCommentSchema = z.object({
   text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),
 });
 
+// 댓글 수정은 내용만 바꾼다
+export const UpdateCommentSchema = CreateCommentSchema;
+export const CommentIdSchema = ItemIdSchema;
+
 export type Person = z.output<typeof PersonSchema>;
 export type Category = z.infer<typeof CategorySchema>;
 export type Comment = z.output<typeof CommentSchema>;
@@ -82,3 +88,4 @@ export type CreateItemInput = z.infer<typeof CreateItemSchema>;
 export type CreateItemRequest = z.infer<typeof CreateItemRequestSchema>;
 export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 export type CreateCommentInput = z.infer<typeof CreateCommentSchema>;
+export type UpdateCommentInput = z.infer<typeof UpdateCommentSchema>;
