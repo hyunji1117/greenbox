@@ -2,7 +2,7 @@
 // app/api/save-subscription/route.test.ts
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { POLICY_VERSION } from '@/app/lib/consent/policies';
+import { currentPolicyVersion } from '@/app/lib/consent/policies';
 import { POST } from './route';
 
 const mocks = vi.hoisted(() => ({
@@ -34,7 +34,7 @@ describe('POST /api/save-subscription', () => {
     vi.clearAllMocks();
     mocks.auth.mockResolvedValue({
       registered: true,
-      consentVersion: POLICY_VERSION,
+      consentVersion: currentPolicyVersion(),
       user: { id: '7' },
     });
   });

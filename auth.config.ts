@@ -4,7 +4,7 @@
 
 import type { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
-import { POLICY_VERSION } from '@/app/lib/consent/policies';
+import { currentPolicyVersion } from '@/app/lib/consent/policies';
 
 export const authConfig = {
   providers: [Google],
@@ -18,7 +18,7 @@ export const authConfig = {
       const isPendingSignup = !!auth?.pendingSignup;
       const isSignedIn = isRegistered || isPendingSignup;
       const hasConsent =
-        isRegistered && auth?.consentVersion === POLICY_VERSION;
+        isRegistered && auth?.consentVersion === currentPolicyVersion();
       const { pathname } = nextUrl;
 
       if (pathname === '/login') {

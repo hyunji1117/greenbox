@@ -5,7 +5,7 @@
 import type { PoolClient } from 'pg';
 import { getPool } from '@/app/lib/db';
 import {
-  POLICY_VERSION,
+  currentPolicyVersion,
   hasAllRequired,
   isConsentType,
   type ConsentType,
@@ -23,7 +23,12 @@ export async function recordConsents(
   await db.query(
     `INSERT INTO consents (user_id, consent_type, policy_version, user_agent)
      SELECT $1, t, $3, $4 FROM unnest($2::text[]) AS t`,
-    [Number(userId), types, POLICY_VERSION, userAgent?.slice(0, 500) ?? null],
+    [
+      Number(userId),
+      types,
+      currentPolicyVersion(),
+      userAgent?.slice(0, 500) ?? null,
+    ],
   );
 }
 
@@ -31,11 +36,12 @@ export async function recordConsents(
 export async function getAgreedPolicyVersion(
   userId: string,
 ): Promise<string | null> {
+  const version = currentPolicyVersion();
   const { rows } = await getPool().query<{ consent_type: string }>(
     `SELECT DISTINCT consent_type FROM consents
      WHERE user_id = $1 AND policy_version = $2`,
-    [Number(userId), POLICY_VERSION],
+    [Number(userId), version],
   );
   const agreed = rows.map(r => r.consent_type).filter(isConsentType);
-  return hasAllRequired(agreed) ? POLICY_VERSION : null;
+  return hasAllRequired(agreed) ? version : null;
 }

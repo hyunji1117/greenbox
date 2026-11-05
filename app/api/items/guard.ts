@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import type { ZodError } from 'zod';
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { POLICY_VERSION } from '@/app/lib/consent/policies';
+import { currentPolicyVersion } from '@/app/lib/consent/policies';
 
 type Guarded =
   | { userId: string; response?: never }
@@ -19,7 +19,7 @@ export async function requireUser(): Promise<Guarded> {
       response: NextResponse.json({ error: 'unauthorized' }, { status: 401 }),
     };
   }
-  if (session.consentVersion !== POLICY_VERSION) {
+  if (session.consentVersion !== currentPolicyVersion()) {
     return {
       response: NextResponse.json(
         { error: 'consent_required' },

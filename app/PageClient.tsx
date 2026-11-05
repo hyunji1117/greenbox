@@ -4,6 +4,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+import PolicyNoticeBanner from '@/app/components/common/PolicyNoticeBanner';
 import BottomNavigation from '@/app/components/layout/BottomNavigation';
 import { FridgeProvider } from '@/app/context/FridgeContext';
 import { goToTab, paramToTab } from '@/app/lib/navigation/tabs';
@@ -81,7 +82,10 @@ export default function PageClient({ fridgeSlot }: PageClientProps) {
           onSettingsClick={() => {}}
         />
         <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
-          <div className="mt-0.5">{renderContent()}</div>
+          <div className="mt-0.5">
+            <PolicyNoticeBanner />
+            {renderContent()}
+          </div>
         </div>
       </div>
     </FridgeProvider>
