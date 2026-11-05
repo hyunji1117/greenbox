@@ -110,8 +110,11 @@ interface FridgeSummary {
 }
 
 // 마지막으로 본 냉장고. 그 냉장고에서 빠졌으면 가장 먼저 들어간 냉장고, 하나도 없으면 새로 만든다
+// keepFridgeId: 지금 화면에 보이는 냉장고. 아직 구성원이면 그대로 둬서, 다시 확인하는 사이에
+// 승인 등으로 마지막 냉장고가 바뀌어도 보고 있던 화면이 갑자기 바뀌지 않게 한다
 export async function resolveCurrentFridge(
   userId: string,
+  keepFridgeId?: string,
 ): Promise<FridgeSummary> {
   const query = () =>
     getPool().query<FridgeSummary>(
@@ -120,9 +123,10 @@ export async function resolveCurrentFridge(
        JOIN fridges f ON f.id = m.fridge_id
        JOIN users u ON u.id = m.user_id
        WHERE m.user_id = $1
-       ORDER BY (m.fridge_id = u.last_fridge_id) DESC, m.joined_at, m.fridge_id
+       ORDER BY (m.fridge_id = $2::bigint) DESC NULLS LAST,
+         (m.fridge_id = u.last_fridge_id) DESC, m.joined_at, m.fridge_id
        LIMIT 1`,
-      [Number(userId)],
+      [Number(userId), keepFridgeId ?? null],
     );
   const { rows } = await query();
   if (rows[0]) return rows[0];
@@ -168,8 +172,9 @@ export async function listFridgeMembers(
 
 export async function getCurrentFridge(
   userId: string,
+  keepFridgeId?: string,
 ): Promise<CurrentFridgeJson> {
-  const fridge = await resolveCurrentFridge(userId);
+  const fridge = await resolveCurrentFridge(userId, keepFridgeId);
   const [members, pendingRequestCount] = await Promise.all([
     listFridgeMembers(fridge.id),
     countPendingRequests(fridge.id),

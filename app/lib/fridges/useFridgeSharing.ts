@@ -39,6 +39,9 @@ export function useMyFridges(enabled = true) {
     queryKey: fridgeKeys.mine(),
     queryFn: () => apiFetch('/api/fridges', MyFridgeListSchema),
     enabled,
+    // 목록을 열 때마다 새로 받는다. 방금 승인된 냉장고가 바로 보여야 한다
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -52,8 +55,12 @@ export function useSwitchFridge() {
       }),
     onSuccess: async fridge => {
       track('fridge_switched');
-      await resetFridgeCaches(queryClient);
+      // 바꾼 냉장고를 먼저 넣어야, 다시 확인할 때 이전 냉장고를 "보고 있는 냉장고"로 보내지 않는다
+      await queryClient.cancelQueries({ queryKey: fridgeKeys.current() });
       queryClient.setQueryData(fridgeKeys.current(), fridge);
+      await queryClient.cancelQueries({ queryKey: itemKeys.all });
+      queryClient.removeQueries({ queryKey: itemKeys.all });
+      await queryClient.invalidateQueries({ queryKey: fridgeKeys.mine() });
     },
   });
 }
@@ -122,6 +129,8 @@ export function usePendingRequests(fridgeId: string, enabled = true) {
     queryFn: () =>
       apiFetch(`${fridgeUrl(fridgeId)}/requests`, JoinRequestListSchema),
     enabled,
+    // 구성원 화면을 열어 둔 동안 새 요청이 바로 보이게 한다
+    refetchInterval: 5_000,
   });
 }
 
@@ -182,8 +191,27 @@ export function useLeaveFridge(fridgeId: string) {
   });
 }
 
+// 참여 화면: 요청을 보낸 뒤 승인됐는지 새로고침 없이 알 수 있도록 다시 확인한다
+export function useMyJoinStatus(code: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...fridgeKeys.all, 'join', code] as const,
+    queryFn: () =>
+      apiFetch(
+        `/api/join/${encodeURIComponent(code)}`,
+        z.object({
+          status: z.enum(['member', 'pending', 'none']),
+          fridgeId: z.string(),
+        }),
+      ),
+    enabled,
+    refetchInterval: query =>
+      query.state.data?.status === 'member' ? false : 5_000,
+  });
+}
+
 // 참여 화면에서 요청 보내기
 export function useRequestJoin(code: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () =>
       apiFetch(
@@ -191,6 +219,12 @@ export function useRequestJoin(code: string) {
         z.object({ status: z.enum(['pending', 'member']) }),
         { method: 'POST' },
       ),
-    onSuccess: ({ status }) => track('join_requested', { result: status }),
+    onSuccess: ({ status }) => {
+      track('join_requested', { result: status });
+      // 기다리는 동안 승인 여부를 바로 확인하기 시작한다
+      return queryClient.invalidateQueries({
+        queryKey: [...fridgeKeys.all, 'join', code],
+      });
+    },
   });
 }
