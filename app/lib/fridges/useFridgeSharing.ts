@@ -68,10 +68,11 @@ export function useSwitchFridge() {
 export function useRenameFridge(fridgeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
+    // 앞 이름만 보낸다. 서버가 "앞 이름 냉장고"로 저장한다
+    mutationFn: (label: string) =>
       apiFetch(fridgeUrl(fridgeId), NoContent, {
         method: 'PATCH',
-        body: { name },
+        body: { label },
       }),
     onSuccess: () => {
       track('fridge_renamed');

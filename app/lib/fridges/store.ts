@@ -23,6 +23,16 @@ export interface CurrentFridgeJson {
   members: FridgeMemberJson[];
   // 승인을 기다리는 참여 요청 수 (구성원에게 표시)
   pendingRequestCount: number;
+  // 내가 속한 냉장고 수. 2개 이상이면 냉장고를 바꿀 수 있다고 표시한다
+  fridgeCount: number;
+}
+
+export async function countMyFridges(userId: string): Promise<number> {
+  const { rows } = await getPool().query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM fridge_members WHERE user_id = $1`,
+    [Number(userId)],
+  );
+  return rows[0].n;
 }
 
 // 승인을 기다리는 요청도 하루가 지나면 만료
@@ -49,15 +59,28 @@ type Db = Pick<PoolClient, 'query'>;
 export const DEFAULT_FRIDGE_NAME = '내 냉장고';
 
 // 이름을 바꾸지 않은 냉장고는 만든 사람에게만 "내 냉장고"다.
-// 함께 보는 사람에게는 "OO님의 냉장고"로 보여 여러 냉장고를 구분할 수 있게 한다
+// 함께 보는 사람에게는 "OO 냉장고"(만든 사람의 호칭)로 보여 여러 냉장고를 구분할 수 있게 한다
 export const fridgeNameForMemberSql = (fridge: string, roleExpr: string) =>
   `CASE WHEN ${fridge}.name = '${DEFAULT_FRIDGE_NAME}' AND ${roleExpr} = 'member'
      THEN COALESCE(
-       (SELECT ${displayNameSql('o')} || '님의 냉장고'
+       (SELECT ${displayNameSql('o')} || ' 냉장고'
         FROM fridge_members om JOIN users o ON o.id = om.user_id
         WHERE om.fridge_id = ${fridge}.id AND om.role = 'owner'),
        ${fridge}.name)
      ELSE ${fridge}.name END`;
+
+// 내 화면에 보일 이름. 함께 보는 사람은 자기가 정한 이름이 있으면 그 이름을 먼저 쓴다
+// 만든 사람은 늘 냉장고 이름 그대로 본다 (만든 사람이 바뀌어 예전에 정한 이름이 남아 있어도)
+export const fridgeNameForViewerSql = (fridge: string, member: string) =>
+  `CASE WHEN ${member}.role = 'member' AND ${member}.custom_name IS NOT NULL
+     THEN ${member}.custom_name
+     ELSE ${fridgeNameForMemberSql(fridge, `${member}.role`)} END`;
+
+// 이름 바꾸기 칸에 지금 이름을 채울지. 만든 사람은 냉장고 이름을, 함께 보는 사람은 자기 이름을 바꾼다
+export const hasCustomNameSql = (fridge: string, member: string) =>
+  `CASE WHEN ${member}.role = 'owner'
+     THEN ${fridge}.name <> '${DEFAULT_FRIDGE_NAME}'
+     ELSE ${member}.custom_name IS NOT NULL END`;
 
 // 구성원이 아니면 null. 존재하지 않는 냉장고와 구별하지 않는다
 export async function getFridgeRole(
@@ -105,7 +128,11 @@ export async function ensureOwnFridge(userId: string, db: Db): Promise<string> {
 
 interface FridgeSummary {
   id: string;
+  // 화면에 보일 이름 (이름을 바꾸지 않았으면 "내 냉장고" 또는 "OO 냉장고")
   name: string;
+  // 내가 바꿀 수 있는 이름(만든 사람은 냉장고 이름, 함께 보는 사람은 내가 부를 이름)을 정했는지
+  // 아니면 이름 바꾸기 칸을 비워 둔다
+  hasCustomName: boolean;
   role: FridgeRole;
 }
 
@@ -118,7 +145,8 @@ export async function resolveCurrentFridge(
 ): Promise<FridgeSummary> {
   const query = () =>
     getPool().query<FridgeSummary>(
-      `SELECT f.id, ${fridgeNameForMemberSql('f', 'm.role')} AS name, m.role
+      `SELECT f.id, ${fridgeNameForViewerSql('f', 'm')} AS name,
+         ${hasCustomNameSql('f', 'm')} AS "hasCustomName", m.role
        FROM fridge_members m
        JOIN fridges f ON f.id = m.fridge_id
        JOIN users u ON u.id = m.user_id
@@ -175,9 +203,16 @@ export async function getCurrentFridge(
   keepFridgeId?: string,
 ): Promise<CurrentFridgeJson> {
   const fridge = await resolveCurrentFridge(userId, keepFridgeId);
-  const [members, pendingRequestCount] = await Promise.all([
+  const [members, pendingRequestCount, fridgeCount] = await Promise.all([
     listFridgeMembers(fridge.id),
     countPendingRequests(fridge.id),
+    countMyFridges(userId),
   ]);
-  return { ...fridge, myUserId: userId, members, pendingRequestCount };
+  return {
+    ...fridge,
+    myUserId: userId,
+    members,
+    pendingRequestCount,
+    fridgeCount,
+  };
 }

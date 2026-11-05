@@ -30,7 +30,7 @@ describe('withSubjectParticle', () => {
 describe('withObjectParticle', () => {
   it('받침에 따라 을/를을 고른다', () => {
     expect(withObjectParticle('본가 냉장고')).toBe('본가 냉장고를');
-    expect(withObjectParticle('현지님의 냉장고')).toBe('현지님의 냉장고를');
+    expect(withObjectParticle('현지 냉장고')).toBe('현지 냉장고를');
     expect(withObjectParticle('자취방')).toBe('자취방을');
   });
 });
