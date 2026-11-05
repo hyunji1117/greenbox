@@ -1,11 +1,11 @@
-// app/privacy/versions/Policy20261112.tsx
-// 2026-11-12 시행 개인정보처리방침
+// app/privacy/versions/Policy20261105.tsx
+// 2026-11-05 시행 개인정보처리방침
 // 바뀐 점: 냉장고 품목과 댓글의 서버 저장, 냉장고 함께 쓰기에서 보이는 정보, 사진 인식(Anthropic), 음성 검색 안내
 
 import { OPERATOR } from '@/app/lib/consent/operator';
 import { PolicyTable, Section } from '../PolicyParts';
 
-export default function Policy20261112() {
+export default function Policy20261105() {
   return (
     <>
       <Section title="1. 수집하는 개인정보 항목과 수집 방법">
