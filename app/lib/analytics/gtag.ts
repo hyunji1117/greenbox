@@ -20,6 +20,7 @@ type EventParams = {
   item_finished: { kind: FinishKind };
   item_finish_undone: undefined;
   comment_added: undefined;
+  comment_edited: undefined;
   push_permission_result: { result: PushStatus | 'error' };
   // 냉장고 함께 쓰기. 냉장고 이름이나 사람 이름은 보내지 않는다
   invite_link_created: undefined;

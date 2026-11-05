@@ -8,6 +8,7 @@ import { displayNameSql } from '@/app/lib/fridges/store';
 import type {
   CreateCommentInput,
   CreateItemInput,
+  UpdateCommentInput,
   UpdateItemInput,
 } from '@/app/lib/schemas/item';
 
@@ -23,6 +24,7 @@ interface CommentJson {
   text: string;
   author: PersonJson;
   createdAt: string;
+  editedAt: string | null;
 }
 
 export interface ItemRow {
@@ -58,7 +60,7 @@ const SELECT_ITEMS = `
           json_build_object(
             'id', c.id::text, 'text', c.text,
             'author', ${personSql('c.author_id', 'i.fridge_id')},
-            'createdAt', c.created_at
+            'createdAt', c.created_at, 'editedAt', c.edited_at
           ) ORDER BY c.created_at, c.id
         )
         FROM item_comments c WHERE c.item_id = i.id),
@@ -84,6 +86,9 @@ export function toItemJson(row: ItemRow) {
     comments: row.comments.map(comment => ({
       ...comment,
       createdAt: new Date(comment.createdAt).toISOString(),
+      editedAt: comment.editedAt
+        ? new Date(comment.editedAt).toISOString()
+        : null,
     })),
     finished: row.finished,
     expiryDate: row.expiry_date,
@@ -162,33 +167,66 @@ export async function updateItem(
   return rowCount ? findItem(itemId) : null;
 }
 
+interface CommentRow {
+  id: string;
+  text: string;
+  created_at: Date;
+  edited_at: Date | null;
+  author: PersonJson;
+}
+
+// 방금 넣거나 고친 댓글(CTE)을 작성자 정보와 함께 읽는다
+const SELECT_COMMENT_FROM = (cte: string) => `
+  SELECT c.id::text AS id, c.text, c.created_at, c.edited_at,
+    ${personSql('c.author_id', 'i.fridge_id')} AS author
+  FROM ${cte} c JOIN items i ON i.id = c.item_id`;
+
+function toCommentJson(row: CommentRow): CommentJson {
+  return {
+    id: row.id,
+    text: row.text,
+    author: row.author,
+    createdAt: row.created_at.toISOString(),
+    editedAt: row.edited_at?.toISOString() ?? null,
+  };
+}
+
 // 내가 구성원인 냉장고의 품목일 때만 댓글을 남긴다. 아니면 null
 export async function addComment(
   userId: string,
   itemId: string,
   input: CreateCommentInput,
 ): Promise<CommentJson | null> {
-  const { rows } = await getPool().query<{
-    id: string;
-    text: string;
-    created_at: Date;
-    author: PersonJson;
-  }>(
+  const { rows } = await getPool().query<CommentRow>(
     `WITH inserted AS (
        INSERT INTO item_comments (item_id, author_id, text)
        SELECT i.id, $1, $3 FROM items i WHERE i.id = $2 AND ${MEMBER_OF_ITEM_FRIDGE}
-       RETURNING id, item_id, author_id, text, created_at
+       RETURNING id, item_id, author_id, text, created_at, edited_at
      )
-     SELECT c.id, c.text, c.created_at, ${personSql('c.author_id', 'i.fridge_id')} AS author
-     FROM inserted c JOIN items i ON i.id = c.item_id`,
+     ${SELECT_COMMENT_FROM('inserted')}`,
     [Number(userId), itemId, input.text],
   );
-  const row = rows[0];
-  if (!row) return null;
-  return {
-    id: row.id,
-    text: row.text,
-    author: row.author,
-    createdAt: row.created_at.toISOString(),
-  };
+  return rows[0] ? toCommentJson(rows[0]) : null;
+}
+
+// 내가 쓴 댓글이고 지금도 그 냉장고 구성원일 때만 고친다. 아니면 null
+// 냉장고에서 나간 뒤에는 남은 가족이 보는 기록이 바뀌지 않도록 고칠 수 없다
+export async function updateComment(
+  userId: string,
+  itemId: string,
+  commentId: string,
+  input: UpdateCommentInput,
+): Promise<CommentJson | null> {
+  const { rows } = await getPool().query<CommentRow>(
+    `WITH updated AS (
+       UPDATE item_comments c SET text = $4, edited_at = now()
+       FROM items i
+       WHERE c.id = $3 AND c.item_id = $2 AND i.id = c.item_id
+         AND c.author_id = $1 AND ${MEMBER_OF_ITEM_FRIDGE}
+       RETURNING c.id, c.item_id, c.author_id, c.text, c.created_at, c.edited_at
+     )
+     ${SELECT_COMMENT_FROM('updated')}`,
+    [Number(userId), itemId, commentId, input.text],
+  );
+  return rows[0] ? toCommentJson(rows[0]) : null;
 }
