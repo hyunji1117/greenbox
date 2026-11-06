@@ -2,8 +2,10 @@
 // app/components/common/BottomSheet.tsx
 // 아래에서 올라오는 시트. 휴대폰에서는 화면 아래에 붙고, 넓은 화면에서는 가운데에 뜬다
 // 바깥을 누르거나 Esc를 누르면 닫힌다. 열리고 닫힐 때 배경은 서서히, 시트는 미끄러지듯 움직인다
+// 아래 탭 메뉴(z-50)에 가려지지 않도록 body 바로 아래에 그리고 탭 메뉴보다 위(z-[60])에 둔다
 
 import React, { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { XIcon } from 'lucide-react';
 
 interface BottomSheetProps {
@@ -34,11 +36,12 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isRendered) return null;
+  // 열린 상태는 화면이 뜬 뒤에만 생겨 서버 렌더링에는 document가 없다
+  if (!isRendered || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center md:items-center ${
+      className={`fixed inset-0 z-[60] flex items-end justify-center md:items-center ${
         isClosing ? 'pointer-events-none' : ''
       }`}
       onClick={onClose}
@@ -84,7 +87,8 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
