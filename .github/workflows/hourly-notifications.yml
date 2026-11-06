@@ -1,5 +1,7 @@
 # .github/workflows/hourly-notifications.yml
-# 매시간 요약 알림 발송 API를 호출한다. 사람마다 정한 시각에 하루 요약과 주간 요약을 보내기 위해서다
+# 매시간 요약 알림 발송 API와 의견 모음 메일 API를 호출한다
+# - 요약 알림: 사람마다 정한 시각에 하루 요약과 주간 요약을 보낸다
+# - 의견 모음 메일: 오전 9시대에 하루 한 번, 누적 엑셀을 첨부해 운영자에게 보낸다 (서버가 시각을 판단)
 # Vercel 무료 플랜의 예약 작업은 하루 1회만 가능해 GitHub Actions로 매시간 깨운다 (docs/decisions/0004)
 # - 예약 실행은 몇 분 늦거나 드물게 건너뛸 수 있다. 서버는 정한 시각부터 2시간 안에는 아직 안 보낸 사람에게 보낸다
 # - 실행 결과(대상 수, 보낸 수, 실패 수, 늦은 분)를 실행 요약에 남긴다
@@ -56,4 +58,30 @@ jobs:
           failed=$(jq '.daily.failed + .weekly.failed' result.json)
           if [ "$failed" -gt 0 ]; then
             echo "::warning::발송 실패 기기 ${failed}개"
+          fi
+
+      - name: 의견 모음 메일 API 호출
+        # 알림 발송이 실패해도 메일은 따로 시도한다
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL || 'https://greenbox-seven.vercel.app' }}
+        run: |
+          status=$(curl -sS -o digest.json -w '%{http_code}' --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/cron/feedback-digest")
+          echo "HTTP $status"
+          {
+            echo "## 의견 모음 메일 결과"
+            echo ""
+            echo "HTTP $status"
+            echo ""
+            echo '```json'
+            cat digest.json
+            echo ""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" != "200" ]; then
+            echo "::error::의견 모음 메일 API가 $status를 돌려줬습니다"
+            exit 1
           fi

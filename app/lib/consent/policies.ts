@@ -2,6 +2,8 @@
 // 동의 항목과 개인정보처리방침 버전 정의.
 // 방침을 바꿀 때는 POLICY_RELEASES에 새 버전과 시행 시각을 추가한다 (시행 7일 전에는 배포해 둔다)
 // 시행 전에는 앱 안 배너로 미리 알리고, 시행 시각이 지나면 다음 요청부터 바로 동의 화면으로 보낸다
+// 원하는 사람만 쓰는 기능을 더하는 것처럼 다시 동의받을 필요가 없는 변경은 requiresConsent: false로 두고,
+// 그 기능을 쓸 때 따로 동의를 받는다. 이때는 시행 뒤 7일 동안 앱 안 배너로 알린다
 
 export interface PolicyRelease {
   // 시행일을 버전 이름으로 쓴다 (동의 기록의 policy_version에 저장)
@@ -10,6 +12,8 @@ export interface PolicyRelease {
   effectiveAt: string;
   // 다시 동의하는 사람에게 보여 줄 바뀐 점 (3줄 이내)
   changes: readonly string[];
+  // false면 시행돼도 다시 동의를 받지 않는다 (없으면 true)
+  requiresConsent?: boolean;
 }
 
 // 오래된 버전부터 적는다
@@ -28,19 +32,53 @@ export const POLICY_RELEASES: readonly PolicyRelease[] = [
       '사진으로 등록하면 식재료를 찾기 위해 사진을 Anthropic(미국)에 보내요',
     ],
   },
+  {
+    version: '2026-11-06',
+    effectiveAt: '2026-11-06T00:00:00+09:00',
+    changes: [
+      '의견 보내기로 보낸 내용을 서비스 개선에 쓰고 1년 뒤 지워요',
+      '의견을 운영자 메일로 모아 보내기 위해 Resend(미국)를 써요',
+    ],
+    // 의견 보내기는 원하는 사람만 쓰고, 보낼 때 따로 동의를 받는다
+    requiresConsent: false,
+  },
 ];
 
 const effectiveTime = (release: PolicyRelease) =>
   new Date(release.effectiveAt).getTime();
 
-// 지금 적용 중인 방침
+const requiresConsent = (release: PolicyRelease) =>
+  release.requiresConsent !== false;
+
+// 동의를 받아야 하는 방침 중 지금 적용 중인 것. 로그인과 API는 이 버전에 동의했는지 확인한다
 export function currentPolicy(now: number = Date.now()): PolicyRelease {
-  const applied = POLICY_RELEASES.filter(r => effectiveTime(r) <= now);
+  const applied = POLICY_RELEASES.filter(
+    r => effectiveTime(r) <= now && requiresConsent(r),
+  );
   return applied[applied.length - 1] ?? POLICY_RELEASES[0];
 }
 
 export function currentPolicyVersion(now: number = Date.now()): string {
   return currentPolicy(now).version;
+}
+
+// 지금 적용 중인 방침 본문 (다시 동의받지 않는 변경까지 포함). /privacy에 보여 준다
+export function latestPolicyVersion(now: number = Date.now()): string {
+  const applied = POLICY_RELEASES.filter(r => effectiveTime(r) <= now);
+  return (applied[applied.length - 1] ?? POLICY_RELEASES[0]).version;
+}
+
+// 다시 동의받지 않고 시행된 변경을 알리는 기간
+export const AMENDMENT_NOTICE_DAYS = 7;
+
+// 최근 7일 안에 다시 동의 없이 시행된 방침. 없으면 null
+export function recentAmendment(
+  now: number = Date.now(),
+): PolicyRelease | null {
+  const latest = findPolicy(latestPolicyVersion(now));
+  if (!latest || requiresConsent(latest)) return null;
+  const elapsed = now - effectiveTime(latest);
+  return elapsed < AMENDMENT_NOTICE_DAYS * 24 * 60 * 60 * 1000 ? latest : null;
 }
 
 // 시행을 앞둔 방침. 없으면 null
