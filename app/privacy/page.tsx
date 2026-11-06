@@ -3,7 +3,7 @@
 // 시행 시각이 지나면 자동으로 새 방침을 보여 주도록 요청마다 그린다
 
 import type { Metadata } from 'next';
-import { currentPolicyVersion } from '@/app/lib/consent/policies';
+import { latestPolicyVersion } from '@/app/lib/consent/policies';
 import PolicyDocument from './PolicyDocument';
 
 export const metadata: Metadata = {
@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default function PrivacyPage() {
-  return <PolicyDocument version={currentPolicyVersion()} />;
+  return <PolicyDocument version={latestPolicyVersion()} />;
 }

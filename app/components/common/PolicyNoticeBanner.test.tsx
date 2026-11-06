@@ -38,8 +38,22 @@ describe('PolicyNoticeBanner', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('시행일이 지나면 보이지 않는다 (동의 화면이 대신 알린다)', () => {
-    vi.setSystemTime(new Date('2026-11-05T09:00:00+09:00'));
+  it('다시 동의받지 않는 변경은 시행 뒤 7일 동안 바뀌었다고 알린다', () => {
+    vi.setSystemTime(new Date('2026-11-06T09:00:00+09:00'));
+    render(<PolicyNoticeBanner />);
+
+    expect(screen.getByRole('status').textContent).toContain(
+      '11월 6일에 개인정보처리방침이 바뀌었어요',
+    );
+    expect(
+      screen
+        .getByRole('link', { name: '무엇이 바뀌었나요' })
+        .getAttribute('href'),
+    ).toBe('/privacy/2026-11-06');
+  });
+
+  it('알리는 기간이 지나면 보이지 않는다', () => {
+    vi.setSystemTime(new Date('2026-11-14T09:00:00+09:00'));
     render(<PolicyNoticeBanner />);
     expect(screen.queryByRole('status')).toBeNull();
   });

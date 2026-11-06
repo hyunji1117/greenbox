@@ -6,7 +6,7 @@ import { APP_NAME } from '@/app/lib/brand';
 import { OPERATOR } from '@/app/lib/consent/operator';
 import {
   POLICY_RELEASES,
-  currentPolicyVersion,
+  latestPolicyVersion,
   policyDateLabel,
   upcomingPolicy,
 } from '@/app/lib/consent/policies';
@@ -19,7 +19,7 @@ interface PolicyDocumentProps {
 
 export default function PolicyDocument({ version }: PolicyDocumentProps) {
   const Body = POLICY_BODIES[version];
-  const current = currentPolicyVersion();
+  const current = latestPolicyVersion();
   const upcoming = upcomingPolicy();
   const isCurrent = version === current;
   const isUpcoming = upcoming?.version === version;

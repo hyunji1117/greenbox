@@ -5,7 +5,9 @@ import { POLICY_BODIES } from '@/app/privacy/versions';
 import {
   POLICY_RELEASES,
   currentPolicyVersion,
+  latestPolicyVersion,
   policyDateLabel,
+  recentAmendment,
   upcomingPolicy,
 } from './policies';
 
@@ -18,10 +20,19 @@ describe('개인정보처리방침 버전', () => {
     expect(upcomingPolicy(before)?.version).toBe('2026-11-05');
   });
 
-  it('한국 시간 자정이 되면 새 방침으로 바뀌고 예정 방침은 없어진다', () => {
+  it('한국 시간 자정이 되면 새 방침으로 바뀐다', () => {
     const after = at('2026-11-05T00:00:00+09:00');
     expect(currentPolicyVersion(after)).toBe('2026-11-05');
-    expect(upcomingPolicy(after)).toBeNull();
+    expect(upcomingPolicy(after)?.version).not.toBe('2026-11-05');
+  });
+
+  it('다시 동의받지 않는 변경은 동의 버전을 바꾸지 않고, 본문과 7일 동안의 알림만 바뀐다', () => {
+    const amended = at('2026-11-06T09:00:00+09:00');
+    expect(currentPolicyVersion(amended)).toBe('2026-11-05');
+    expect(latestPolicyVersion(amended)).toBe('2026-11-06');
+    expect(recentAmendment(amended)?.version).toBe('2026-11-06');
+    expect(recentAmendment(at('2026-11-13T00:00:00+09:00'))).toBeNull();
+    expect(recentAmendment(at('2026-11-05T23:59:59+09:00'))).toBeNull();
   });
 
   it('모든 버전에 본문이 있고, 바뀐 점은 3줄 이내다', () => {
