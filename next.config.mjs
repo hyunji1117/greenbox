@@ -1,5 +1,6 @@
 // next.config.mjs
 
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import withPWAInit from '@ducanh2912/next-pwa';
@@ -23,7 +24,21 @@ const pwaConfig = withPWAInit({
   },
 });
 
+// 앱 버전은 package.json의 version을 쓴다. 운영 배포할 때마다 올리고 같은 이름의 git 태그(v1.2.3)를 붙인다
+// 같은 버전 안에서도 어떤 배포인지 알 수 있게 Vercel이 넣어 주는 커밋 번호 앞 7자리를 함께 둔다
+const { version: appVersion } = JSON.parse(
+  readFileSync(path.join(__dirname, 'package.json'), 'utf8'),
+);
+
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: appVersion,
+    NEXT_PUBLIC_APP_COMMIT: (process.env.VERCEL_GIT_COMMIT_SHA ?? '').slice(
+      0,
+      7,
+    ),
+  },
+
   // React Strict Mode 설정 (Fast Refresh 에러 해결)
   reactStrictMode: true,
 
