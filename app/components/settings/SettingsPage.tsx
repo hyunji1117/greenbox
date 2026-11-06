@@ -10,7 +10,7 @@ import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import PushNotificationCard from '@/app/components/settings/PushNotificationCard';
 import NotificationSettingsCard from '@/app/components/settings/NotificationSettingsCard';
 import FeedbackCard from '@/app/components/settings/FeedbackCard';
-import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
+import AppVersionCard from '@/app/components/settings/AppVersionCard';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,7 +50,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const [isLoggingOut, startLoggingOut] = useTransition();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('account');
-  const appVersion = '1.0.0';
 
   // 입력 중이 아니면 저장된 호칭을 보여준다
   const nicknameValue = nicknameDraft ?? myProfile?.familyNickname ?? '';
@@ -206,15 +205,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
               <PushNotificationCard />
               <NotificationSettingsCard />
               <FeedbackCard />
-              <div
-                className={`flex items-center justify-between p-4 ${SURFACE}`}
-              >
-                <span className="text-sm font-medium text-gray-800">
-                  앱 버전
-                </span>
-                <span className="text-sm text-gray-500">{appVersion}</span>
-              </div>
-              <InternalDeviceToggle />
+              <AppVersionCard />
             </>
           )}
         </div>
