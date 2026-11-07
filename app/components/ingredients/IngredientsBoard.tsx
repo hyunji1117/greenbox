@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
+import RecipeCard from '@/app/components/ingredients/RecipeCard';
 import { EXPIRY_SOON_DAYS, expiryLabel } from '@/app/lib/items/expiry';
 import { summarizeItems } from '@/app/lib/items/summary';
 import { useItems } from '@/app/lib/items/useItems';
@@ -95,6 +96,9 @@ const IngredientsBoard: React.FC<IngredientsBoardProps> = ({
           </ul>
         )}
       </section>
+
+      {/* 곧 먹어야 할 재료가 있을 때만 보인다 (레시피를 쓸 수 있는 사람에게만) */}
+      <RecipeCard />
 
       <section className={`p-4 ${SURFACE}`}>
         <SectionHeader

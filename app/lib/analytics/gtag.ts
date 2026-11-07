@@ -21,6 +21,12 @@ type EventParams = {
   item_finish_undone: undefined;
   comment_added: undefined;
   comment_edited: undefined;
+  // 초간단 레시피. 재료 이름은 보내지 않는다
+  recipe_made: undefined;
+  recipe_opened: undefined;
+  recipe_step_image_opened: undefined;
+  recipe_missing_added: { count: number };
+  recipe_cooked: { finished: number };
   // 알림 설정. source: 처음 묻는 화면(first)인지 설정 화면(settings)인지
   notify_level_selected: {
     level: 'all' | 'watched' | 'none';
