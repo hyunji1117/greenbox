@@ -77,6 +77,19 @@ const GroceryListPage: React.FC = () => {
     });
   };
 
+  // 담기에서 잘못 누른 것을 되돌린다. 하나씩 빼고, 0개가 되면 리스트에서 지운다
+  const removeOneFromList = (name: string) => {
+    setShoppingList(prev =>
+      prev.flatMap(i =>
+        i.name !== name
+          ? [i]
+          : i.quantity > 1
+            ? [{ ...i, quantity: i.quantity - 1 }]
+            : [],
+      ),
+    );
+  };
+
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [undoAction, setUndoAction] = useState<(() => void) | null>(null);
@@ -335,6 +348,7 @@ const GroceryListPage: React.FC = () => {
             )}
             <FrequentItemsPicker
               onPick={addToList}
+              onUnpick={removeOneFromList}
               quantities={listQuantities}
               purchaseCounts={purchaseCounts}
             />

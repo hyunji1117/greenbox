@@ -68,6 +68,33 @@ describe('GroceryListPage', () => {
     ).toBeTruthy();
   });
 
+  it('담은 사진은 빼기로 하나씩 되돌리고, 0개가 되면 리스트에서 빠진다', () => {
+    render(<GroceryListPage />);
+    const spinach = () =>
+      screen.getByRole('button', {
+        name: /^시금치 (리스트에 담기|하나 더 담기)/,
+      });
+
+    fireEvent.click(spinach());
+    fireEvent.click(spinach());
+    fireEvent.click(
+      screen.getByRole('button', { name: '시금치 하나 빼기, 지금 2개' }),
+    );
+    expect(
+      screen.getByRole('button', { name: '시금치 하나 더 담기, 지금 1개' }),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '시금치 하나 빼기, 지금 1개' }),
+    );
+    expect(
+      screen.getByRole('button', { name: '시금치 리스트에 담기' }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: '시금치 수량 늘리기' }),
+    ).toBeNull();
+  });
+
   it('사진 목록에 없는 이름도 찾은 그대로 담는다', () => {
     render(<GroceryListPage />);
 

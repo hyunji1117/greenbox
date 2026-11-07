@@ -6,7 +6,7 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { MicIcon, Plus, SearchIcon, XIcon } from 'lucide-react';
+import { MicIcon, Minus, Plus, SearchIcon, XIcon } from 'lucide-react';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import { ITEM_NAME_MAX } from '@/app/lib/schemas/item';
@@ -44,6 +44,8 @@ function imageUrl(item: FridgeItem): string {
 
 interface FrequentItemsPickerProps {
   onPick: (name: string) => void;
+  // 담은 것을 하나 빼기 (0개가 되면 리스트에서 빠진다)
+  onUnpick: (name: string) => void;
   // 리스트에 이미 담긴 수량 (이름 기준)
   quantities: Map<string, number>;
   // 이 기기에서 구매 완료한 횟수 (이름 기준)
@@ -52,6 +54,7 @@ interface FrequentItemsPickerProps {
 
 const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
   onPick,
+  onUnpick,
   quantities,
   purchaseCounts,
 }) => {
@@ -82,10 +85,7 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
 
   return (
     <section className="mt-8">
-      <h2 className="text-base font-semibold">식재료 담기</h2>
-      <p className="mt-0.5 mb-3 text-sm text-gray-500">
-        찾거나 사진을 누르면 리스트에 담겨요
-      </p>
+      <h2 className="mb-3 text-base font-semibold">식재료 담기</h2>
       <form
         onSubmit={event => {
           event.preventDefault();
@@ -181,7 +181,7 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
           const quantity = quantities.get(item.name) ?? 0;
           const purchaseCount = purchaseCounts.get(item.name) ?? 0;
           return (
-            <li key={item.id}>
+            <li key={item.id} className="relative">
               <button
                 type="button"
                 aria-label={
@@ -219,9 +219,11 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
                     </span>
                   )}
                   {quantity > 0 && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-[#4B2F8C]/55 text-white">
-                      <Plus size={20} strokeWidth={2} />
-                      <span className="text-xl font-semibold">{quantity}</span>
+                    <span className="absolute inset-0 flex items-center justify-center gap-0.5 bg-[#4B2F8C]/55 text-white">
+                      <Plus size={28} strokeWidth={2.5} aria-hidden />
+                      <span className="text-4xl leading-none font-bold">
+                        {quantity}
+                      </span>
                     </span>
                   )}
                 </span>
@@ -229,6 +231,17 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
                   {item.name}
                 </span>
               </button>
+              {/* 담은 카드는 오른쪽 위 빼기로 되돌린다 (카드를 누르면 하나 더 담기) */}
+              {quantity > 0 && (
+                <button
+                  type="button"
+                  aria-label={`${item.name} 하나 빼기, 지금 ${quantity}개`}
+                  onClick={() => onUnpick(item.name)}
+                  className="absolute top-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#553C9A] shadow-md ring-1 ring-black/5"
+                >
+                  <Minus size={18} strokeWidth={2.5} />
+                </button>
+              )}
             </li>
           );
         })}
