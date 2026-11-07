@@ -40,7 +40,9 @@ jobs:
             --retry 2 --retry-delay 10 --retry-all-errors \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$APP_URL/api/cron/notifications")
+          # 응답에는 건수와 시각만 있다 (사람 정보와 내용 없음). 200이어도 실제로 무엇을 했는지 로그에서 보이게 남긴다
           echo "HTTP $status"
+          cat result.json; echo
           {
             echo "## 요약 알림 발송 결과"
             echo ""
@@ -70,7 +72,9 @@ jobs:
           status=$(curl -sS -o digest.json -w '%{http_code}' --max-time 120 \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$APP_URL/api/cron/feedback-digest")
+          # status: not_due(시각 아님) / already_sent / no_new(새 의견 없음) / sent
           echo "HTTP $status"
+          cat digest.json; echo
           {
             echo "## 의견 모음 메일 결과"
             echo ""
