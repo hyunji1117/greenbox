@@ -134,12 +134,19 @@ export type DigestResult =
   | { status: 'no_new'; total: number; deleted: number }
   | { status: 'sent'; newCount: number; total: number; deleted: number };
 
+export interface DigestOptions {
+  // 운영자가 수동 실행에서 고르면 오전 9시대가 아니어도 지금 보낸다
+  // 하루 한 번 기록은 그대로 남겨, 같은 날 두 번 보내지 않고 다음 날 오전 발송은 평소대로 간다
+  sendNow?: boolean;
+}
+
 export async function runFeedbackDigest(
   now: Date = new Date(),
   send: (email: DigestEmail) => Promise<void> = sendDigestEmail,
+  { sendNow = false }: DigestOptions = {},
 ): Promise<DigestResult> {
   const clock = koreaClock(now);
-  if (!isDueHour(DIGEST_HOUR, clock.hour)) {
+  if (!sendNow && !isDueHour(DIGEST_HOUR, clock.hour)) {
     return { status: 'not_due', koreaHour: clock.hour };
   }
   if (await hasDigestSent(clock.date)) {

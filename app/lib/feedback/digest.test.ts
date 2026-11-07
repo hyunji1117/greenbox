@@ -96,6 +96,33 @@ describe('runFeedbackDigest', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it('지금 보내기를 고르면 오전 9시대가 아니어도 보내고 오늘 보낸 것으로 기록한다', async () => {
+    mocks.listAllFeedback.mockResolvedValue([row('1', '2026-11-07T06:05:00Z')]);
+    mocks.lastDigestSentAt.mockResolvedValue(null);
+    const send = vi.fn().mockResolvedValue(undefined);
+
+    const result = await runFeedbackDigest(
+      new Date('2026-11-07T06:40:00Z'),
+      send,
+      { sendNow: true },
+    );
+
+    expect(result).toMatchObject({ status: 'sent', newCount: 1 });
+    expect(mocks.recordDigestSent).toHaveBeenCalledWith('2026-11-07', 1, 1);
+  });
+
+  it('지금 보내기여도 오늘 이미 보냈으면 다시 보내지 않는다', async () => {
+    mocks.hasDigestSent.mockResolvedValue(true);
+    const send = vi.fn();
+    const result = await runFeedbackDigest(
+      new Date('2026-11-07T06:40:00Z'),
+      send,
+      { sendNow: true },
+    );
+    expect(result.status).toBe('already_sent');
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it('오늘 이미 보냈으면 다시 보내지 않는다', async () => {
     mocks.hasDigestSent.mockResolvedValue(true);
     const send = vi.fn();

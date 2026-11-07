@@ -15,6 +15,11 @@ on:
     # 정각은 실행이 몰려 늦어지기 쉬워 5분에 실행한다
     - cron: '5 * * * *'
   workflow_dispatch:
+    inputs:
+      send_feedback_now:
+        description: '개발 피드백 메일을 시각과 상관없이 지금 보내기 (하루 한 번은 그대로)'
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -68,10 +73,12 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_URL: ${{ vars.APP_URL || 'https://greenbox-seven.vercel.app' }}
+          # 수동 실행에서 "지금 보내기"를 골랐을 때만 붙는다 (예약 실행은 늘 빈 값)
+          NOW_QUERY: ${{ inputs.send_feedback_now && '?now=1' || '' }}
         run: |
           status=$(curl -sS -o digest.json -w '%{http_code}' --max-time 120 \
             -H "Authorization: Bearer $CRON_SECRET" \
-            "$APP_URL/api/cron/feedback-digest")
+            "$APP_URL/api/cron/feedback-digest$NOW_QUERY")
           # status: not_due(시각 아님) / already_sent / no_new(새 의견 없음) / sent
           echo "HTTP $status"
           cat digest.json; echo
