@@ -34,6 +34,10 @@ interface FridgeQuickAddProps {
 // 눌러도 입력창의 포커스를 유지해서 모바일 키보드가 닫히지 않게 한다
 const keepInputFocus = (e: React.MouseEvent) => e.preventDefault();
 
+// 유통기한을 넣지 않고 등록하면 서버가 권장 보관 기간으로 채운다 (app/lib/items/storageGuide.ts)
+export const EXPIRY_FILLED_NOTICE =
+  '유통기한은 권장 기간으로 채웠어요. 다르면 바꿔 주세요';
+
 const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   category,
   items,
@@ -46,10 +50,10 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const [name, setName] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
-  const [photoNotice, setPhotoNotice] = useState('');
+  const [notice, setNotice] = useState('');
   const cameraRef = useRef<HTMLInputElement>(null);
   const openCamera = () => {
-    setPhotoNotice('');
+    setNotice('');
     cameraRef.current?.click();
   };
   const trimmedName = name.trim();
@@ -67,6 +71,8 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
         onSuccess: item => {
           onSuccess?.();
           onAdded?.(item.id);
+          // 서버가 권장 보관 기간으로 유통기한을 채웠다는 것을 알린다 (참고값이라 고칠 수 있다고 함께 안내)
+          setNotice(EXPIRY_FILLED_NOTICE);
         },
       },
     );
@@ -204,12 +210,14 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
         onRetake={openCamera}
         onAdded={count => {
           setPhoto(null);
-          setPhotoNotice(`사진에서 찾은 식재료 ${count}개를 넣었어요`);
+          setNotice(
+            `사진에서 찾은 식재료 ${count}개를 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
+          );
         }}
       />
-      {photoNotice && (
+      {notice && (
         <p role="status" className="mt-2 text-center text-xs text-[#553C9A]">
-          {photoNotice}
+          {notice}
         </p>
       )}
       {createItem.isError && (

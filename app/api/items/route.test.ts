@@ -187,7 +187,28 @@ describe('POST /api/items', () => {
       name: '우유',
       category: 'fridge',
       quantity: 1,
+      // 유통기한을 비워 두면 권장 보관 기간(우유 냉장 5일)으로 채운다
+      expiryDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
+  });
+
+  it('유통기한을 비워 두면 오늘(한국 날짜)부터 권장 일수 뒤로 채우고, 직접 넣은 날짜는 그대로 둔다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    // 2026-11-08 09:00 KST
+    vi.setSystemTime(new Date('2026-11-08T00:00:00Z'));
+    mocks.createItem.mockResolvedValue(toItemJson(row));
+    const post = (body: object) =>
+      POST(
+        jsonRequest(JSON.stringify({ quantity: 1, fridgeId: '5', ...body })),
+      );
+
+    await post({ name: '두부', category: 'fridge' });
+    await post({ name: '두부', category: 'fridge', expiryDate: '2026-11-20' });
+    vi.useRealTimers();
+
+    expect(mocks.createItem.mock.calls.map(call => call[2].expiryDate)).toEqual(
+      ['2026-11-11', '2026-11-20'],
+    );
   });
 
   it('구성원이 아닌 냉장고에는 넣지 않고 404다', async () => {
