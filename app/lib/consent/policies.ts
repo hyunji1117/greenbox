@@ -86,6 +86,12 @@ export function upcomingPolicy(now: number = Date.now()): PolicyRelease | null {
   return POLICY_RELEASES.find(r => effectiveTime(r) > now) ?? null;
 }
 
+// 바로 이전 방침 버전. 첫 방침이면 null
+export function previousPolicyVersion(version: string): string | null {
+  const index = POLICY_RELEASES.findIndex(r => r.version === version);
+  return index > 0 ? POLICY_RELEASES[index - 1].version : null;
+}
+
 export function findPolicy(version: string): PolicyRelease | null {
   return POLICY_RELEASES.find(r => r.version === version) ?? null;
 }
@@ -102,13 +108,11 @@ export const CONSENT_ITEMS: {
   type: ConsentType;
   label: string;
   required: boolean;
-  href?: string;
 }[] = [
   {
     type: 'privacy_collection',
     label: '개인정보 수집·이용 동의',
     required: true,
-    href: '/privacy',
   },
   {
     type: 'age_over_14',

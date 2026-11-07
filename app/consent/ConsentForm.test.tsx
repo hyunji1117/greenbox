@@ -13,27 +13,32 @@ vi.mock('@/app/auth/actions', () => ({
 describe('ConsentForm', () => {
   afterEach(cleanup);
 
-  it('바뀐 방침에 다시 동의할 때는 바뀐 점과 탈퇴 요청 방법을 보여 준다', () => {
+  it('다시 동의할 때는 바뀐 방침 링크와 로그아웃을 한 줄에 두고 탈퇴를 권하지 않는다', () => {
     render(
       <ConsentForm
         email="a@example.com"
         isFirstLogin={false}
-        changes={['첫째 변경', '둘째 변경']}
+        changedSince="2026-10-02"
       />,
     );
-    const changes = screen.getByRole('region', { name: '무엇이 바뀌었나요' });
-    expect(changes.querySelectorAll('li')).toHaveLength(2);
     expect(
-      screen.getByRole('link', { name: '탈퇴 요청하기' }).getAttribute('href'),
-    ).toMatch(/^mailto:/);
-    expect(
-      screen.getByRole('button', { name: '동의하지 않고 로그아웃' }),
-    ).toBeTruthy();
+      screen
+        .getByRole('link', { name: '바뀐 개인정보처리방침 보기' })
+        .getAttribute('href'),
+    ).toBe('/privacy?changedSince=2026-10-02');
+    expect(screen.getByRole('button', { name: '로그아웃' })).toBeTruthy();
+    expect(screen.getByText(/계정으로 이용하고 있어요/)).toBeTruthy();
+    expect(screen.queryByText(/탈퇴/)).toBeNull();
   });
 
-  it('처음 가입할 때는 바뀐 점과 탈퇴 요청을 보이지 않는다', () => {
-    render(<ConsentForm email={null} isFirstLogin changes={[]} />);
-    expect(screen.queryByRole('region')).toBeNull();
-    expect(screen.queryByRole('link', { name: '탈퇴 요청하기' })).toBeNull();
+  it('처음 가입할 때는 일반 방침 링크와 나가기를 둔다', () => {
+    render(<ConsentForm email="a@example.com" isFirstLogin />);
+    expect(
+      screen
+        .getByRole('link', { name: '개인정보처리방침' })
+        .getAttribute('href'),
+    ).toBe('/privacy');
+    expect(screen.getByRole('button', { name: '나가기' })).toBeTruthy();
+    expect(screen.getByText(/계정으로 가입해요/)).toBeTruthy();
   });
 });

@@ -1,9 +1,8 @@
 'use client';
 // app/components/auth/ConsentChecklist.tsx
-// 개인정보 동의 체크리스트 (로그인 화면, 동의 화면에서 같이 쓴다)
+// 개인정보 동의 체크리스트. 방침 원문은 화면 맨 아래 링크 하나로 연다 (같은 화면을 가리키는 링크를 두 번 두지 않는다)
 
 import React from 'react';
-import Link from 'next/link';
 import { CONSENT_ITEMS, type ConsentType } from '@/app/lib/consent/policies';
 
 interface ConsentChecklistProps {
@@ -39,7 +38,7 @@ const ConsentChecklist: React.FC<ConsentChecklistProps> = ({
         전체 동의
       </label>
       {CONSENT_ITEMS.map(item => (
-        <div key={item.type} className="flex items-center justify-between">
+        <div key={item.type}>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
@@ -56,15 +55,6 @@ const ConsentChecklist: React.FC<ConsentChecklistProps> = ({
               {item.label}
             </span>
           </label>
-          {item.href && (
-            <Link
-              href={item.href}
-              target="_blank"
-              className="text-xs text-gray-500 underline"
-            >
-              보기
-            </Link>
-          )}
         </div>
       ))}
     </div>
