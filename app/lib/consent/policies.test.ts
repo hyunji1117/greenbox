@@ -6,6 +6,7 @@ import {
   POLICY_RELEASES,
   currentPolicyVersion,
   latestPolicyVersion,
+  previousPolicyVersion,
   policyDateLabel,
   recentAmendment,
   upcomingPolicy,
@@ -49,6 +50,12 @@ describe('개인정보처리방침 버전', () => {
     for (const release of POLICY_RELEASES) {
       expect(release.effectiveAt.slice(0, 10)).toBe(release.version);
     }
+  });
+
+  it('바로 이전 방침 버전을 찾는다', () => {
+    expect(previousPolicyVersion('2026-11-06')).toBe('2026-11-05');
+    expect(previousPolicyVersion('2026-10-02')).toBeNull();
+    expect(previousPolicyVersion('없는 버전')).toBeNull();
   });
 
   it('시행일을 읽기 쉽게 표시한다', () => {

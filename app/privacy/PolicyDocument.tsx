@@ -8,6 +8,7 @@ import {
   POLICY_RELEASES,
   latestPolicyVersion,
   policyDateLabel,
+  previousPolicyVersion,
   upcomingPolicy,
 } from '@/app/lib/consent/policies';
 import PolicyBackButton from './PolicyBackButton';
@@ -15,15 +16,24 @@ import { POLICY_BODIES } from './versions';
 
 interface PolicyDocumentProps {
   version: string;
+  // 이 버전 뒤에 바뀐 문장을 빨간색으로 보여 준다
+  changedSince?: string;
 }
 
-export default function PolicyDocument({ version }: PolicyDocumentProps) {
+export default function PolicyDocument({
+  version,
+  changedSince,
+}: PolicyDocumentProps) {
   const Body = POLICY_BODIES[version];
   const current = latestPolicyVersion();
   const upcoming = upcomingPolicy();
   const isCurrent = version === current;
   const isUpcoming = upcoming?.version === version;
-  const others = POLICY_RELEASES.filter(r => r.version !== version).reverse();
+  // 다른 버전은 바로 이전 방침만 보여 준다. 지난 방침을 보고 있으면 현재 방침으로 돌아갈 길도 둔다
+  const previous = previousPolicyVersion(version);
+  const others = POLICY_RELEASES.filter(
+    r => r.version === previous || (r.version === current && !isCurrent),
+  ).reverse();
 
   return (
     <main className="min-h-screen bg-gray-50 px-3 pb-8 sm:px-4">
@@ -79,7 +89,7 @@ export default function PolicyDocument({ version }: PolicyDocumentProps) {
           <p className="text-xs text-gray-400">시행일: {version}</p>
         </header>
 
-        <Body />
+        <Body changedSince={changedSince} />
 
         {others.length > 0 && (
           <footer className="space-y-1 border-t border-gray-100 pt-4">

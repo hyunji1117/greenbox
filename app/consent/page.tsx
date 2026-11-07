@@ -8,7 +8,7 @@ import { auth } from '@/auth';
 import AuthShell from '@/app/components/auth/AuthShell';
 import ConsentForm from './ConsentForm';
 import { APP_NAME } from '@/app/lib/brand';
-import { currentPolicy } from '@/app/lib/consent/policies';
+import { findPolicy } from '@/app/lib/consent/policies';
 
 export const metadata: Metadata = {
   title: '이용 동의',
@@ -19,9 +19,17 @@ export default async function ConsentPage() {
   if (!session?.user) redirect('/login');
 
   const isFirstLogin = !session.registered;
+  // 다시 동의하는 사람에게만 마지막으로 동의한 뒤 바뀐 부분을 방침에서 표시한다
+  const changedSince =
+    !isFirstLogin &&
+    session.consentVersion &&
+    findPolicy(session.consentVersion)
+      ? session.consentVersion
+      : undefined;
 
   return (
     <AuthShell
+      hideFooter
       title={isFirstLogin ? '처음 오셨네요' : '개인정보처리방침이 바뀌었어요'}
       description={
         isFirstLogin ? (
@@ -30,20 +38,13 @@ export default async function ConsentPage() {
             <br />
             아래 필수 항목에 동의해 주세요.
           </>
-        ) : (
-          <>
-            바뀐 방침을 확인하고
-            <br />
-            다시 동의하면 계속 이용할 수 있어요.
-          </>
-        )
+        ) : undefined
       }
     >
       <ConsentForm
         email={session.user.email ?? null}
         isFirstLogin={isFirstLogin}
-        // 다시 동의하는 사람에게만 무엇이 바뀌었는지 보여 준다
-        changes={isFirstLogin ? [] : currentPolicy().changes}
+        changedSince={changedSince}
       />
     </AuthShell>
   );
