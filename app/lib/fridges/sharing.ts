@@ -325,6 +325,13 @@ export async function decideRequest(
          VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING`,
         [fridgeId, Number(requester)],
       );
+      // 초대가 이뤄졌으니 링크를 바로 끈다. 같은 링크가 다른 곳에 퍼져도 더 들어올 수 없게 한다
+      // (다른 사람을 더 초대하려면 새 링크를 만든다. 이미 들어온 요청은 그대로 승인할 수 있다)
+      await client.query(
+        `UPDATE fridge_invites SET revoked_at = now()
+         WHERE fridge_id = $1 AND revoked_at IS NULL`,
+        [fridgeId],
+      );
       // 초대받아 들어온 냉장고이니 요청한 사람이 다음에 앱을 열면 이 냉장고부터 보이게 한다
       // (지금 보고 있는 화면은 바꾸지 않는다: resolveCurrentFridge의 keepFridgeId)
       await client.query(`UPDATE users SET last_fridge_id = $1 WHERE id = $2`, [
