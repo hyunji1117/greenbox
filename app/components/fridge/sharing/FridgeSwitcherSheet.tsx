@@ -105,8 +105,8 @@ const FridgeSwitcherSheet: React.FC<FridgeSwitcherSheetProps> = ({
         </p>
       )}
       <p className="mt-2 px-1 text-xs text-gray-500">
-        냉장고는 5개까지 함께 쓸 수 있어요. 다른 냉장고는 가족에게 받은 초대
-        링크로 들어가요.
+        냉장고는 5개까지 함께 쓸 수 있어요. 다른 냉장고는 초대받은 링크로
+        들어가요.
       </p>
 
       <div className={`mt-4 p-4 ${SURFACE}`}>

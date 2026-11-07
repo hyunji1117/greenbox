@@ -33,7 +33,7 @@ export default async function JoinPage({
           <>
             링크가 만료됐거나 새 링크로 바뀌었어요.
             <br />
-            초대한 가족에게 새 링크를 받아 주세요.
+            초대한 분께 새 링크를 받아 주세요.
           </>
         }
       >
@@ -53,7 +53,7 @@ export default async function JoinPage({
 
   return (
     <AuthShell
-      title={`${preview.fridgeName ?? '가족 냉장고'}에 초대받았어요`}
+      title={`${preview.fridgeName ?? '함께 쓰는 냉장고'}에 초대받았어요`}
       description={
         <>
           지금 {preview.memberCount}명이 함께 보고 있어요.

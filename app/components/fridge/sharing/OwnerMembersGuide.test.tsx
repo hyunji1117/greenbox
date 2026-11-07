@@ -47,9 +47,12 @@ describe('OwnerMembersGuide', () => {
       />,
     );
     expect(guide()?.textContent).toContain(
-      '엄마님이 이 냉장고를 함께 보고 있어요',
+      '엄마님과 이 냉장고를 함께 쓰고 있어요',
     );
-    expect(guide()?.textContent).toContain('언제든 내보낼 수 있어요');
+    expect(guide()?.textContent).toContain(
+      '누구와 함께 쓸지 언제든 직접 고를 수 있어요',
+    );
+    expect(guide()?.textContent).not.toContain('내보낼');
   });
 
   it('다른 안내나 시트가 떠 있으면 기다린다', () => {
@@ -124,10 +127,10 @@ describe('OwnerMembersGuide', () => {
         onOpenMembers={() => {}}
       />,
     );
-    expect(guide()?.textContent).toContain('엄마님 외 1명이');
+    expect(guide()?.textContent).toContain('엄마님 외 1명과');
   });
 
-  it('함께 보는 사람 보기를 누르면 목록을 열고 안내는 확인한 것으로 한다', () => {
+  it('함께 쓰는 사람 보기를 누르면 목록을 열고 안내는 확인한 것으로 한다', () => {
     const onOpenMembers = vi.fn();
     render(
       <OwnerMembersGuide
@@ -138,7 +141,7 @@ describe('OwnerMembersGuide', () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole('button', { name: '함께 보는 사람 보기' }),
+      screen.getByRole('button', { name: '함께 쓰는 사람 보기' }),
     );
     expect(onOpenMembers).toHaveBeenCalledOnce();
     expect(guide()).toBeNull();
@@ -146,8 +149,8 @@ describe('OwnerMembersGuide', () => {
 });
 
 describe('watchersLabel', () => {
-  it('이름이 없으면 가족으로 부른다', () => {
-    expect(watchersLabel([null])).toBe('가족님이');
-    expect(watchersLabel(['엄마', '아빠', null])).toBe('엄마님 외 2명이');
+  it('이름이 없으면 함께 쓰는 분으로 부른다', () => {
+    expect(watchersLabel([null])).toBe('함께 쓰는 분과');
+    expect(watchersLabel(['엄마', '아빠', null])).toBe('엄마님 외 2명과');
   });
 });

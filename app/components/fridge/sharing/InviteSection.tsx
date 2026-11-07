@@ -1,6 +1,6 @@
 'use client';
 // app/components/fridge/sharing/InviteSection.tsx
-// 가족 초대 링크 만들기, 공유, 복사, 끄기
+// 함께 쓸 사람 초대 링크 만들기, 공유, 복사, 끄기 (가족뿐 아니라 함께 사는 친구도 초대할 수 있다)
 // 링크는 24시간만 쓸 수 있고, 새로 만들면 이전 링크는 바로 쓸 수 없다. 링크로 들어와도 승인해야 들어온다
 // 참여를 승인하면 링크는 서버가 자동으로 끈다 (app/lib/fridges/sharing.ts decideRequest)
 
@@ -68,7 +68,7 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
   return (
     <section>
       <h3 className="mb-2 px-1 text-sm font-semibold text-gray-700">
-        가족 초대
+        함께 쓸 사람 초대
       </h3>
       <div className={`space-y-3 p-4 ${SURFACE}`}>
         {invite.isPending ? (
@@ -125,8 +125,9 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
         ) : (
           <>
             <p className="text-sm leading-relaxed text-gray-600">
-              링크를 받은 가족이 참여를 요청하면, 여기서 승인한 뒤에 함께 볼 수
-              있어요. 링크는 24시간 동안 쓸 수 있고, 승인하면 자동으로 꺼져요.
+              냉장고에 함께 쓸 사람을 초대해 공유해 보세요. 링크를 받은 사람이
+              참여를 요청하면 여기서 승인한 뒤 함께 볼 수 있어요. 링크는 24시간
+              동안 쓸 수 있고, 승인하면 자동으로 꺼져요.
             </p>
             <button
               type="button"
