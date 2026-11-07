@@ -2,6 +2,7 @@
 // app/components/fridge/sharing/InviteSection.tsx
 // 가족 초대 링크 만들기, 공유, 복사, 끄기
 // 링크는 24시간만 쓸 수 있고, 새로 만들면 이전 링크는 바로 쓸 수 없다. 링크로 들어와도 승인해야 들어온다
+// 참여를 승인하면 링크는 서버가 자동으로 끈다 (app/lib/fridges/sharing.ts decideRequest)
 
 import React, { useState } from 'react';
 import { track } from '@/app/lib/analytics/gtag';
@@ -79,7 +80,7 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
             </p>
             <p className="text-xs text-gray-500">
               {formatExpiry(invite.data.expiresAt)} 쓸 수 있어요. 링크로 들어온
-              사람은 승인해야 들어와요.
+              사람은 승인해야 들어오고, 승인하면 링크는 자동으로 꺼져요.
             </p>
             <div className="flex gap-2">
               {canShare && (
@@ -125,7 +126,7 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
           <>
             <p className="text-sm leading-relaxed text-gray-600">
               링크를 받은 가족이 참여를 요청하면, 여기서 승인한 뒤에 함께 볼 수
-              있어요. 링크는 24시간 동안 쓸 수 있어요.
+              있어요. 링크는 24시간 동안 쓸 수 있고, 승인하면 자동으로 꺼져요.
             </p>
             <button
               type="button"
