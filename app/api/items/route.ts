@@ -2,6 +2,8 @@
 // 냉장고 품목 목록 조회와 등록. 어느 냉장고인지는 요청마다 밝히고, 서버가 구성원인지 확인한다
 
 import { NextResponse } from 'next/server';
+import { recommendedExpiryDate } from '@/app/lib/items/storageGuide';
+import { koreaClock } from '@/app/lib/notifications/schedule';
 import { createItem, listItems } from '@/app/lib/items/store';
 import {
   CreateItemRequestSchema,
@@ -44,6 +46,14 @@ export async function POST(request: Request) {
   const member = await requireFridgeMember(userId, fridgeId);
   if (member.response) return member.response;
 
-  const item = await createItem(fridgeId, userId, input);
+  // 유통기한을 비워 두면 권장 보관 기간으로 채운다 (직접 넣은 날짜가 우선, 나중에 고칠 수 있음)
+  const expiryDate =
+    input.expiryDate ??
+    recommendedExpiryDate(
+      input.name,
+      input.category,
+      koreaClock(new Date()).date,
+    );
+  const item = await createItem(fridgeId, userId, { ...input, expiryDate });
   return NextResponse.json(item, { status: 201, headers: NO_STORE });
 }
