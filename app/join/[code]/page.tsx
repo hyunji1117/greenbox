@@ -9,6 +9,7 @@ import { currentPolicyVersion } from '@/app/lib/consent/policies';
 import { getInvitePreview } from '@/app/lib/fridges/sharing';
 import { getFridgeRole } from '@/app/lib/fridges/store';
 import type { JoinPageState } from '@/app/lib/analytics/gtag';
+import JoinDescription from './JoinDescription';
 import JoinActions from './JoinActions';
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default async function JoinPage({
   if (!preview) {
     return (
       <AuthShell
+        strongPrivacyLink
         title="쓸 수 없는 초대 링크예요"
         description={
           <>
@@ -55,13 +57,9 @@ export default async function JoinPage({
     <AuthShell
       title={`${preview.fridgeName ?? '함께 쓰는 냉장고'}에 초대받았어요`}
       description={
-        <>
-          지금 {preview.memberCount}명이 함께 보고 있어요.
-          <br />
-          참여를 요청하면 구성원이 승인한 뒤에 품목, 유통기한, 댓글을 함께 볼 수
-          있어요.
-        </>
+        <JoinDescription code={code} canRequest={state === 'can_request'} />
       }
+      strongPrivacyLink
     >
       <JoinActions
         code={code}

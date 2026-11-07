@@ -79,8 +79,7 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
               {link}
             </p>
             <p className="text-xs text-gray-500">
-              {formatExpiry(invite.data.expiresAt)} 쓸 수 있어요. 링크로 들어온
-              사람은 승인해야 들어오고, 승인하면 링크는 자동으로 꺼져요.
+              {formatExpiry(invite.data.expiresAt)} 쓸 수 있어요.
             </p>
             <div className="flex gap-2">
               {canShare && (
@@ -118,16 +117,11 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
                 링크 끄기
               </button>
             </div>
-            <p className="text-xs text-gray-400">
-              새 링크를 만들거나 끄면 이전 링크는 바로 쓸 수 없어요.
-            </p>
           </>
         ) : (
           <>
             <p className="text-sm leading-relaxed text-gray-600">
-              냉장고에 함께 쓸 사람을 초대해 공유해 보세요. 링크를 받은 사람이
-              참여를 요청하면 여기서 승인한 뒤 함께 볼 수 있어요. 링크는 24시간
-              동안 쓸 수 있고, 승인하면 자동으로 꺼져요.
+              냉장고에 함께 쓸 사람을 초대해 공유해 보세요.
             </p>
             <button
               type="button"

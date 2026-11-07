@@ -131,7 +131,8 @@ const GroceryListPage: React.FC = () => {
   };
   const onClearCompleted = async () => {
     const completed = shoppingList.filter(i => i.completed);
-    if (completed.length === 0) return toast('완료된 항목이 없습니다');
+    // 버튼 이름이 "구매 완료"라 체크 없이 누르면 무엇을 해야 하는지 알려 준다
+    if (completed.length === 0) return toast('산 식재료를 먼저 체크해 주세요');
     if (addPurchasedItems.isPending) return;
 
     // 구매한 품목은 냉장실로 넣는다. 다른 곳에 둘 품목은 나중에 옮기는 기능이 필요하다
@@ -209,7 +210,7 @@ const GroceryListPage: React.FC = () => {
       <div ref={headerRef} className="mb-4">
         <h1 className="text-xl font-semibold">장보기 리스트</h1>
         <p className="mt-1 text-sm text-balance text-gray-500">
-          구매를 완료하면 냉장고에 들어가고 구매 기록에 남아요
+          구매를 완료하고 냉장고에서 바로 관리해 보세요
         </p>
       </div>
 
@@ -226,10 +227,10 @@ const GroceryListPage: React.FC = () => {
             {shoppingList.length === 0 ? (
               <div className="px-1 pt-4 text-center">
                 <p className="text-base font-semibold text-gray-800">
-                  아직 담은 식재료가 없어요
+                  장볼 식재료가 없어요
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
-                  아래에서 찾거나 사진을 눌러 담아 주세요
+                  아래에서 찾아 담아 보세요
                 </p>
               </div>
             ) : (
@@ -310,7 +311,7 @@ const GroceryListPage: React.FC = () => {
                     ? '냉장고에 넣는 중...'
                     : completedCount > 0
                       ? `구매 완료 ${completedCount}개 냉장고에 넣기`
-                      : '장바구니에 담을 때마다 체크해 주세요'}
+                      : '구매 완료'}
                 </button>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-medium text-gray-600">
                   <button

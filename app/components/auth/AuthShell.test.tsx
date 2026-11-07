@@ -2,8 +2,13 @@
 
 import React from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import AuthShell from './AuthShell';
+
+// next/font는 빌드할 때만 동작해서 테스트에서는 글꼴 클래스만 돌려준다
+vi.mock('next/font/google', () => ({
+  Nanum_Pen_Script: () => ({ className: 'font-hand' }),
+}));
 
 describe('AuthShell 맨 아래 개인정보처리방침 링크', () => {
   afterEach(cleanup);

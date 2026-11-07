@@ -30,7 +30,7 @@ import { prepareImage } from '@/app/lib/vision/resizeImage';
 const CATEGORY_LABELS: Record<Category, string> = {
   fridge: '냉장',
   freezer: '냉동',
-  pantry: '실온',
+  pantry: '상온',
 };
 
 interface Candidate extends RecognizedItem {
