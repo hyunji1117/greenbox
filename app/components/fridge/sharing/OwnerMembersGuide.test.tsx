@@ -4,7 +4,7 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CurrentFridge } from '@/app/lib/schemas/fridge';
-import OwnerMembersGuide, { watchersLabel } from './OwnerMembersGuide';
+import OwnerMembersGuide, { joinedLabel } from './OwnerMembersGuide';
 
 const member = (userId: string, name: string | null, role = 'member') => ({
   userId,
@@ -46,11 +46,9 @@ describe('OwnerMembersGuide', () => {
         onOpenMembers={() => {}}
       />,
     );
+    expect(guide()?.textContent).toContain('엄마님이 이 냉장고에 참여했어요');
     expect(guide()?.textContent).toContain(
-      '엄마님과 이 냉장고를 함께 쓰고 있어요',
-    );
-    expect(guide()?.textContent).toContain(
-      '누구와 함께 쓸지 언제든 직접 고를 수 있어요',
+      '사람 수를 눌러 함께 쓰는 사람을 볼 수 있어요',
     );
     expect(guide()?.textContent).not.toContain('내보낼');
   });
@@ -127,7 +125,7 @@ describe('OwnerMembersGuide', () => {
         onOpenMembers={() => {}}
       />,
     );
-    expect(guide()?.textContent).toContain('엄마님 외 1명과');
+    expect(guide()?.textContent).toContain('아빠님이 이 냉장고에 참여했어요');
   });
 
   it('함께 쓰는 사람 보기를 누르면 목록을 열고 안내는 확인한 것으로 한다', () => {
@@ -148,9 +146,9 @@ describe('OwnerMembersGuide', () => {
   });
 });
 
-describe('watchersLabel', () => {
-  it('이름이 없으면 함께 쓰는 분으로 부른다', () => {
-    expect(watchersLabel([null])).toBe('함께 쓰는 분과');
-    expect(watchersLabel(['엄마', '아빠', null])).toBe('엄마님 외 2명과');
+describe('joinedLabel', () => {
+  it('이름이 없으면 새 구성원으로 부른다', () => {
+    expect(joinedLabel([null])).toBe('새 구성원이');
+    expect(joinedLabel(['엄마', '아빠', null])).toBe('엄마님 외 2명이');
   });
 });

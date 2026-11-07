@@ -61,8 +61,8 @@ const MembersSheet: React.FC<MembersSheetProps> = ({
                       </span>
                     </div>
                     <p className="text-sm leading-relaxed text-gray-600">
-                      승인하면 {name}님이 이 냉장고의 품목, 유통기한, 댓글을
-                      보게 돼요.
+                      승인하면 {name}님이 이 냉장고의 품목, 유통기한, 댓글을 볼
+                      수 있어요.
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -89,7 +89,8 @@ const MembersSheet: React.FC<MembersSheetProps> = ({
                         }
                         className={`${SMALL_BUTTON} flex-1 bg-white text-gray-700 ring-1 ring-gray-200`}
                       >
-                        거절
+                        {/* 내가 보낸 초대에 대한 요청이라 "거절"보다 부드러운 "취소"로 부른다 (하는 일은 거절) */}
+                        취소
                       </button>
                     </div>
                   </li>

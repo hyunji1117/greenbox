@@ -28,7 +28,7 @@ const LOCATION_CARDS = [
   },
   {
     id: 'pantry',
-    name: '저장고',
+    name: '상온',
     image:
       'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=720&q=80',
   },

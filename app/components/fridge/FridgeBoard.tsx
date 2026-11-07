@@ -12,6 +12,7 @@ import type { Category } from '@/app/lib/schemas/item';
 import ActionToast from '@/app/components/common/ActionToast';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
+import GroceriesIcon from '@/app/components/icons/GroceriesIcon';
 import FridgeQuickAdd from '@/app/components/fridge/FridgeQuickAdd';
 import FridgeHeader from '@/app/components/fridge/sharing/FridgeHeader';
 import NotifyFirstSheet from '@/app/components/fridge/NotifyFirstSheet';
@@ -21,13 +22,12 @@ import {
   RefrigeratorIcon,
   ShoppingBasket,
   SnowflakeIcon,
-  PackageIcon,
 } from 'lucide-react';
 
 const CATEGORY_TABS = [
   { id: 'fridge', label: '냉장실', Icon: RefrigeratorIcon },
   { id: 'freezer', label: '냉동실', Icon: SnowflakeIcon },
-  { id: 'pantry', label: '저장고', Icon: PackageIcon },
+  { id: 'pantry', label: '상온', Icon: GroceriesIcon },
 ] as const;
 
 const goToShoppingList = () => goToTab('shoppingList');
@@ -112,16 +112,11 @@ const FridgeBoard: React.FC = () => {
               <button
                 type="button"
                 onClick={goToShoppingList}
-                className="mt-3 flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-2xl bg-[#F1EDFA] px-4 py-2 text-center transition-colors hover:bg-[#E6DFF7]"
+                className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-[#F1EDFA] px-4 text-sm font-semibold whitespace-nowrap text-[#553C9A] transition-colors hover:bg-[#E6DFF7]"
               >
-                <span className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap text-[#553C9A]">
-                  <ShoppingBasket size={18} className="shrink-0" />
-                  새로 살 땐 리스트에 담기
-                  <ChevronRightIcon size={16} className="shrink-0" />
-                </span>
-                <span className="text-xs text-balance text-[#6B5B95]">
-                  자주 사는 품목이 기록으로 남아요
-                </span>
+                <ShoppingBasket size={18} className="shrink-0" />
+                새로 살 땐 리스트에 담기
+                <ChevronRightIcon size={16} className="shrink-0" />
               </button>
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredItems.map(item => (

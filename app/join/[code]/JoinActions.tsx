@@ -136,12 +136,13 @@ const JoinActions: React.FC<JoinActionsProps> = ({ code, state, fridgeId }) => {
     joinStatus.data?.status === 'pending'
   ) {
     return (
-      <div className="space-y-3">
+      // 안내 내용과 아래 버튼(과 방침 링크) 묶음 사이를 제목과 내용처럼 띄운다
+      <div className="space-y-8">
         <p className="rounded-2xl bg-white p-4 text-center text-sm leading-relaxed text-gray-700">
-          참여를 요청했어요.
+          승인을 요청 중이에요. 잠시만 기다려 주세요.
           <br />
-          구성원이 승인하면 이 화면이 바로 바뀌고 알림도 보내 드려요. 요청은
-          24시간 동안 유지돼요.
+          <span className="font-semibold text-[#6B46C1]">초대자</span>가
+          승인하면 함께 쓸 수 있어요.
         </p>
         <Link href="/" className={SECONDARY}>
           내 냉장고로 가기

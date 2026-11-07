@@ -211,9 +211,14 @@ export function useMyJoinStatus(code: string, enabled: boolean) {
 }
 
 // 참여 화면에서 요청 보내기
+export const joinRequestKey = (code: string) =>
+  [...fridgeKeys.all, 'join-request', code] as const;
+
 export function useRequestJoin(code: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    // 참여 화면의 설명이 요청을 보내는 중인지 알 수 있게 이름을 붙인다
+    mutationKey: joinRequestKey(code),
     mutationFn: () =>
       apiFetch(
         `/api/join/${encodeURIComponent(code)}`,

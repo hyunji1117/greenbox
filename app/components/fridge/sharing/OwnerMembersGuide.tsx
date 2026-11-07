@@ -38,12 +38,12 @@ export function unseenMembers<T extends { userId: string }>(
   return others.filter(member => !seenIds.includes(member.userId));
 }
 
-// "엄마님과" / "엄마님 외 2명과". 이름이 없으면 "함께 쓰는 분과"
-export function watchersLabel(names: (string | null)[]): string {
+// "엄마님이" / "엄마님 외 2명이". 이름이 없으면 "새 구성원이"
+export function joinedLabel(names: (string | null)[]): string {
   const [first, ...rest] = names.map(name =>
-    name ? `${name}님` : '함께 쓰는 분',
+    name ? `${name}님` : '새 구성원',
   );
-  return rest.length > 0 ? `${first} 외 ${rest.length}명과` : `${first}과`;
+  return rest.length > 0 ? `${first} 외 ${rest.length}명이` : `${first}이`;
 }
 
 interface OwnerMembersGuideProps {
@@ -85,8 +85,9 @@ const OwnerMembersGuide: React.FC<OwnerMembersGuideProps> = ({
   return (
     <SpotlightGuide
       target={target}
-      title={`${watchersLabel(others.map(m => m.name))} 이 냉장고를 함께 쓰고 있어요`}
-      body="품목, 유통기한, 댓글을 함께 볼 수 있어요. 위의 사람 수를 누르면 누구와 함께 쓸지 언제든 직접 고를 수 있어요."
+      // 새로 들어온 사람만 알린다 (이미 확인한 사람은 다시 부르지 않는다)
+      title={`${joinedLabel(unseenMembers(others, seenIds).map(m => m.name))} 이 냉장고에 참여했어요`}
+      body="사람 수를 눌러 함께 쓰는 사람을 볼 수 있어요."
       primaryLabel="함께 쓰는 사람 보기"
       spotLabel="함께 쓰는 사람 열기"
       spotShape="rounded-full"
