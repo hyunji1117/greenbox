@@ -1,6 +1,7 @@
 'use client';
 // app/components/fridge/sharing/OwnerMembersGuide.tsx
-// 냉장고를 만든 사람에게 "누가 함께 보고 있는지"와 내보내는 방법을 알린다
+// 냉장고를 만든 사람에게 누구와 함께 쓰고 있는지 알리고, 함께 쓸 사람을 직접 고를 수 있다고 안내한다
+// 내보내기를 앞세우면 함께 쓰는 사람을 경계하는 말로 들려, 고르는 쪽으로 안내한다
 // 배경을 살짝 어둡게 하고 위쪽 "N명" 버튼만 비춘다 (냉장고 바꾸기 안내와 같은 모양)
 // 가족이 대신 초대하고 승인해 줬어도 만든 사람이 직접 알 수 있게 한다 (가족 응답 26.11.06)
 // 확인하면 사라지고, 새로운 사람이 들어오면 다시 보인다 (기기별로 기억)
@@ -37,10 +38,12 @@ export function unseenMembers<T extends { userId: string }>(
   return others.filter(member => !seenIds.includes(member.userId));
 }
 
-// "엄마님이" / "엄마님 외 2명이"
+// "엄마님과" / "엄마님 외 2명과". 이름이 없으면 "함께 쓰는 분과"
 export function watchersLabel(names: (string | null)[]): string {
-  const [first, ...rest] = names.map(name => name ?? '가족');
-  return rest.length > 0 ? `${first}님 외 ${rest.length}명이` : `${first}님이`;
+  const [first, ...rest] = names.map(name =>
+    name ? `${name}님` : '함께 쓰는 분',
+  );
+  return rest.length > 0 ? `${first} 외 ${rest.length}명과` : `${first}과`;
 }
 
 interface OwnerMembersGuideProps {
@@ -82,10 +85,10 @@ const OwnerMembersGuide: React.FC<OwnerMembersGuideProps> = ({
   return (
     <SpotlightGuide
       target={target}
-      title={`${watchersLabel(others.map(m => m.name))} 이 냉장고를 함께 보고 있어요`}
-      body="품목, 유통기한, 댓글이 함께 보여요. 위의 사람 수를 누르면 누가 보는지 확인하고, 원하지 않으면 언제든 내보낼 수 있어요."
-      primaryLabel="함께 보는 사람 보기"
-      spotLabel="함께 보는 사람 열기"
+      title={`${watchersLabel(others.map(m => m.name))} 이 냉장고를 함께 쓰고 있어요`}
+      body="품목, 유통기한, 댓글을 함께 볼 수 있어요. 위의 사람 수를 누르면 누구와 함께 쓸지 언제든 직접 고를 수 있어요."
+      primaryLabel="함께 쓰는 사람 보기"
+      spotLabel="함께 쓰는 사람 열기"
       spotShape="rounded-full"
       onPrimary={() => {
         acknowledge();

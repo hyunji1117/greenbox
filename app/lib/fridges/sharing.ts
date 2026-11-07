@@ -170,7 +170,7 @@ export async function revokeInvites(fridgeId: string): Promise<void> {
 
 export interface InvitePreview {
   fridgeId: string;
-  // 이름을 바꾸지 않은 냉장고면 null (참여 화면이 "가족 냉장고"로 부른다)
+  // 이름을 바꾸지 않은 냉장고면 null (참여 화면이 "함께 쓰는 냉장고"로 부른다)
   fridgeName: string | null;
   memberCount: number;
 }
@@ -485,7 +485,8 @@ export async function getNamesForNotice(
     [fridgeId, Number(userId)],
   );
   return {
-    fridgeName: rows[0]?.fridge_name ?? '가족 냉장고',
-    userName: rows[0]?.user_name ?? '가족',
+    fridgeName: rows[0]?.fridge_name ?? '함께 쓰는 냉장고',
+    // 알림 문구가 "OO님이"라서 이름이 없을 때도 "님"이 자연스러운 말을 쓴다
+    userName: rows[0]?.user_name ?? '새 구성원',
   };
 }
