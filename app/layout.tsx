@@ -8,6 +8,7 @@ import PushSubscriber from './_client/PushSubscriber';
 import Analytics from './_client/Analytics';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
+import DevServerBadge from '@/app/components/common/DevServerBadge';
 
 // 외부 CSS로 불러오면 글꼴 CSS를 받을 때까지 화면이 멈추고, 글꼴이 올 때까지 글자가 보이지 않는다.
 // 빌드할 때 내려받아 같은 도메인에서 제공하고, 크기를 맞춘 대체 글꼴로 먼저 그려 글꼴 교체 때 화면이 밀리지 않게 한다.
@@ -50,6 +51,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content={APP_SHORT_NAME} />
       </head>
       <body>
+        <DevServerBadge />
         <Analytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
 
         <PushSubscriber />
