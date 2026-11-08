@@ -25,7 +25,10 @@ import {
   recipeCacheKey,
   toRecipeJson,
 } from '@/app/lib/recipes/today';
-import { TodayRecipeRequestSchema } from '@/app/lib/schemas/recipe';
+import {
+  TodayRecipeQuerySchema,
+  TodayRecipeRequestSchema,
+} from '@/app/lib/schemas/recipe';
 
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
@@ -39,7 +42,7 @@ async function load(userId: string, fridgeId: string) {
 export async function GET(request: Request) {
   const { userId, response } = await requireUser();
   if (response) return response;
-  const parsed = TodayRecipeRequestSchema.safeParse({
+  const parsed = TodayRecipeQuerySchema.safeParse({
     fridgeId: new URL(request.url).searchParams.get('fridgeId'),
   });
   if (!parsed.success) return notFound();

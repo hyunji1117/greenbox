@@ -32,7 +32,14 @@ describe('개인정보처리방침 버전', () => {
     expect(currentPolicyVersion(amended)).toBe('2026-11-05');
     expect(latestPolicyVersion(amended)).toBe('2026-11-06');
     expect(recentAmendment(amended)?.version).toBe('2026-11-06');
-    expect(recentAmendment(at('2026-11-13T00:00:00+09:00'))).toBeNull();
+    // 11월 9일 개정(레시피)도 다시 동의받지 않는 변경이라 그 뒤 7일 동안 알린다
+    expect(currentPolicyVersion(at('2026-11-10T09:00:00+09:00'))).toBe(
+      '2026-11-05',
+    );
+    expect(recentAmendment(at('2026-11-13T00:00:00+09:00'))?.version).toBe(
+      '2026-11-09',
+    );
+    expect(recentAmendment(at('2026-11-16T00:00:00+09:00'))).toBeNull();
     expect(recentAmendment(at('2026-11-05T23:59:59+09:00'))).toBeNull();
   });
 

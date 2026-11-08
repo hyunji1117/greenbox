@@ -25,6 +25,8 @@ type EventParams = {
   comment_edited: undefined;
   // 초간단 레시피. 재료 이름은 보내지 않는다
   recipe_made: undefined;
+  // 레시피를 처음 쓸 때 해외 AI로 품목 이름을 보내는 데 동의
+  recipe_consent_agreed: undefined;
   recipe_opened: undefined;
   recipe_step_image_opened: undefined;
   recipe_missing_added: { count: number };

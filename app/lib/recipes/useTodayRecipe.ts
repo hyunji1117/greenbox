@@ -36,7 +36,7 @@ export function useMakeRecipe() {
     mutationFn: () =>
       apiFetch('/api/recipes/today', RecipeSchema, {
         method: 'POST',
-        body: { fridgeId },
+        body: { fridgeId, agreed: true },
       }),
     onSuccess: recipe => {
       track('recipe_made');

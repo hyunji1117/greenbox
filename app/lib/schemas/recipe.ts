@@ -33,8 +33,15 @@ export const TodayRecipeSchema = z.discriminatedUnion('available', [
 ]);
 export type TodayRecipe = z.infer<typeof TodayRecipeSchema>;
 
-export const TodayRecipeRequestSchema = z.object({
+// 저장된 레시피 찾기 (GET). 해외로 보내지 않으므로 동의 표시가 필요 없다
+export const TodayRecipeQuerySchema = z.object({
   fridgeId: z.string().regex(/^\d{1,18}$/),
+});
+
+// 새로 만들기 (POST)
+export const TodayRecipeRequestSchema = TodayRecipeQuerySchema.extend({
+  // 품목 이름을 Anthropic, OpenAI(미국)로 보내는 데 동의했는지. 레시피를 처음 만들거나 열 때 받는다
+  agreed: z.literal(true),
 });
 
 // 레시피 그림 자리: 0은 완성 사진, 1부터 단계

@@ -42,7 +42,21 @@ export const POLICY_RELEASES: readonly PolicyRelease[] = [
     // 의견 보내기는 원하는 사람만 쓰고, 보낼 때 따로 동의를 받는다
     requiresConsent: false,
   },
+  {
+    version: '2026-11-09',
+    effectiveAt: '2026-11-09T00:00:00+09:00',
+    changes: [
+      '레시피를 만들면 품목 이름을 Anthropic, OpenAI(미국)로 보내요',
+      '먹은 개수와 알림을 눌러 연 기록을 함께 저장해요',
+      '화면 오류와 성능 기록을 누구의 것인지 없이 90일 보관해요',
+    ],
+    // 레시피는 원하는 사람만 쓰고, 처음 만들거나 열 때 따로 동의를 받는다
+    requiresConsent: false,
+  },
 ];
+
+// 레시피(품목 이름을 해외 AI로 보냄)를 방침에 넣은 버전. 이 버전이 시행되면 모두에게 연다
+export const RECIPE_POLICY_VERSION = '2026-11-09';
 
 const effectiveTime = (release: PolicyRelease) =>
   new Date(release.effectiveAt).getTime();

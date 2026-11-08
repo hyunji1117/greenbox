@@ -13,21 +13,25 @@ import PolicyNoticeBanner from './PolicyNoticeBanner';
 const at = (date: string) => new Date(date).getTime();
 
 describe('policyNoticeVersion', () => {
-  it('시행 전과 다시 동의받지 않는 변경 뒤 7일 동안 알릴 버전을 고른다', () => {
+  it('시행 전에는 다가올 버전을, 다시 동의받지 않는 변경 뒤 7일 동안은 그 버전을 고른다', () => {
     expect(
       policyNoticeVersion(undefined, at('2026-11-01T09:00:00+09:00')),
     ).toBe('2026-11-05');
+    // 11월 9일 개정을 미리 알리는 동안에는 그 버전을 먼저 알린다
     expect(
-      policyNoticeVersion(undefined, at('2026-11-06T09:00:00+09:00')),
-    ).toBe('2026-11-06');
+      policyNoticeVersion(undefined, at('2026-11-08T09:00:00+09:00')),
+    ).toBe('2026-11-09');
     expect(
-      policyNoticeVersion(undefined, at('2026-11-14T09:00:00+09:00')),
+      policyNoticeVersion(undefined, at('2026-11-12T09:00:00+09:00')),
+    ).toBe('2026-11-09');
+    expect(
+      policyNoticeVersion(undefined, at('2026-11-16T09:00:00+09:00')),
     ).toBeNull();
   });
 
   it('닫은 버전은 쿠키 기록을 보고 처음부터 빼고 그린다', () => {
     expect(
-      policyNoticeVersion('2026-11-06', at('2026-11-06T09:00:00+09:00')),
+      policyNoticeVersion('2026-11-09', at('2026-11-12T09:00:00+09:00')),
     ).toBeNull();
   });
 });

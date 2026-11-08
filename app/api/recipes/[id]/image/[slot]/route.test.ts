@@ -86,8 +86,12 @@ describe('/api/recipes/[id]/image/[slot]', () => {
     mocks.countRecentGenerations.mockResolvedValue(20);
     expect((await get('0')).status).toBe(429);
     mocks.countRecentGenerations.mockResolvedValue(0);
+    // 레시피를 넣은 방침(2026-11-09) 시행 전에는 지정한 사람만
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-08T21:00:00+09:00'));
     vi.stubEnv('RECIPE_PREVIEW_USER_IDS', '');
     expect((await get('0')).status).toBe(404);
+    vi.useRealTimers();
     expect(mocks.generateImage).not.toHaveBeenCalled();
   });
 });

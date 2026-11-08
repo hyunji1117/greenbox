@@ -98,9 +98,17 @@ describe('isRecipeAvailable', () => {
   it('방침 시행 전에는 지정한 사람에게만 열고, 켜면 모두에게 연다', () => {
     vi.stubEnv('RECIPE_PREVIEW_USER_IDS', '1, 7');
     vi.stubEnv('RECIPES_ENABLED', '');
-    expect(isRecipeAvailable('7')).toBe(true);
-    expect(isRecipeAvailable('2')).toBe(false);
+    const before = new Date('2026-11-08T21:00:00+09:00').getTime();
+    expect(isRecipeAvailable('7', before)).toBe(true);
+    expect(isRecipeAvailable('2', before)).toBe(false);
     vi.stubEnv('RECIPES_ENABLED', 'true');
-    expect(isRecipeAvailable('2')).toBe(true);
+    expect(isRecipeAvailable('2', before)).toBe(true);
+  });
+
+  it('레시피를 넣은 방침(2026-11-09)이 시행되면 모두에게 연다', () => {
+    vi.stubEnv('RECIPE_PREVIEW_USER_IDS', '7');
+    vi.stubEnv('RECIPES_ENABLED', '');
+    const after = new Date('2026-11-09T00:00:00+09:00').getTime();
+    expect(isRecipeAvailable('2', after)).toBe(true);
   });
 });
