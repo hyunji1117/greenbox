@@ -9,7 +9,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { MicIcon, SearchIcon, ShoppingBasket, XIcon } from 'lucide-react';
 import VoiceSearchBar from '@/app/components/fridge/VoiceSearchBar';
-import { SPEECH_ERROR_TEXT } from '@/app/components/grocery-list/FrequentItemsPicker';
+import { findByName } from '@/app/lib/items/nameMatch';
+import { SPEECH_ERROR_TEXT } from '@/app/lib/speech/useSpeechInput';
 import { ITEM_NAME_MAX, type Category } from '@/app/lib/schemas/item';
 import { useSpeechInput } from '@/app/lib/speech/useSpeechInput';
 
@@ -31,21 +32,9 @@ const hasFinalConsonant = (name: string) => {
   return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 !== 0;
 };
 
-// 띄어쓰기와 대소문자를 무시하고 찾는다 ("방울 토마토"로 말해도 "방울토마토"를 찾음)
-const normalize = (text: string) => text.replace(/\s+/g, '').toLowerCase();
-
+// 같은 재료의 다른 이름(계란과 달걀)과 한 글자 틀린 인식도 찾는다 (app/lib/items/nameMatch.ts)
 export function findItems<T extends SearchableItem>(items: T[], query: string) {
-  const keyword = normalize(query);
-  if (!keyword) return [];
-  const matches = items.filter(item => normalize(item.name).includes(keyword));
-  // 이름이 똑같거나 앞부분이 같은 품목을 먼저
-  return matches.sort((a, b) => {
-    const score = (item: T) => {
-      const name = normalize(item.name);
-      return name === keyword ? 0 : name.startsWith(keyword) ? 1 : 2;
-    };
-    return score(a) - score(b);
-  });
+  return findByName(items, query);
 }
 
 export const JUMP_DELAY_MS = 400;
@@ -143,14 +132,18 @@ function FridgeItemSearch<T extends SearchableItem>({
               onClick={speech.isListening ? speech.stop : speech.start}
               className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 speech.isListening
-                  ? 'bg-[#6B46C1] text-white'
-                  : 'text-[#6B46C1] hover:bg-[#F1EDFA]'
+                  ? 'bg-[#F1EDFA] text-[#6B46C1]'
+                  : 'text-[#6B46C1] active:bg-[#F1EDFA]'
               }`}
             >
+              {/* 듣는 동안 빨간 녹음 불이 깜빡인다 */}
               {speech.isListening && (
-                <span className="absolute inset-0 rounded-xl bg-[#6B46C1]/40 motion-safe:animate-ping" />
+                <span
+                  aria-hidden
+                  className="motion-safe:animate-rec-blink absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                />
               )}
-              <MicIcon size={18} className="relative" />
+              <MicIcon size={18} />
             </button>
           )}
           {query && !speech.isListening && (

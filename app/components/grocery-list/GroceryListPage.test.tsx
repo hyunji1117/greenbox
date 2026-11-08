@@ -83,7 +83,7 @@ describe('GroceryListPage', () => {
     render(<GroceryListPage />);
 
     fireEvent.change(input(), { target: { value: '김치' } });
-    fireEvent.click(screen.getByRole('button', { name: '‘김치’ 그대로 담기' }));
+    fireEvent.click(screen.getByRole('button', { name: '‘김치’ 리스트에 추가하기' }));
 
     expect(
       screen.getByRole('button', { name: '김치 수량 늘리기' }),

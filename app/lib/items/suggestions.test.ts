@@ -41,4 +41,13 @@ describe('getRebuySuggestions', () => {
       ),
     ).toEqual([]);
   });
+
+  it('실제 식재료 이름만 다시 사자고 제안한다 (잘못 들어간 이름은 빼기)', () => {
+    expect(
+      getRebuySuggestions(
+        [item('오', true), item('브로콜리', true), item('유기농 우유', true)],
+        'fridge',
+      ),
+    ).toEqual(['브로콜리', '유기농 우유']);
+  });
 });

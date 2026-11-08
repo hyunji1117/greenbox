@@ -38,6 +38,12 @@ function getRecognition(): RecognitionConstructor | undefined {
 
 export type SpeechError = 'denied' | 'no-speech' | 'failed';
 
+export const SPEECH_ERROR_TEXT: Record<SpeechError, string> = {
+  denied: '마이크 사용이 막혀 있어요. 브라우저 설정에서 마이크를 허용해 주세요',
+  'no-speech': '말소리를 듣지 못했어요. 다시 눌러 말해 주세요',
+  failed: '음성으로 찾지 못했어요. 글자로 찾아 주세요',
+};
+
 // 인식된 문장 끝의 마침표, 물음표 등을 떼어 검색어로 쓴다
 export function toSearchText(transcript: string): string {
   return transcript

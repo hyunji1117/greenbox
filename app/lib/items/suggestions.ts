@@ -1,6 +1,7 @@
 // app/lib/items/suggestions.ts
 // 빠른 추가 추천. 집에 있는 것을 등록할 기본 목록과, 전에 먹어서 다시 살 만한 품목을 나눈다
 
+import { checkFoodName } from '@/app/lib/items/foodVocabulary';
 import type { Category, Item } from '@/app/lib/schemas/item';
 
 const HOME_SUGGESTIONS: Record<Category, string[]> = {
@@ -32,6 +33,7 @@ export function getHomeSuggestions(
 }
 
 // items는 추가된 최신순이다. 소진 시각은 저장하지 않아 이 순서를 그대로 쓴다
+// 실제 식재료 이름만 다시 사자고 제안한다 (잘못 들어간 "오" 같은 이름을 다시 권하지 않게)
 export function getRebuySuggestions(
   items: Item[],
   category: Category,
@@ -44,6 +46,11 @@ export function getRebuySuggestions(
     .filter(item => item.finished)
     .map(item => item.name);
   return [...new Set(finished)]
-    .filter(name => !inFridge.has(name) && name.includes(keyword))
+    .filter(
+      name =>
+        !inFridge.has(name) &&
+        name.includes(keyword) &&
+        checkFoodName(name).status === 'known',
+    )
     .slice(0, MAX_REBUY_SUGGESTIONS);
 }

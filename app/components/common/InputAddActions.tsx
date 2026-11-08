@@ -4,7 +4,7 @@
 // - 글자를 적었으면 + 는 바로 넣기(제출)
 // - 비어 있으면 + 를 눌러 카메라와 음성을 옆으로 펼친다 (다시 누르면 접힘, + 가 x 모양으로 돈다)
 // - 말하는 동안에는 펼친 채로 두어 멈추기 버튼이 보이게 한다
-// - 버튼 터치 영역은 42x42로 맞춘다
+// - 버튼 터치 영역은 42x42로 맞추고, 버튼 사이는 4px 띄운다 (접히면 간격도 함께 사라지게 펼침 칸 안에 둔다)
 // - 펼친 뒤 버튼 밖을 누르면 다시 + 로 접는다
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -55,7 +55,7 @@ const InputAddActions: React.FC<InputAddActionsProps> = ({
   return (
     <div ref={rootRef} className="flex shrink-0 items-center">
       <div
-        className={`flex items-center overflow-hidden transition-[max-width,opacity] duration-200 ease-out motion-reduce:transition-none ${
+        className={`flex items-center gap-1 overflow-hidden pr-1 transition-[max-width,opacity] duration-200 ease-out motion-reduce:transition-none ${
           isTrayVisible ? 'max-w-24 opacity-100' : 'max-w-0 opacity-0'
         }`}
         inert={!isTrayVisible}
@@ -78,13 +78,17 @@ const InputAddActions: React.FC<InputAddActionsProps> = ({
             aria-pressed={speech.isListening}
             onClick={speech.isListening ? speech.stop : speech.start}
             className={`relative ${TRAY_BUTTON} ${
-              speech.isListening ? 'bg-[#6B46C1] text-white' : ''
+              speech.isListening ? 'bg-[#F1EDFA]' : ''
             }`}
           >
+            {/* 듣는 동안 빨간 녹음 불이 깜빡인다 */}
             {speech.isListening && (
-              <span className="absolute inset-0 rounded-xl bg-[#6B46C1]/40 motion-safe:animate-ping" />
+              <span
+                aria-hidden
+                className="motion-safe:animate-rec-blink absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+              />
             )}
-            <MicIcon size={18} className="relative" />
+            <MicIcon size={18} />
           </button>
         )}
       </div>
