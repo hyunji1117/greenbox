@@ -6,7 +6,7 @@
 // - 다른 칸(냉동실, 상온)에 있으면 그 칸으로 바꾼 뒤 옮겨 간다
 // - 말하는 동안 결과가 바뀌어 화면이 흔들리지 않게, 말이나 입력이 잠깐 멈춘 뒤에 옮겨 간다
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MicIcon, SearchIcon, ShoppingBasket, XIcon } from 'lucide-react';
 import VoiceSearchBar from '@/app/components/fridge/VoiceSearchBar';
 import { findByName } from '@/app/lib/items/nameMatch';
@@ -20,7 +20,7 @@ export interface SearchableItem {
   category: Category;
 }
 
-const CATEGORY_LABEL: Record<Category, string> = {
+export const CATEGORY_LABEL: Record<Category, string> = {
   fridge: '냉장실',
   freezer: '냉동실',
   pantry: '상온',
@@ -49,6 +49,8 @@ interface FridgeItemSearchProps<T extends SearchableItem> {
   jumpedId: string | null;
   // 냉장고에 없는 이름을 장볼 리스트에 담는다
   onAddToList?: (name: string) => void;
+  // 여러 개를 찾으면 옮겨 가지 않고 찾은 품목만 모아 보여 준다
+  onShowMany?: (items: T[], query: string) => void;
 }
 
 function FridgeItemSearch<T extends SearchableItem>({
@@ -58,28 +60,63 @@ function FridgeItemSearch<T extends SearchableItem>({
   onJump,
   jumpedId,
   onAddToList,
+  onShowMany,
 }: FridgeItemSearchProps<T>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const speech = useSpeechInput(text => setQuery(text.slice(0, ITEM_NAME_MAX)));
   const matches = useMemo(() => findItems(items, query), [items, query]);
-  const onJumpRef = useRef(onJump);
+  const handlersRef = useRef({ onJump, onShowMany });
   useEffect(() => {
-    onJumpRef.current = onJump;
-  }, [onJump]);
+    handlersRef.current = { onJump, onShowMany };
+  }, [onJump, onShowMany]);
 
-  const firstId = matches[0]?.id;
+  // 음성으로 찾은 결과. 찾거나 한 번 듣고 끝나면 음성 바는 처음 상태로 돌리고, 결과(여러 개, 없음)는 아래에 남긴다
+  const isVoice = speech.isSupported;
+  const [result, setResult] = useState('');
+  const finishVoice = (spoken: string) => {
+    speech.stop();
+    setResult(spoken);
+    setQuery('');
+  };
+
+  // 하나면 그 카드로 옮겨 가고, 여러 개면 찾은 품목만 모아 보여 준다 (계란과 달걀처럼 다른 이름도 같은 재료로 찾는다)
+  const matchKey = matches.map(item => item.id).join(',');
   useEffect(() => {
-    if (!firstId || firstId === jumpedId) return;
+    if (!matchKey) return;
+    if (matches.length === 1 && matches[0].id === jumpedId) return;
     const timer = setTimeout(() => {
-      const first = matches.find(item => item.id === firstId);
-      if (first) onJumpRef.current(first);
+      const spoken = query.trim();
+      if (matches.length === 1) handlersRef.current.onJump(matches[0]);
+      else handlersRef.current.onShowMany?.(matches, spoken);
+      // 찾았으면 음성을 바로 끈다
+      if (isVoice) finishVoice(spoken);
     }, JUMP_DELAY_MS);
     return () => clearTimeout(timer);
-    // 첫 결과가 바뀔 때만 옮겨 간다 (같은 품목을 다시 찾을 때는 아래 버튼으로)
+    // 찾은 품목이 바뀔 때만 옮겨 가거나 모아 보여 준다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstId]);
+  }, [matchKey]);
 
   const keyword = query.trim();
+
+  // 한 번 듣고 끝났는데 못 찾았으면 음성 바를 처음 상태로 돌리고 없다는 안내만 남긴다
+  const wasListening = useRef(false);
+  useEffect(() => {
+    if (speech.isListening) {
+      wasListening.current = true;
+      return;
+    }
+    if (!wasListening.current) return;
+    wasListening.current = false;
+    if (keyword) finishVoice(keyword);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.isListening]);
+
+  // 음성은 결과를, 글자 입력은 적은 글자를 기준으로 안내한다
+  const shownQuery = isVoice ? result : keyword;
+  const shownMatches = useMemo(
+    () => (isVoice ? findItems(items, result) : matches),
+    [isVoice, items, result, matches],
+  );
 
   return (
     <div className="mt-3">
@@ -89,11 +126,15 @@ function FridgeItemSearch<T extends SearchableItem>({
           isListening={speech.isListening}
           text={query}
           onStart={() => {
+            setResult('');
             setQuery('');
             speech.start();
           }}
           onStop={speech.stop}
-          onClear={() => setQuery('')}
+          onClear={() => {
+            setResult('');
+            setQuery('');
+          }}
         />
       ) : (
         <form
@@ -167,20 +208,21 @@ function FridgeItemSearch<T extends SearchableItem>({
         ) : null}
       </div>
       {/* 냉장고에 없으면 다음에 할 일(장볼 리스트에 담기)을 바로 고를 수 있게 한다 */}
-      {keyword && matches.length === 0 && !speech.isListening && (
+      {shownQuery && shownMatches.length === 0 && !speech.isListening && (
         <div
           role="status"
           className="mt-3 flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-3 text-center ring-1 ring-black/5"
         >
           <p className="text-sm text-gray-700">
-            냉장고에 ‘{keyword}’{hasFinalConsonant(keyword) ? '이' : '가'}{' '}
+            냉장고에 ‘{shownQuery}’{hasFinalConsonant(shownQuery) ? '이' : '가'}{' '}
             없어요. 장볼 리스트에 담을까요?
           </p>
           {onAddToList && (
             <button
               type="button"
               onClick={() => {
-                onAddToList(keyword);
+                onAddToList(shownQuery);
+                setResult('');
                 setQuery('');
               }}
               className="flex h-[42px] items-center gap-1.5 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold text-white active:bg-[#553C9A]"
@@ -189,24 +231,6 @@ function FridgeItemSearch<T extends SearchableItem>({
               장볼 리스트에 담기
             </button>
           )}
-        </div>
-      )}
-      {/* 같은 이름이 여러 칸에 있거나 비슷한 이름이 많으면 골라서 옮겨 간다 */}
-      {matches.length > 1 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {matches.slice(0, 8).map(item => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onJump(item)}
-              className="flex h-9 items-center rounded-full bg-[#F1EDFA] px-3 text-sm font-medium text-[#553C9A] hover:bg-[#E6DFF7]"
-            >
-              {item.name}
-              <span className="ml-1 text-xs font-normal text-[#7A68B0]">
-                {CATEGORY_LABEL[item.category]}
-              </span>
-            </button>
-          ))}
         </div>
       )}
     </div>

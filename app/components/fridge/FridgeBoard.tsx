@@ -14,11 +14,14 @@ import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import GroceriesIcon from '@/app/components/icons/GroceriesIcon';
 import FridgeQuickAdd from '@/app/components/fridge/FridgeQuickAdd';
-import FridgeItemSearch from '@/app/components/fridge/FridgeItemSearch';
+import FridgeItemSearch, {
+  CATEGORY_LABEL,
+} from '@/app/components/fridge/FridgeItemSearch';
 import FridgeHeader from '@/app/components/fridge/sharing/FridgeHeader';
 import NotifyFirstSheet from '@/app/components/fridge/NotifyFirstSheet';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 import {
+  ChevronLeftIcon,
   ChevronRightIcon,
   RefrigeratorIcon,
   ShoppingBasket,
@@ -50,7 +53,17 @@ const FridgeBoard: React.FC = () => {
   // 찾기로 옮겨 간 카드. 칸을 바꾼 뒤 그려지면 화면 가운데로 옮기고 잠깐 강조한다
   const [jumpedId, setJumpedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  // 여러 개를 찾으면 칸과 상관없이 찾은 품목만 모아 보여 준다 (예: 냉장실 달걀과 냉동실 계란말이)
+  const [found, setFound] = useState<{ query: string; ids: string[] } | null>(
+    null,
+  );
+  const foundItems = found
+    ? unfinishedItems.filter(item => found.ids.includes(item.id))
+    : [];
+  const isShowingFound = found !== null && foundItems.length > 0;
+  const shownItems = isShowingFound ? foundItems : filteredItems;
   const jumpTo = (item: { id: string; category: Category }) => {
+    setFound(null);
     if (item.category !== activeCategory) {
       setActiveCategory(item.category);
       setNewItemId(null);
@@ -88,6 +101,7 @@ const FridgeBoard: React.FC = () => {
         onChange={id => {
           setActiveCategory(id);
           setNewItemId(null);
+          setFound(null);
         }}
         className="mb-4"
       />
@@ -140,10 +154,11 @@ const FridgeBoard: React.FC = () => {
                 className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-[#F1EDFA] px-4 text-sm font-semibold whitespace-nowrap text-[#553C9A] transition-colors hover:bg-[#E6DFF7]"
               >
                 <ShoppingBasket size={18} className="shrink-0" />
-                새로 살 땐 리스트에 담기
+                쇼핑 리스트에 담으러 가기
                 <ChevronRightIcon size={16} className="shrink-0" />
               </button>
-              {unfinishedItems.length > 0 && (
+              {/* 지금 칸이 비어 있으면 찾을 것이 없어 음성 찾기를 숨긴다 */}
+              {filteredItems.length > 0 && (
                 <FridgeItemSearch
                   items={unfinishedItems}
                   query={searchQuery}
@@ -151,10 +166,29 @@ const FridgeBoard: React.FC = () => {
                   onJump={jumpTo}
                   jumpedId={jumpedId}
                   onAddToList={handleRebuy}
+                  onShowMany={(list, query) => {
+                    setJumpedId(null);
+                    setFound({ query, ids: list.map(item => item.id) });
+                  }}
                 />
               )}
+              {isShowingFound && (
+                <div className="mt-4 flex items-center justify-between gap-2 px-1">
+                  <p className="min-w-0 text-sm font-semibold text-gray-800">
+                    ‘{found.query}’ 찾은 품목 {foundItems.length}개
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setFound(null)}
+                    className="flex h-[42px] shrink-0 items-center gap-1 rounded-xl px-3 text-sm font-medium text-[#553C9A] active:bg-[#F1EDFA]"
+                  >
+                    <ChevronLeftIcon size={16} />
+                    전체 리스트로 돌아가기
+                  </button>
+                </div>
+              )}
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                {filteredItems.map(item => (
+                {shownItems.map(item => (
                   <div
                     key={item.id}
                     id={`fridge-item-${item.id}`}
@@ -164,6 +198,12 @@ const FridgeBoard: React.FC = () => {
                         : 'scroll-mt-4'
                     }
                   >
+                    {/* 모아 보기에서는 어느 칸에 있는지 함께 보여 준다 */}
+                    {isShowingFound && (
+                      <p className="mb-1.5 px-1 text-xs font-medium text-gray-500">
+                        {CATEGORY_LABEL[item.category]}
+                      </p>
+                    )}
                     <FridgeItem
                       item={item}
                       isNew={item.id === newItemId}
