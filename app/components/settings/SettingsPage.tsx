@@ -11,6 +11,7 @@ import PushNotificationCard from '@/app/components/settings/PushNotificationCard
 import NotificationSettingsCard from '@/app/components/settings/NotificationSettingsCard';
 import FeedbackCard from '@/app/components/settings/FeedbackCard';
 import AppVersionCard from '@/app/components/settings/AppVersionCard';
+import { OPERATOR } from '@/app/lib/consent/operator';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
 import { useQueryClient } from '@tanstack/react-query';
@@ -208,7 +209,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
               <PushNotificationCard />
               <NotificationSettingsCard />
               <FeedbackCard />
-              <AppVersionCard />
+              <AppVersionCard
+                isOperator={myProfile?.email === OPERATOR.email}
+              />
             </>
           )}
         </div>

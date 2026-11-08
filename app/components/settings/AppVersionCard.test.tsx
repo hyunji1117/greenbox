@@ -3,6 +3,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { INTERNAL_FLAG_KEY } from '@/app/lib/analytics/gtag';
 import AppVersionCard, {
   REVEAL_TAPS,
@@ -58,6 +59,18 @@ describe('AppVersionCard', () => {
       fireEvent.click(screen.getByText('앱 버전'));
     expect(screen.getByRole('switch')).toBeTruthy();
     expect(localStorage.getItem(TOGGLE_HIDDEN_KEY)).toBeNull();
+  });
+
+  it('운영자 계정이면 개발자 영역에 테스트 알림 버튼도 보여 준다', () => {
+    localStorage.setItem(INTERNAL_FLAG_KEY, '1');
+    const { rerender } = render(<AppVersionCard />);
+    expect(screen.queryByText('테스트 알림 보내기')).toBeNull();
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <AppVersionCard isOperator />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText('테스트 알림 보내기')).toBeTruthy();
   });
 
   it('이미 테스트 기기로 표시한 기기에서는 끌 수 있게 보여 준다', () => {
