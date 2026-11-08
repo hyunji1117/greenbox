@@ -4,7 +4,10 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INTERNAL_FLAG_KEY } from '@/app/lib/analytics/gtag';
-import AppVersionCard, { REVEAL_TAPS } from './AppVersionCard';
+import AppVersionCard, {
+  REVEAL_TAPS,
+  TOGGLE_HIDDEN_KEY,
+} from './AppVersionCard';
 
 describe('AppVersionCard', () => {
   beforeEach(() => localStorage.clear());
@@ -36,6 +39,25 @@ describe('AppVersionCard', () => {
     for (let i = 0; i < REVEAL_TAPS; i += 1) fireEvent.click(version);
     expect(screen.getByText('1.2.0 (b4d0d43)')).toBeTruthy();
     vi.unstubAllEnvs();
+  });
+
+  it('다시 5번 누르면 스위치를 숨기고, 켠 기기에서도 다음에 열 때 숨긴 채로 둔다', () => {
+    localStorage.setItem(INTERNAL_FLAG_KEY, '1');
+    render(<AppVersionCard />);
+    const version = screen.getByText('앱 버전');
+    for (let i = 0; i < REVEAL_TAPS; i += 1) fireEvent.click(version);
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(localStorage.getItem(TOGGLE_HIDDEN_KEY)).toBe('1');
+    // 표시는 그대로 켜져 있다 (숨기기만 한다)
+    expect(localStorage.getItem(INTERNAL_FLAG_KEY)).toBe('1');
+
+    cleanup();
+    render(<AppVersionCard />);
+    expect(screen.queryByRole('switch')).toBeNull();
+    for (let i = 0; i < REVEAL_TAPS; i += 1)
+      fireEvent.click(screen.getByText('앱 버전'));
+    expect(screen.getByRole('switch')).toBeTruthy();
+    expect(localStorage.getItem(TOGGLE_HIDDEN_KEY)).toBeNull();
   });
 
   it('이미 테스트 기기로 표시한 기기에서는 끌 수 있게 보여 준다', () => {
