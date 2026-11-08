@@ -1,6 +1,10 @@
 // app/lib/recipes/today.ts
 // 홈 카드용 오늘의 초간단 레시피: 곧 먹어야 할 재료를 고르고, 저장된 레시피를 찾거나 새로 만든다 (서버 전용)
 
+import {
+  latestPolicyVersion,
+  RECIPE_POLICY_VERSION,
+} from '@/app/lib/consent/policies';
 import { daysUntilExpiry, EXPIRY_SOON_DAYS } from '@/app/lib/items/expiry';
 import type { ItemJson } from '@/app/lib/items/store';
 import type { Recipe } from '@/app/lib/schemas/recipe';
@@ -17,10 +21,14 @@ export const DAILY_IMAGE_LIMIT = 20;
 // 레시피 모양이나 지시문을 바꾸면 올려서 예전 저장분을 다시 쓰지 않게 한다
 const CACHE_VERSION = 'v1';
 
-// 개인정보처리방침에 레시피(품목 이름을 Anthropic, OpenAI로 보냄)가 들어가기 전까지는
-// 지정한 사람(운영자 테스트 계정)에게만 연다. 시행 뒤 RECIPES_ENABLED=true로 모두에게 연다
-export function isRecipeAvailable(userId: string): boolean {
+// 개인정보처리방침에 레시피(품목 이름을 Anthropic, OpenAI로 보냄)가 들어간 버전(2026-11-09)이 시행되면 모두에게 연다
+// 시행 전에는 지정한 사람(운영자 테스트 계정)에게만 연다. 처음 만들거나 열 때 따로 동의를 받는다 (RecipeCard)
+export function isRecipeAvailable(
+  userId: string,
+  now: number = Date.now(),
+): boolean {
   if (process.env.RECIPES_ENABLED === 'true') return true;
+  if (latestPolicyVersion(now) >= RECIPE_POLICY_VERSION) return true;
   const allowed = (process.env.RECIPE_PREVIEW_USER_IDS ?? '')
     .split(',')
     .map(id => id.trim())

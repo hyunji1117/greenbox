@@ -54,7 +54,7 @@ const post = () =>
   POST(
     new Request('http://localhost/api/recipes/today', {
       method: 'POST',
-      body: JSON.stringify({ fridgeId: '5' }),
+      body: JSON.stringify({ fridgeId: '5', agreed: true }),
     }),
   );
 const get = () =>
@@ -77,7 +77,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('/api/recipes/today', () => {
-  it('지정한 사람이 아니면 카드를 숨기고 만들지도 않는다', async () => {
+  it('방침(2026-11-09) 시행 전에는 지정한 사람이 아니면 카드를 숨기고 만들지도 않는다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-08T21:00:00+09:00'));
     mocks.auth.mockResolvedValue({
       registered: true,
       consentVersion: currentPolicyVersion(),
@@ -86,6 +88,27 @@ describe('/api/recipes/today', () => {
     expect(await (await get()).json()).toEqual({ available: false });
     expect((await post()).status).toBe(404);
     expect(mocks.generateRecipe).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('방침 시행 뒤에는 모두에게 열고, 해외로 보내는 데 동의하지 않은 만들기 요청은 받지 않는다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T09:00:00+09:00'));
+    mocks.auth.mockResolvedValue({
+      registered: true,
+      consentVersion: currentPolicyVersion(),
+      user: { id: '8' },
+    });
+    expect((await (await get()).json()).available).toBe(true);
+    const withoutConsent = await POST(
+      new Request('http://localhost/api/recipes/today', {
+        method: 'POST',
+        body: JSON.stringify({ fridgeId: '5' }),
+      }),
+    );
+    expect(withoutConsent.status).toBe(400);
+    expect(mocks.generateRecipe).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it('GET은 저장된 레시피만 찾고 새로 만들지 않는다', async () => {
