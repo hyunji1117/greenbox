@@ -107,7 +107,7 @@ const NotificationSettingsCard: React.FC = () => {
           htmlFor="daily-hour"
           className="mb-1 block text-xs font-medium text-gray-500"
         >
-          하루 요약 (유통기한 3일 안)
+          하루 요약 (오래 두는 식재료일수록 미리)
         </label>
         <Select
           id="daily-hour"
@@ -126,29 +126,29 @@ const NotificationSettingsCard: React.FC = () => {
       <div>
         <div className="mb-1 flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">
-            주간 요약 (장 보기 전, 일주일 안)
+            장보기 전 요약 (장 보는 날, 일주일 안)
           </span>
           <Switch
             checked={settings.weeklyEnabled}
-            label="주간 요약 받기"
+            label="장보기 전 요약 받기"
             onChange={weeklyEnabled => update.mutate({ weeklyEnabled })}
           />
         </div>
         <div className="flex gap-2">
           <Select
-            aria-label="주간 요약 요일"
+            aria-label="장 보는 요일"
             value={settings.weeklyDay}
             disabled={off || !settings.weeklyEnabled}
             onChange={e => update.mutate({ weeklyDay: Number(e.target.value) })}
           >
             {WEEKDAY_LABELS.map((label, day) => (
               <option key={label} value={day}>
-                {label}요일
+                {label}요일에 장 봐요
               </option>
             ))}
           </Select>
           <Select
-            aria-label="주간 요약 시각"
+            aria-label="장보기 전 요약 시각"
             value={settings.weeklyHour}
             disabled={off || !settings.weeklyEnabled}
             onChange={e =>

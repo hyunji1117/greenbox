@@ -2,7 +2,7 @@
 // 매시간 실행된다. 지금이 발송 시각인 사람에게 하루 요약과 주간 요약을 1건씩 보낸다
 // 결과(대상 수, 보낸 수, 실패 수, 늦게 실행된 분)를 돌려줘 예약 실행 기록에 남긴다
 
-import { EXPIRY_SOON_DAYS } from '@/app/lib/items/expiry';
+import { isDueForDaily, MAX_LEAD_DAYS } from '@/app/lib/notifications/leadTime';
 import {
   claimSummarySend,
   listNotificationCandidates,
@@ -21,7 +21,7 @@ import {
   type PushMessage,
 } from '@/app/lib/push/sendToUsers';
 
-// 주간 요약은 다음 장보기 전까지 일주일 안에 끝나는 품목을 모은다
+// 장보기 전 요약은 다음 장보기 전까지(일주일 안) 끝나는 품목을 모은다
 export const WEEKLY_SUMMARY_DAYS = 7;
 
 export type SummaryKind = 'daily' | 'weekly';
@@ -35,10 +35,10 @@ export function buildSummary(
   return kind === 'daily'
     ? {
         title: '곧 먹어야 할 식재료가 있어요',
-        body: `${subject}의 유통기한이 ${EXPIRY_SOON_DAYS}일 안에 끝나요`,
+        body: `${subject}의 유통기한이 다가와요`,
       }
     : {
-        title: '이번 주에 먹어야 할 식재료',
+        title: '다음 장보기 전에 먹어야 할 식재료',
         body: `장 보기 전에 확인해 보세요. ${subject}의 유통기한이 일주일 안에 끝나요`,
       };
 }
@@ -102,23 +102,28 @@ export async function sendDueSummaries(
   const weeklyIds = candidates
     .filter(c => isWeeklyDue(c, clock))
     .map(c => c.userId);
-  // 같은 시각에 둘 다 해당하면 주간 요약만 보낸다 (주간 요약이 하루 요약 품목을 포함)
+  // 같은 시각에 둘 다 해당하면 장보기 전 요약만 보낸다 (일주일 안 품목이 하루 요약 품목을 포함)
   const dailyIds = candidates
     .filter(c => isDailyDue(c, clock) && !weeklyIds.includes(c.userId))
     .map(c => c.userId);
 
+  // 하루 요약은 가장 일찍 알리는 품목(일주일 전)까지 가져와 품목마다 알림 시작일을 따진다
   const runs: [SummaryKind, string[], number][] = [
     ['weekly', weeklyIds, WEEKLY_SUMMARY_DAYS],
-    ['daily', dailyIds, EXPIRY_SOON_DAYS],
+    ['daily', dailyIds, MAX_LEAD_DAYS],
   ];
   for (const [kind, userIds, withinDays] of runs) {
     const tally = result[kind];
     tally.due = userIds.length;
-    for (const { userId, itemNames } of await listSummaryItems(
+    for (const { userId, items } of await listSummaryItems(
       userIds,
       clock.date,
       withinDays,
     )) {
+      const itemNames = (
+        kind === 'daily' ? items.filter(isDueForDaily) : items
+      ).map(item => item.name);
+      if (itemNames.length === 0) continue;
       // 알릴 품목이 없으면 기록을 남기지 않아, 그 시각 안에 품목이 생기면 다음 실행에서 받는다
       if (!(await claimSummarySend(userId, kind, clock.date))) continue;
       tally.users += 1;
