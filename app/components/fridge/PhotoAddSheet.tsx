@@ -5,13 +5,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  CameraIcon,
-  Check,
-  Loader2Icon,
-  MinusIcon,
-  PlusIcon,
-} from 'lucide-react';
+import { CameraIcon, Check, Loader2Icon } from 'lucide-react';
+import QuantityStepper from '@/app/components/common/QuantityStepper';
 import BottomSheet from '@/app/components/common/BottomSheet';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { ApiError, apiFetch } from '@/app/lib/api/apiFetch';
@@ -56,6 +51,8 @@ interface PhotoAddSheetProps {
   onClose: () => void;
   onRetake: () => void;
   onAdded: (count: number) => void;
+  // 장보기에서 쓰면 냉장고에 넣지 않고 리스트에 담는다 (보관 위치는 고르지 않는다)
+  onPickToList?: (items: { name: string; quantity: number }[]) => void;
 }
 
 const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
@@ -63,7 +60,9 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
   onClose,
   onRetake,
   onAdded,
+  onPickToList,
 }) => {
+  const isList = Boolean(onPickToList);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hasPartialFailure, setHasPartialFailure] = useState(false);
   // 같은 사진을 두 번 보내지 않는다 (개발 모드에서 화면 효과가 두 번 실행돼도 사용료가 두 번 들지 않게)
@@ -102,6 +101,13 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
 
   const addChosen = async () => {
     if (chosen.length === 0 || addItems.isPending) return;
+    if (onPickToList) {
+      onPickToList(
+        chosen.map(c => ({ name: c.name.trim(), quantity: c.quantity })),
+      );
+      onAdded(chosen.length);
+      return;
+    }
     const saved = await addItems
       .mutateAsync(
         chosen.map(c => ({
@@ -129,7 +135,11 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
   };
 
   return (
-    <BottomSheet isOpen={file !== null} title="사진으로 등록" onClose={onClose}>
+    <BottomSheet
+      isOpen={file !== null}
+      title={isList ? '사진으로 담기' : '사진으로 등록'}
+      onClose={onClose}
+    >
       {recognize.isPending ? (
         <div className="flex flex-col items-center gap-3 py-10 text-sm text-gray-600">
           <Loader2Icon
@@ -159,7 +169,9 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
       ) : (
         <>
           <p className="mb-3 px-1 text-sm text-gray-600">
-            맞는 것만 골라 주세요. 이름과 보관 위치, 수량은 고칠 수 있어요
+            {isList
+              ? '맞는 것만 골라 주세요. 이름과 수량은 고칠 수 있어요'
+              : '맞는 것만 골라 주세요. 이름과 보관 위치, 수량은 고칠 수 있어요'}
           </p>
           <ul className="space-y-2">
             {candidates.map(c => (
@@ -193,58 +205,40 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
                     }`}
                   />
                 </div>
-                <div className="mt-1 flex items-center justify-between gap-2 pl-10">
-                  <div
-                    role="radiogroup"
-                    aria-label={`${c.name} 보관 위치`}
-                    className="flex rounded-xl bg-[#F4F4F8] p-0.5"
-                  >
-                    {(Object.keys(CATEGORY_LABELS) as Category[]).map(cat => (
-                      <button
-                        key={cat}
-                        type="button"
-                        role="radio"
-                        aria-checked={c.category === cat}
-                        onClick={() => update(c.key, { category: cat })}
-                        className={`h-8 rounded-lg px-2.5 text-xs font-medium transition-colors ${
-                          c.category === cat
-                            ? 'bg-white text-[#553C9A] shadow-sm'
-                            : 'text-gray-500'
-                        }`}
-                      >
-                        {CATEGORY_LABELS[cat]}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex h-9 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        update(c.key, { quantity: Math.max(1, c.quantity - 1) })
-                      }
-                      disabled={c.quantity <= 1}
-                      aria-label={`${c.name} 수량 줄이기`}
-                      className="flex h-9 w-8 items-center justify-center rounded-l-xl disabled:opacity-30"
+                <div
+                  className={`mt-1 flex items-center gap-2 pl-10 ${isList ? 'justify-end' : 'justify-between'}`}
+                >
+                  {!isList && (
+                    <div
+                      role="radiogroup"
+                      aria-label={`${c.name} 보관 위치`}
+                      className="flex rounded-xl bg-[#F4F4F8] p-0.5"
                     >
-                      <MinusIcon size={14} />
-                    </button>
-                    <span className="min-w-5 text-center text-sm font-semibold">
-                      {c.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        update(c.key, {
-                          quantity: Math.min(QUANTITY_MAX, c.quantity + 1),
-                        })
-                      }
-                      disabled={c.quantity >= QUANTITY_MAX}
-                      aria-label={`${c.name} 수량 늘리기`}
-                      className="flex h-9 w-8 items-center justify-center rounded-r-xl disabled:opacity-30"
-                    >
-                      <PlusIcon size={14} />
-                    </button>
-                  </div>
+                      {(Object.keys(CATEGORY_LABELS) as Category[]).map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          role="radio"
+                          aria-checked={c.category === cat}
+                          onClick={() => update(c.key, { category: cat })}
+                          className={`h-8 rounded-lg px-2.5 text-xs font-medium transition-colors ${
+                            c.category === cat
+                              ? 'bg-white text-[#553C9A] shadow-sm'
+                              : 'text-gray-500'
+                          }`}
+                        >
+                          {CATEGORY_LABELS[cat]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <QuantityStepper
+                    value={c.quantity}
+                    onChange={quantity => update(c.key, { quantity })}
+                    label={`${c.name} 수량`}
+                    max={QUANTITY_MAX}
+                    size="sm"
+                  />
                 </div>
               </li>
             ))}
@@ -263,7 +257,7 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
             {addItems.isPending
               ? '넣는 중...'
               : chosen.length > 0
-                ? `${chosen.length}개 냉장고에 넣기`
+                ? `${chosen.length}개 ${isList ? '리스트에 담기' : '냉장고에 넣기'}`
                 : '넣을 식재료를 골라 주세요'}
           </button>
           <RetakeButton onClick={onRetake} subtle />

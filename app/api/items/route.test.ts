@@ -39,6 +39,7 @@ const row: ItemRow = {
   name: '우유',
   category: 'fridge',
   quantity: 1,
+  eaten_quantity: 0,
   added_by: { id: '7', name: '현지', isMember: true },
   created_at: new Date('2026-10-30T03:00:00.000Z'),
   finished: false,

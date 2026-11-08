@@ -2,15 +2,15 @@
 // 집에 이미 있는 품목을 이름만으로 등록한다. 유통기한과 수량은 추가한 뒤 카드에서 정한다
 // 새로 사는 품목은 구매 기록이 남도록 냉장고에 바로 넣지 않고 장보기 리스트로 보낸다
 // 카메라로 찍으면 사진 속 식재료를 찾아 골라서 한 번에 등록한다
+// 입력창 오른쪽 + 를 누르면 카메라와 음성이 펼쳐진다 (장보기에서 말로 찾는 습관이 들어 등록에서도 찾게 됨)
+// 말한 이름은 입력창에 넣고, 확인한 뒤 + 로 등록한다 (잘못 알아들은 이름이 바로 들어가지 않게)
 
 import React, { useRef, useState } from 'react';
-import {
-  CameraIcon,
-  Loader2Icon,
-  PlusIcon,
-  ShoppingBasket,
-} from 'lucide-react';
+import { PlusIcon, ShoppingBasket } from 'lucide-react';
+import InputAddActions from '@/app/components/common/InputAddActions';
 import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
+import { SPEECH_ERROR_TEXT } from '@/app/components/grocery-list/FrequentItemsPicker';
+import { useSpeechInput } from '@/app/lib/speech/useSpeechInput';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import {
   getHomeSuggestions,
@@ -51,6 +51,8 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [notice, setNotice] = useState('');
+  // 말한 내용을 이름 칸에 넣는다
+  const speech = useSpeechInput(text => setName(text.slice(0, ITEM_NAME_MAX)));
   const cameraRef = useRef<HTMLInputElement>(null);
   const openCamera = () => {
     setNotice('');
@@ -107,47 +109,49 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           value={name}
           onChange={e => setName(e.target.value)}
           aria-label="추가할 식재료 이름"
-          placeholder="집에 있는 식재료 등록하기"
+          placeholder="식재료 직접 입력 (예: 오이)"
           maxLength={ITEM_NAME_MAX}
           enterKeyHint="done"
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"
         />
-        <button
-          type="button"
-          onClick={openCamera}
-          aria-label="사진으로 식재료 찾기"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#6B46C1] transition-colors hover:bg-[#F1EDFA]"
-        >
-          <CameraIcon size={20} />
-        </button>
-        {/* 휴대폰에서는 뒤쪽 카메라를 바로 열고, PC에서는 사진 파일을 고른다 */}
-        <input
-          ref={cameraRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={e => {
-            const file = e.target.files?.[0] ?? null;
-            // 같은 사진을 다시 골라도 변경으로 잡히도록 비운다
-            e.target.value = '';
-            if (file) setPhoto(file);
-          }}
+        <InputAddActions
+          canSubmit={Boolean(trimmedName)}
+          isSubmitting={createItem.isPending}
+          submitLabel="식재료 추가"
+          onCamera={openCamera}
+          speech={speech}
+          keepFocus={keepInputFocus}
         />
-        <button
-          type="submit"
-          aria-label={createItem.isPending ? '추가하는 중' : '식재료 추가'}
-          onMouseDown={keepInputFocus}
-          disabled={!trimmedName || createItem.isPending}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#6B46C1] text-white transition-colors duration-200 hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
-        >
-          {createItem.isPending ? (
-            <Loader2Icon size={20} className="motion-safe:animate-spin" />
-          ) : (
-            <PlusIcon size={20} />
-          )}
-        </button>
       </form>
+      {/* 휴대폰에서는 뒤쪽 카메라를 바로 열고, PC에서는 사진 파일을 고른다 */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={e => {
+          const file = e.target.files?.[0] ?? null;
+          // 같은 사진을 다시 골라도 변경으로 잡히도록 비운다
+          e.target.value = '';
+          if (file) setPhoto(file);
+        }}
+      />
+      {(speech.isListening || speech.error) && (
+        <p aria-live="polite" className="mt-2 px-1 text-xs">
+          {speech.isListening ? (
+            <span className="text-[#553C9A]">
+              듣고 있어요. 등록할 식재료 이름을 말해 주세요
+            </span>
+          ) : (
+            speech.error && (
+              <span className="text-red-500">
+                {SPEECH_ERROR_TEXT[speech.error]}
+              </span>
+            )
+          )}
+        </p>
+      )}
       <div
         className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
           isExpanded

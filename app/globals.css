@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* 앱은 밝은 화면만 지원한다. 기기가 다크 모드여도 배경을 바꾸지 않아야
    iOS 상태바 아래(화면 맨 위)가 검게 비치지 않는다 */
@@ -22,6 +22,28 @@
   --animate-sheet-down: sheet-down 220ms cubic-bezier(0.4, 0, 1, 1) both;
   --animate-dialog-in: dialog-in 220ms ease-out both;
   --animate-dialog-out: dialog-out 180ms ease-in both;
+  /* 음성 찾기 바: 몽환적인 그라데이션이 흐르고, 듣는 동안 더 빠르게 흐르며 음파가 움직인다 */
+  --animate-ai-flow: ai-flow 8s linear infinite;
+  --animate-ai-flow-fast: ai-flow 2.4s linear infinite;
+  --animate-ai-wave: ai-wave 0.9s ease-in-out infinite;
+
+  @keyframes ai-flow {
+    from {
+      background-position: 0% 50%;
+    }
+    to {
+      background-position: 300% 50%;
+    }
+  }
+  @keyframes ai-wave {
+    0%,
+    100% {
+      transform: scaleY(0.3);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
 
   @keyframes backdrop-in {
     from {

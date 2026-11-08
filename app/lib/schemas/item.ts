@@ -35,6 +35,8 @@ export const ItemSchema = z.object({
   name: z.string(),
   category: CategorySchema,
   quantity: z.number().int().min(1),
+  // 개수별로 먹음 처리한 수. 남은 수량은 quantity - eatenQuantity (이 필드를 보내기 전의 응답은 0)
+  eatenQuantity: z.number().int().min(0).default(0),
   addedBy: PersonSchema,
   addedAt: isoDateTime,
   comments: z.array(CommentSchema),
@@ -69,7 +71,10 @@ export const CreateItemRequestSchema = CreateItemSchema.extend({
 });
 
 export const UpdateItemSchema = CreateItemSchema.partial()
-  .extend({ finished: z.boolean().optional() })
+  .extend({
+    finished: z.boolean().optional(),
+    eatenQuantity: z.number().int().min(0).max(QUANTITY_MAX).optional(),
+  })
   .refine(value => Object.keys(value).length > 0, {
     message: '바꿀 항목이 없습니다',
   });

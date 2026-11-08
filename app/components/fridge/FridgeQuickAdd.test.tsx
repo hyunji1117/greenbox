@@ -23,6 +23,68 @@ describe('FridgeQuickAdd', () => {
   });
   afterEach(cleanup);
 
+  it('비어 있을 때 + 를 누르면 카메라와 음성을 펼치고, 이름을 적으면 + 가 바로 추가가 된다', () => {
+    render(<FridgeQuickAdd category="fridge" items={[]} />);
+    expect(input().getAttribute('placeholder')).toBe(
+      '식재료 직접 입력 (예: 오이)',
+    );
+
+    const toggle = screen.getByRole('button', {
+      name: '사진이나 음성으로 넣기',
+    });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(
+      screen
+        .getByRole('button', { name: '사진, 음성 접기' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(screen.getByRole('button', { name: '사진으로 찾기' })).toBeTruthy();
+
+    // 버튼 밖을 누르면 다시 + 로 접는다
+    fireEvent.pointerDown(document.body);
+    expect(
+      screen
+        .getByRole('button', { name: '사진이나 음성으로 넣기' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false');
+
+    fireEvent.change(input(), { target: { value: '오이' } });
+    expect(screen.getByRole('button', { name: '식재료 추가' })).toBeTruthy();
+  });
+
+  it('펼친 음성으로 말한 이름은 입력창에 넣어 확인 후 등록한다', () => {
+    class FakeRecognition {
+      lang = '';
+      interimResults = false;
+      continuous = false;
+      maxAlternatives = 1;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror = null;
+      onend: (() => void) | null = null;
+      start() {
+        this.onresult?.({
+          results: [
+            Object.assign([{ transcript: '양파.' }], { isFinal: true }),
+          ],
+        });
+      }
+      stop() {}
+      abort() {}
+    }
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition);
+    render(<FridgeQuickAdd category="fridge" items={[]} />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '사진이나 음성으로 넣기' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: '말로 넣기' }));
+
+    expect((input() as HTMLInputElement).value).toBe('양파');
+    expect(mutate).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
   it('이름을 다듬어 현재 칸에 수량 1로 추가하고 성공하면 입력을 비운다', () => {
     mutate.mockImplementation((_input, options) =>
       options.onSuccess({ id: '9' }),
@@ -65,7 +127,8 @@ describe('FridgeQuickAdd', () => {
     const { container } = render(
       <FridgeQuickAdd category="fridge" items={[]} />,
     );
-    const panel = () => container.querySelector('[inert]');
+    // 추천 영역 (입력창 옆 카메라, 음성 펼침도 inert를 쓰므로 추천 영역만 고른다)
+    const panel = () => container.querySelector('.min-h-0[inert]');
 
     expect(panel()).not.toBeNull();
     fireEvent.focus(input());

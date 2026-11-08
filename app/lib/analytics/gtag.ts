@@ -19,6 +19,8 @@ type EventParams = {
   item_added: { source: ItemAddSource; count: number };
   item_finished: { kind: FinishKind };
   item_finish_undone: undefined;
+  // 개수별 먹음 처리 (계란, 양파처럼 일부만 먹었을 때)
+  item_partly_eaten: { count: number };
   comment_added: undefined;
   comment_edited: undefined;
   // 초간단 레시피. 재료 이름은 보내지 않는다

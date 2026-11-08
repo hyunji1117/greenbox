@@ -93,6 +93,27 @@ describe('PhotoAddSheet', () => {
     ]);
   });
 
+  it('장보기에서 쓰면 보관 위치 없이 고른 것만 리스트에 담고 냉장고에는 넣지 않는다', async () => {
+    mocks.apiFetch.mockResolvedValue({
+      items: [
+        { name: '우유', category: 'fridge', quantity: 1 },
+        { name: '만두', category: 'freezer', quantity: 2 },
+      ],
+    });
+    const onPickToList = vi.fn();
+    const { onAdded } = renderSheet({ onPickToList });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: '우유 넣기 선택' }),
+    );
+    expect(screen.queryByRole('radiogroup')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '1개 리스트에 담기' }));
+
+    expect(onPickToList).toHaveBeenCalledWith([{ name: '만두', quantity: 2 }]);
+    expect(onAdded).toHaveBeenCalledWith(1);
+    expect(mocks.mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('식재료를 못 찾으면 다시 찍기를 권한다', async () => {
     mocks.apiFetch.mockResolvedValue({ items: [] });
     renderSheet();

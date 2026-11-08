@@ -9,6 +9,8 @@ import GroceryListPage from './GroceryListPage';
 vi.mock('@/app/lib/items/useItems', () => ({
   useAddPurchasedItems: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
+// 사진으로 담기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다
+vi.mock('@/app/components/fridge/PhotoAddSheet', () => ({ default: () => null }));
 vi.mock('@/app/lib/storage/PurchaseDataStorage', () => ({
   default: {
     recordPurchase: vi.fn(),
@@ -50,49 +52,31 @@ describe('GroceryListPage', () => {
     expect(screen.getByRole('button', { name: '김치 지우기' })).toBeTruthy();
   });
 
-  it('식재료 사진을 누르면 담고, 다시 누르면 수량을 늘린다', () => {
+  it('사진을 누르면 리스트에 담고 체크로 보여 주며, 다시 누르면 빼고, 수량은 리스트에서 바꾼다', () => {
     render(<GroceryListPage />);
-
     fireEvent.click(
       screen.getByRole('button', { name: '시금치 리스트에 담기' }),
     );
+
+    const picked = screen.getByRole('button', {
+      name: '시금치 담음, 누르면 리스트에서 빼기',
+    });
+    expect(picked.getAttribute('aria-pressed')).toBe('true');
+
+    // 계란 30개처럼 많이 살 때는 리스트의 수량 칸에 직접 적는다
+    const quantity = screen.getByRole('textbox', { name: '시금치 수량' });
+    fireEvent.change(quantity, { target: { value: '30' } });
+    fireEvent.blur(quantity);
     expect(
-      screen.getByRole('button', { name: '시금치 수량 늘리기' }),
-    ).toBeTruthy();
+      (screen.getByRole('textbox', { name: '시금치 수량' }) as HTMLInputElement)
+        .value,
+    ).toBe('30');
 
-    fireEvent.click(
-      screen.getByRole('button', { name: '시금치 하나 더 담기, 지금 1개' }),
-    );
-    expect(
-      screen.getByRole('button', { name: '시금치 하나 더 담기, 지금 2개' }),
-    ).toBeTruthy();
-  });
-
-  it('담은 사진은 빼기로 하나씩 되돌리고, 0개가 되면 리스트에서 빠진다', () => {
-    render(<GroceryListPage />);
-    const spinach = () =>
-      screen.getByRole('button', {
-        name: /^시금치 (리스트에 담기|하나 더 담기)/,
-      });
-
-    fireEvent.click(spinach());
-    fireEvent.click(spinach());
-    fireEvent.click(
-      screen.getByRole('button', { name: '시금치 하나 빼기, 지금 2개' }),
-    );
-    expect(
-      screen.getByRole('button', { name: '시금치 하나 더 담기, 지금 1개' }),
-    ).toBeTruthy();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: '시금치 하나 빼기, 지금 1개' }),
-    );
+    fireEvent.click(picked);
     expect(
       screen.getByRole('button', { name: '시금치 리스트에 담기' }),
     ).toBeTruthy();
-    expect(
-      screen.queryByRole('button', { name: '시금치 수량 늘리기' }),
-    ).toBeNull();
+    expect(screen.queryByRole('textbox', { name: '시금치 수량' })).toBeNull();
   });
 
   it('사진 목록에 없는 이름도 찾은 그대로 담는다', () => {
