@@ -16,32 +16,17 @@ import {
   type KoreaClock,
 } from '@/app/lib/notifications/schedule';
 import {
-  configurePush,
-  deliverToUser,
-  type PushMessage,
-} from '@/app/lib/push/sendToUsers';
+  assignVariant,
+  buildSummary,
+  type SummaryKind,
+} from '@/app/lib/notifications/copy';
+import { configurePush, deliverToUser } from '@/app/lib/push/sendToUsers';
 
 // 장보기 전 요약은 다음 장보기 전까지(일주일 안) 끝나는 품목을 모은다
 export const WEEKLY_SUMMARY_DAYS = 7;
 
-export type SummaryKind = 'daily' | 'weekly';
-
-export function buildSummary(
-  kind: SummaryKind,
-  itemNames: string[],
-): PushMessage {
-  const [first, ...rest] = itemNames;
-  const subject = rest.length > 0 ? `${first} 외 ${rest.length}개` : first;
-  return kind === 'daily'
-    ? {
-        title: '곧 먹어야 할 식재료가 있어요',
-        body: `${subject}의 유통기한이 다가와요`,
-      }
-    : {
-        title: '다음 장보기 전에 먹어야 할 식재료',
-        body: `장 보기 전에 확인해 보세요. ${subject}의 유통기한이 일주일 안에 끝나요`,
-      };
-}
+export type { SummaryKind } from '@/app/lib/notifications/copy';
+export { buildSummary } from '@/app/lib/notifications/copy';
 
 export function isDailyDue(c: NotificationCandidate, clock: KoreaClock) {
   return c.enabled && isDueHour(c.dailyHour, clock.hour);
@@ -125,11 +110,14 @@ export async function sendDueSummaries(
       ).map(item => item.name);
       if (itemNames.length === 0) continue;
       // 알릴 품목이 없으면 기록을 남기지 않아, 그 시각 안에 품목이 생기면 다음 실행에서 받는다
-      if (!(await claimSummarySend(userId, kind, clock.date))) continue;
+      const variant = assignVariant(userId, clock.date, kind);
+      if (!(await claimSummarySend(userId, kind, clock.date, variant))) {
+        continue;
+      }
       tally.users += 1;
       const delivered = await deliverToUser(
         userId,
-        buildSummary(kind, itemNames),
+        buildSummary(kind, itemNames, variant, clock.date),
       );
       tally.sent += delivered.sent;
       tally.removed += delivered.removed;

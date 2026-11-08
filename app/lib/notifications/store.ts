@@ -199,10 +199,53 @@ export async function claimSummarySend(
   userId: string,
   kind: 'daily' | 'weekly',
   period: string,
+  // 알림 문구 A/B에서 이 사람이 받은 문구
+  variant?: string,
 ): Promise<boolean> {
   const { rowCount } = await getPool().query(
-    `INSERT INTO notification_sends (user_id, kind, period)
-     VALUES ($1, $2, $3::date) ON CONFLICT DO NOTHING`,
+    `INSERT INTO notification_sends (user_id, kind, period, variant)
+     VALUES ($1, $2, $3::date, $4) ON CONFLICT DO NOTHING`,
+    [Number(userId), kind, period, variant ?? null],
+  );
+  return rowCount === 1;
+}
+
+export interface VariantSummary {
+  kind: 'daily' | 'weekly';
+  variant: string;
+  sent: number;
+  opened: number;
+}
+
+// 알림 문구별 보낸 수와 눌러서 연 수 (문구를 기록하기 시작한 뒤의 발송만)
+export async function summarizePushVariants(
+  sinceDays: number,
+): Promise<VariantSummary[]> {
+  const { rows } = await getPool().query<{
+    kind: 'daily' | 'weekly';
+    variant: string;
+    sent: number;
+    opened: number;
+  }>(
+    `SELECT kind, variant, count(*)::int AS sent, count(opened_at)::int AS opened
+     FROM notification_sends
+     WHERE variant IS NOT NULL AND period > current_date - $1::integer
+     GROUP BY kind, variant
+     ORDER BY kind, variant`,
+    [sinceDays],
+  );
+  return rows;
+}
+
+// 알림을 눌러 앱을 열었을 때. 본인이 받은 그 알림에만, 처음 연 시각만 남긴다
+export async function markSummaryOpened(
+  userId: string,
+  kind: 'daily' | 'weekly',
+  period: string,
+): Promise<boolean> {
+  const { rowCount } = await getPool().query(
+    `UPDATE notification_sends SET opened_at = now()
+     WHERE user_id = $1 AND kind = $2 AND period = $3::date AND opened_at IS NULL`,
     [Number(userId), kind, period],
   );
   return rowCount === 1;

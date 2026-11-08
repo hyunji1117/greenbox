@@ -49,6 +49,8 @@ type EventParams = {
   install_link_shared: { method: 'share' | 'copy' };
   install_prompt_result: { outcome: 'accepted' | 'dismissed' };
   policy_notice_dismissed: undefined;
+  // 알림을 눌러 앱을 열었을 때. 문구 A/B 비교에 쓴다
+  notification_opened: { kind: 'daily' | 'weekly'; variant: string };
   // 알림 설정. source: 처음 묻는 화면(first)인지 설정 화면(settings)인지
   notify_level_selected: {
     level: 'all' | 'watched' | 'none';

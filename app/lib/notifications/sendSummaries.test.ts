@@ -72,10 +72,12 @@ describe('sendDueSummaries', () => {
     const result = await sendDueSummaries(FRIDAY_8AM);
 
     expect(mocks.listSummaryItems).toHaveBeenCalledWith(['1'], '2026-11-06', 7);
+    // 1번 사람의 11/06 매일 알림은 B 문구로 배정된다 (사람과 날짜로 고정)
     expect(mocks.claimSummarySend).toHaveBeenCalledWith(
       '1',
       'daily',
       '2026-11-06',
+      'B',
     );
     expect(mocks.deliverToUser).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({
@@ -112,8 +114,9 @@ describe('sendDueSummaries', () => {
 
     expect(mocks.deliverToUser).toHaveBeenCalledTimes(1);
     expect(mocks.deliverToUser).toHaveBeenCalledWith('1', {
-      title: '곧 먹어야 할 식재료가 있어요',
-      body: '우유 외 1개의 유통기한이 다가와요',
+      title: '오늘은 우유 먼저 먹어 볼까요?',
+      body: '우유 외 1개, 유통기한 전에 꺼내 두면 좋아요',
+      url: '/?tab=fridge&from=push&kind=daily&v=B&d=2026-11-06',
     });
     expect(mocks.claimSummarySend).toHaveBeenCalledTimes(1);
     expect(result.daily).toMatchObject({ due: 2, users: 1 });
@@ -161,6 +164,7 @@ describe('sendDueSummaries', () => {
     expect(mocks.deliverToUser).toHaveBeenCalledWith('1', {
       title: '다음 장보기 전에 먹어야 할 식재료',
       body: expect.stringContaining('우유 외 1개'),
+      url: '/?tab=fridge&from=push&kind=weekly&v=A&d=2026-11-07',
     });
     expect(result.weekly).toMatchObject({ due: 1, users: 1 });
   });
