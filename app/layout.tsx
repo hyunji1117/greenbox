@@ -6,6 +6,7 @@ import { Nanum_Gothic } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
 import Analytics from './_client/Analytics';
+import Telemetry from './_client/Telemetry';
 import PushOpenTracker from './_client/PushOpenTracker';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
@@ -54,6 +55,7 @@ export default function RootLayout({
       <body>
         <DevServerBadge />
         <Analytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        <Telemetry />
         <PushOpenTracker />
 
         <PushSubscriber />

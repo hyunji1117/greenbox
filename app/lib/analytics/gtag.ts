@@ -49,6 +49,12 @@ type EventParams = {
   install_link_shared: { method: 'share' | 'copy' };
   install_prompt_result: { outcome: 'accepted' | 'dismissed' };
   policy_notice_dismissed: undefined;
+  // 실제 사용자 기기의 성능 지표 (CLS는 1000배 한 정수)
+  web_vital: {
+    metric_name: string;
+    value: number;
+    rating: 'good' | 'needs-improvement' | 'poor';
+  };
   // 알림을 눌러 앱을 열었을 때. 문구 A/B 비교에 쓴다
   notification_opened: { kind: 'daily' | 'weekly'; variant: string };
   // 알림 설정. source: 처음 묻는 화면(first)인지 설정 화면(settings)인지
