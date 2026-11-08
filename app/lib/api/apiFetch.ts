@@ -2,6 +2,12 @@
 // 클라이언트의 서버 API 호출 창구. 응답을 스키마로 검증해서 화면에는 믿을 수 있는 값만 넘긴다.
 // 실패 원인에 따라 처리가 달라서 HTTP 실패와 응답 형식 불일치를 다른 에러로 구분한다.
 
+import {
+  APP_VERSION,
+  APP_VERSION_HEADER,
+  UPDATE_REQUIRED_EVENT,
+  UPDATE_REQUIRED_STATUS,
+} from '@/app/lib/app/version';
 import type { z } from 'zod';
 
 // 서버가 실패 상태로 응답함 (401, 404, 500 등)
@@ -50,14 +56,20 @@ export async function apiFetch<Schema extends z.ZodType>(
     method,
     signal,
     cache: 'no-store',
-    headers:
-      body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers: {
+      [APP_VERSION_HEADER]: APP_VERSION,
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   // 본문이 JSON이 아닌 응답(프록시 오류 페이지 등)도 아래에서 에러로 처리된다
   const json: unknown = await res.json().catch(() => null);
   if (!res.ok) {
+    // 새 버전이 배포돼 이 화면이 예전 버전이면 업데이트 화면을 띄운다 (UpdateWatcher)
+    if (res.status === UPDATE_REQUIRED_STATUS) {
+      window.dispatchEvent(new Event(UPDATE_REQUIRED_EVENT));
+    }
     // 앱을 켜 둔 채 방침 시행 시각이 지나면 API가 동의를 요구한다. 동의 화면으로 보낸다
     if (res.status === 403 && isConsentRequired(json)) {
       window.location.assign('/consent');

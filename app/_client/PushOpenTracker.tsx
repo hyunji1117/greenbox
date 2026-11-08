@@ -5,6 +5,7 @@
 
 import { useEffect } from 'react';
 import { track } from '@/app/lib/analytics/gtag';
+import { APP_VERSION, APP_VERSION_HEADER } from '@/app/lib/app/version';
 import {
   readPushOpen,
   withoutPushParams,
@@ -30,7 +31,10 @@ export default function PushOpenTracker() {
     );
     void fetch('/api/notifications/opened', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        [APP_VERSION_HEADER]: APP_VERSION,
+      },
       body: JSON.stringify({ kind: open.kind, period: open.period }),
       keepalive: true,
     }).catch(() => {});

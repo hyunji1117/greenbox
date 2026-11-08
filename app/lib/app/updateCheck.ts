@@ -30,12 +30,19 @@ export function alreadyReloadedFor(version: string): boolean {
   }
 }
 
-// 서비스 워커도 새 버전을 받게 한 뒤 새로 불러온다
+// 앱을 새로 받아 다시 연다 (종료했다 다시 켠 것과 같게)
+// 저장해 둔 화면 파일(캐시)을 모두 지우고, 서비스 워커도 새 버전을 받게 한 뒤 새로 불러온다
 export async function reloadToVersion(version: string): Promise<void> {
   try {
     sessionStorage.setItem(RELOADED_FOR_KEY, version);
   } catch {
     // 기억하지 못해도 새로 불러오기는 한다
+  }
+  try {
+    const keys = (await window.caches?.keys()) ?? [];
+    await Promise.all(keys.map(key => window.caches.delete(key)));
+  } catch {
+    // 캐시를 지우지 못해도 새로 불러오기는 한다
   }
   try {
     await (await navigator.serviceWorker?.getRegistration())?.update();

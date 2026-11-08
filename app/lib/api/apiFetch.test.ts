@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { ApiError, ApiSchemaError, apiFetch } from './apiFetch';
+import { APP_VERSION } from '@/app/lib/app/version';
 
 const Schema = z.object({ id: z.string() });
 
@@ -50,9 +51,22 @@ describe('apiFetch', () => {
       expect.objectContaining({
         method: 'POST',
         body: '{"a":1}',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'x-app-version': APP_VERSION,
+          'Content-Type': 'application/json',
+        },
       }),
     );
+  });
+
+  it('예전 버전이라 업데이트가 필요하다는 426이면 업데이트 화면을 띄우게 알린다', async () => {
+    mockFetch(426, '{"error":"update_required"}');
+    const onUpdate = vi.fn();
+    window.addEventListener('greenbox:update-required', onUpdate);
+
+    await expect(apiFetch('/api/x', Schema)).rejects.toBeInstanceOf(ApiError);
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    window.removeEventListener('greenbox:update-required', onUpdate);
   });
 
   it('방침 동의가 필요하다는 403이면 동의 화면으로 보낸다', async () => {
