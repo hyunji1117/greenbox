@@ -22,7 +22,7 @@ export const NotificationSettingsSchema = z.object({
 export type NotificationSettings = z.infer<typeof NotificationSettingsSchema>;
 
 // 가족 응답(26.11.06)으로 정한 기본값. 마이그레이션 0009의 DEFAULT와 같게 유지한다
-// 하루 요약: 아침 8시 / 주간 요약: 토요일 12시 (주말 오후 장 보러 나가기 전)
+// 하루 요약: 아침 8시 / 장보기 전 요약(주간): 토요일 12시 (주말 오후 장 보러 나가기 전)
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
   dailyHour: 8,

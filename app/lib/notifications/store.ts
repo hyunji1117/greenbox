@@ -143,12 +143,20 @@ export async function listNotificationCandidates(): Promise<
   }));
 }
 
-export interface SummaryItems {
-  userId: string;
-  itemNames: string[];
+export interface SummaryItem {
+  name: string;
+  // 오늘부터 유통기한까지 남은 날 (오늘이 마지막 날이면 0)
+  daysLeft: number;
+  // 등록한 날부터 유통기한까지 (알림 시작일을 정하는 보관 기간)
+  periodDays: number;
 }
 
-// 한국 날짜 today부터 withinDays일 안에 끝나는 품목을 사람마다 묶는다
+export interface SummaryItems {
+  userId: string;
+  items: SummaryItem[];
+}
+
+// 한국 날짜 today부터 withinDays일 안에 끝나는 품목을 사람마다 묶는다 (유통기한이 가까운 순)
 // 냉장고별 알림 수준을 따른다: 전체 품목 / 관심 품목만(고르지 않았으면 이것) / 받지 않음
 // 지난 품목은 매일 다시 알리지 않는다
 export async function listSummaryItems(
@@ -159,9 +167,13 @@ export async function listSummaryItems(
   if (userIds.length === 0) return [];
   const { rows } = await getPool().query<{
     user_id: number;
-    item_names: string[];
+    items: SummaryItem[];
   }>(
-    `SELECT m.user_id, array_agg(i.name ORDER BY i.expiry_date, i.id) AS item_names
+    `SELECT m.user_id, json_agg(json_build_object(
+         'name', i.name,
+         'daysLeft', i.expiry_date - $2::date,
+         'periodDays', i.expiry_date - (i.created_at AT TIME ZONE 'Asia/Seoul')::date
+       ) ORDER BY i.expiry_date, i.id) AS items
      FROM fridge_members m
      JOIN items i ON i.fridge_id = m.fridge_id
      WHERE m.user_id = ANY($1::int[])
@@ -178,7 +190,7 @@ export async function listSummaryItems(
   );
   return rows.map(row => ({
     userId: String(row.user_id),
-    itemNames: row.item_names,
+    items: row.items,
   }));
 }
 

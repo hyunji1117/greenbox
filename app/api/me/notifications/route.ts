@@ -1,5 +1,5 @@
 // app/api/me/notifications/route.ts
-// 내 알림 설정 (켜기/끄기, 하루 요약 시각, 주간 요약 요일과 시각)
+// 내 알림 설정 (켜기/끄기, 하루 요약 시각, 장보기 전 요약 요일과 시각)
 // 가족마다 생활 시간이 달라 사람마다 따로 정한다
 
 import { NextResponse } from 'next/server';
