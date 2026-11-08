@@ -94,8 +94,9 @@ export function buildDigestHtml(newRows: FeedbackRow[], total: number): string {
 export interface DigestEmail {
   subject: string;
   html: string;
-  filename: string;
-  attachment: Buffer;
+  // 운영 지표 메일처럼 첨부가 없는 메일도 같은 함수로 보낸다
+  filename?: string;
+  attachment?: Buffer;
 }
 
 // Resend로 보낸다. 가입한 본인 메일로는 도메인 없이 onboarding@resend.dev에서 보낼 수 있다
@@ -115,12 +116,15 @@ export async function sendDigestEmail(email: DigestEmail): Promise<void> {
       to: [process.env.FEEDBACK_EMAIL_TO ?? OPERATOR.email],
       subject: email.subject,
       html: email.html,
-      attachments: [
-        {
-          filename: email.filename,
-          content: email.attachment.toString('base64'),
-        },
-      ],
+      attachments:
+        email.attachment && email.filename
+          ? [
+              {
+                filename: email.filename,
+                content: email.attachment.toString('base64'),
+              },
+            ]
+          : undefined,
     }),
   });
   if (!res.ok) {

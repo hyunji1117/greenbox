@@ -2,6 +2,7 @@
 # 매시간 요약 알림 발송 API와 의견 모음 메일 API를 호출한다
 # - 요약 알림: 사람마다 정한 시각에 하루 요약과 주간 요약을 보낸다
 # - 의견 모음 메일: 오전 9시대에 하루 한 번, 누적 엑셀을 첨부해 운영자에게 보낸다 (서버가 시각을 판단)
+# - 운영 지표 메일: 오전 9시대에 하루 한 번, 실제 사용자 성능과 화면 오류, 알림 문구 A/B 결과를 보낸다
 # Vercel 무료 플랜의 예약 작업은 하루 1회만 가능해 GitHub Actions로 매시간 깨운다 (docs/decisions/0004)
 # - 예약 실행은 몇 분 늦거나 드물게 건너뛸 수 있다. 서버는 정한 시각부터 2시간 안에는 아직 안 보낸 사람에게 보낸다
 # - 실행 결과(대상 수, 보낸 수, 실패 수, 늦은 분)를 실행 요약에 남긴다
@@ -18,6 +19,10 @@ on:
     inputs:
       send_feedback_now:
         description: '개발 피드백 메일을 시각과 상관없이 지금 보내기 (하루 한 번은 그대로)'
+        type: boolean
+        default: false
+      send_ops_now:
+        description: '운영 지표 메일을 시각과 상관없이 지금 보내기 (하루 한 번은 그대로)'
         type: boolean
         default: false
 
@@ -94,5 +99,33 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "$status" != "200" ]; then
             echo "::error::의견 모음 메일 API가 $status를 돌려줬습니다"
+            exit 1
+          fi
+
+      - name: 운영 지표 메일 API 호출
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL || 'https://greenbox-seven.vercel.app' }}
+          NOW_QUERY: ${{ inputs.send_ops_now && '?now=1' || '' }}
+        run: |
+          status=$(curl -sS -o ops.json -w '%{http_code}' --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/cron/ops-digest$NOW_QUERY")
+          # status: not_due / already_sent / no_data / sent (건수만, 내용 없음)
+          echo "HTTP $status"
+          cat ops.json; echo
+          {
+            echo "## 운영 지표 메일 결과"
+            echo ""
+            echo "HTTP $status"
+            echo ""
+            echo '```json'
+            cat ops.json
+            echo ""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" != "200" ]; then
+            echo "::error::운영 지표 메일 API가 $status를 돌려줬습니다"
             exit 1
           fi
