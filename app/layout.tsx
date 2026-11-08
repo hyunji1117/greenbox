@@ -8,6 +8,7 @@ import PushSubscriber from './_client/PushSubscriber';
 import Analytics from './_client/Analytics';
 import Telemetry from './_client/Telemetry';
 import PushOpenTracker from './_client/PushOpenTracker';
+import UpdateWatcher from './_client/UpdateWatcher';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
 import DevServerBadge from '@/app/components/common/DevServerBadge';
@@ -57,6 +58,7 @@ export default function RootLayout({
         <Analytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
         <Telemetry />
         <PushOpenTracker />
+        <UpdateWatcher />
 
         <PushSubscriber />
         <QueryProvider>{children}</QueryProvider>
