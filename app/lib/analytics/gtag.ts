@@ -53,6 +53,8 @@ type EventParams = {
   install_link_shared: { method: 'share' | 'copy' };
   install_prompt_result: { outcome: 'accepted' | 'dismissed' };
   policy_notice_dismissed: undefined;
+  // 새 버전 반영: 앱으로 돌아올 때 자동으로, 또는 안내의 새로 고침 버튼으로
+  app_updated: { how: 'auto' | 'button' };
   // 실제 사용자 기기의 성능 지표 (CLS는 1000배 한 정수)
   web_vital: {
     metric_name: string;
