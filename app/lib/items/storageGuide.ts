@@ -119,6 +119,9 @@ export const DEFAULT_DAYS: Record<Category, number> = {
 // 긴 낱말부터 맞춰 본다
 const KEYS = Object.keys(GUIDE).sort((a, b) => b.length - a.length);
 
+// 보관 기간을 아는 식재료 이름들 (음성으로 들은 이름이 식재료인지 확인할 때도 쓴다)
+export const GUIDE_KEYWORDS: readonly string[] = KEYS;
+
 export function recommendedDays(name: string, category: Category): number {
   const normalized = name.replace(/\s+/g, '');
   for (const key of KEYS) {

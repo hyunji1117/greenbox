@@ -1,7 +1,13 @@
 // app/components/fridge/FridgeQuickAdd.test.tsx
 
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Item } from '@/app/lib/schemas/item';
 import FridgeQuickAdd from './FridgeQuickAdd';
@@ -53,7 +59,8 @@ describe('FridgeQuickAdd', () => {
     expect(screen.getByRole('button', { name: '식재료 추가' })).toBeTruthy();
   });
 
-  it('펼친 음성으로 말한 이름은 입력창에 넣어 확인 후 등록한다', () => {
+  // 말한 글자를 차례로 들려준 뒤 끝내는 가짜 음성 인식 (말하는 도중 "오" → 끝에 "오이")
+  const fakeRecognition = (transcripts: string[]) =>
     class FakeRecognition {
       lang = '';
       interimResults = false;
@@ -63,25 +70,65 @@ describe('FridgeQuickAdd', () => {
       onerror = null;
       onend: (() => void) | null = null;
       start() {
-        this.onresult?.({
-          results: [
-            Object.assign([{ transcript: '양파.' }], { isFinal: true }),
-          ],
-        });
+        transcripts.forEach((transcript, index) =>
+          setTimeout(
+            () =>
+              this.onresult?.({
+                results: [Object.assign([{ transcript }], { isFinal: false })],
+              }),
+            150 * (index + 1),
+          ),
+        );
+        setTimeout(() => this.onend?.(), 150 * (transcripts.length + 1));
       }
       stop() {}
       abort() {}
-    }
-    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition);
-    render(<FridgeQuickAdd category="fridge" items={[]} />);
+    };
 
+  const speak = async (transcripts: string[]) => {
+    vi.stubGlobal('webkitSpeechRecognition', fakeRecognition(transcripts));
+    render(<FridgeQuickAdd category="fridge" items={[]} />);
     fireEvent.click(
       screen.getByRole('button', { name: '사진이나 음성으로 넣기' }),
     );
     fireEvent.click(screen.getByRole('button', { name: '말로 넣기' }));
+  };
 
-    expect((input() as HTMLInputElement).value).toBe('양파');
+  it('말하는 동안에는 등록할 수 없고, 다 들은 뒤 식재료 이름이면 입력창에 넣는다', async () => {
+    await speak(['오', '오이.']);
+    // 말하는 도중에는 + 가 등록 버튼이 되지 않는다
+    await waitFor(() =>
+      expect(screen.getByText(/듣고 있어요: ‘오’/)).toBeTruthy(),
+    );
+    expect(screen.queryByRole('button', { name: '식재료 추가' })).toBeNull();
+
+    await waitFor(() =>
+      expect((input() as HTMLInputElement).value).toBe('오이'),
+    );
+    expect(screen.getByRole('button', { name: '식재료 추가' })).toBeTruthy();
     expect(mutate).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it('식재료가 아닌 말로 들리면 넣지 않고 다시 말할지 묻는다', async () => {
+    await speak(['오']);
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain(
+        '‘오’는 식재료 이름이 아닌 것 같아요',
+      ),
+    );
+    expect((input() as HTMLInputElement).value).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: '그대로 넣기' }));
+    expect((input() as HTMLInputElement).value).toBe('오');
+    vi.unstubAllGlobals();
+  });
+
+  it('한 글자 틀리게 들리면 아는 이름으로 고쳐 넣는다', async () => {
+    await speak(['파프리가']);
+    await waitFor(() =>
+      expect((input() as HTMLInputElement).value).toBe('파프리카'),
+    );
+    expect(screen.getByText(/‘파프리가’를 ‘파프리카’/)).toBeTruthy();
     vi.unstubAllGlobals();
   });
 

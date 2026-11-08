@@ -9,8 +9,8 @@ import React, { useRef, useState } from 'react';
 import { PlusIcon, ShoppingBasket } from 'lucide-react';
 import InputAddActions from '@/app/components/common/InputAddActions';
 import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
-import { SPEECH_ERROR_TEXT } from '@/app/components/grocery-list/FrequentItemsPicker';
-import { useSpeechInput } from '@/app/lib/speech/useSpeechInput';
+import { useVoiceFoodName } from '@/app/lib/speech/useVoiceFoodName';
+import VoiceCheckNotice from '@/app/components/common/VoiceCheckNotice';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import {
   getHomeSuggestions,
@@ -51,8 +51,12 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [notice, setNotice] = useState('');
-  // 말한 내용을 이름 칸에 넣는다
-  const speech = useSpeechInput(text => setName(text.slice(0, ITEM_NAME_MAX)));
+  // 말한 이름은 다 들은 뒤 식재료 이름인지 확인하고 넣는다 (말하는 도중 글자나 잘못 들은 말이 등록되지 않게)
+  const voice = useVoiceFoodName({
+    knownNames: items.map(item => item.name),
+    onAccept: setName,
+  });
+  const speech = voice.speech;
   const cameraRef = useRef<HTMLInputElement>(null);
   const openCamera = () => {
     setNotice('');
@@ -115,7 +119,8 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"
         />
         <InputAddActions
-          canSubmit={Boolean(trimmedName)}
+          // 말하는 동안에는 + 가 등록이 되지 않게 한다
+          canSubmit={Boolean(trimmedName) && !speech.isListening}
           isSubmitting={createItem.isPending}
           submitLabel="식재료 추가"
           onCamera={openCamera}
@@ -137,21 +142,15 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           if (file) setPhoto(file);
         }}
       />
-      {(speech.isListening || speech.error) && (
-        <p aria-live="polite" className="mt-2 px-1 text-xs">
-          {speech.isListening ? (
-            <span className="text-[#553C9A]">
-              듣고 있어요. 등록할 식재료 이름을 말해 주세요
-            </span>
-          ) : (
-            speech.error && (
-              <span className="text-red-500">
-                {SPEECH_ERROR_TEXT[speech.error]}
-              </span>
-            )
-          )}
-        </p>
-      )}
+      <VoiceCheckNotice
+        isListening={speech.isListening}
+        heard={voice.heard}
+        check={voice.check}
+        error={speech.error}
+        onRetry={speech.start}
+        onAcceptHeard={voice.acceptHeard}
+        listeningHint="등록할 식재료 이름을 말해 주세요"
+      />
       <div
         className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
           isExpanded

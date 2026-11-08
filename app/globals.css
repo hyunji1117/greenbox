@@ -26,6 +26,18 @@
   --animate-ai-flow: ai-flow 8s linear infinite;
   --animate-ai-flow-fast: ai-flow 2.4s linear infinite;
   --animate-ai-wave: ai-wave 0.9s ease-in-out infinite;
+  /* 녹음 중 표시: 빨간 불이 깜빡인다 */
+  --animate-rec-blink: rec-blink 1s ease-in-out infinite;
+
+  @keyframes rec-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.15;
+    }
+  }
 
   @keyframes ai-flow {
     from {

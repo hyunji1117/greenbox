@@ -11,17 +11,10 @@ import InputAddActions from '@/app/components/common/InputAddActions';
 import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
+import { findByName } from '@/app/lib/items/nameMatch';
 import { ITEM_NAME_MAX } from '@/app/lib/schemas/item';
-import {
-  useSpeechInput,
-  type SpeechError,
-} from '@/app/lib/speech/useSpeechInput';
-
-export const SPEECH_ERROR_TEXT: Record<SpeechError, string> = {
-  denied: '마이크 사용이 막혀 있어요. 브라우저 설정에서 마이크를 허용해 주세요',
-  'no-speech': '말소리를 듣지 못했어요. 다시 눌러 말해 주세요',
-  failed: '음성으로 찾지 못했어요. 글자로 찾아 주세요',
-};
+import { useVoiceFoodName } from '@/app/lib/speech/useVoiceFoodName';
+import VoiceCheckNotice from '@/app/components/common/VoiceCheckNotice';
 
 const CATEGORY_TABS = [
   { id: 'vegetables', label: '채소' },
@@ -76,13 +69,14 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
   const items = useMemo(
     () =>
       keyword
-        ? mockItems.filter(item => item.name.includes(keyword))
+        ? findByName(mockItems, keyword)
         : mockItems.filter(item => item.category === activeCategory),
     [keyword, activeCategory],
   );
   const hasExactMatch = items.some(item => item.name === keyword);
-  // 말한 내용을 검색어로 넣는다. 말하는 동안에도 결과가 바로 바뀐다
-  const speech = useSpeechInput(text => setQuery(text.slice(0, ITEM_NAME_MAX)));
+  // 말한 이름은 다 들은 뒤 식재료 이름인지 확인하고 찾기 칸에 넣는다 (잘못 들은 말이 그대로 담기지 않게)
+  const voice = useVoiceFoodName({ onAccept: setQuery });
+  const speech = voice.speech;
 
   const addTyped = () => {
     if (!keyword) return;
@@ -128,8 +122,8 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
           </button>
         )}
         <InputAddActions
-          canSubmit={Boolean(keyword)}
-          submitLabel="적은 이름 그대로 담기"
+          canSubmit={Boolean(keyword) && !speech.isListening}
+          submitLabel="적은 이름 리스트에 추가하기"
           onCamera={() => cameraRef.current?.click()}
           speech={speech}
         />
@@ -156,17 +150,17 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
         onAdded={() => setPhoto(null)}
       />
       {/* 화면 읽기 프로그램에도 듣는 중과 오류를 알린다 */}
-      <p aria-live="polite" className="-mt-1 mb-3 px-1 text-xs empty:hidden">
-        {speech.isListening ? (
-          <span className="text-[#553C9A]">
-            듣고 있어요. 식재료 이름을 말해 주세요
-          </span>
-        ) : speech.error ? (
-          <span className="text-red-500">
-            {SPEECH_ERROR_TEXT[speech.error]}
-          </span>
-        ) : null}
-      </p>
+      <div className="-mt-1 mb-3">
+        <VoiceCheckNotice
+          isListening={speech.isListening}
+          heard={voice.heard}
+          check={voice.check}
+          error={speech.error}
+          onRetry={speech.start}
+          onAcceptHeard={voice.acceptHeard}
+          listeningHint="식재료 이름을 말해 주세요"
+        />
+      </div>
 
       {keyword ? (
         // 사진 목록에 똑같은 이름이 없으면 적은 이름 그대로 담을 수 있게 맨 위에 둔다
@@ -177,7 +171,7 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
             className={`mb-3 flex min-h-12 w-full items-center gap-2 px-4 text-left text-sm font-medium text-[#553C9A] ${SURFACE}`}
           >
             <Plus size={18} className="shrink-0" />
-            <span className="min-w-0 truncate">‘{keyword}’ 그대로 담기</span>
+            <span className="min-w-0 truncate">‘{keyword}’ 리스트에 추가하기</span>
           </button>
         )
       ) : (
