@@ -1,10 +1,10 @@
 'use client';
 // app/components/settings/NotificationSettingsCard.tsx
-// 요약 알림을 받을 시각과 이 냉장고의 알림 수준. 가족마다 생활 시간이 달라 사람마다 정한다
+// 알림을 받을 시각과 이 냉장고의 알림 수준. 가족마다 생활 시간이 달라 사람마다 정한다
 // 바꾸면 바로 저장한다 (저장 버튼 없음). 실패하면 원래 값으로 돌아가고 안내한다
 
 import React from 'react';
-import { ChevronDownIcon } from 'lucide-react';
+import { BellIcon, ChevronDownIcon } from 'lucide-react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import {
@@ -27,14 +27,26 @@ const LEVEL_OPTIONS: { level: NotifyLevel; label: string }[] = [
   { level: 'none', label: '받지 않음' },
 ];
 
-const LEVEL_HINT: Record<NotifyLevel, string> = {
+// 관심 품목 안내의 종은 품목 카드에서 켜진 종과 같은 아이콘과 색으로 보여 준다
+const LEVEL_HINT: Record<NotifyLevel, React.ReactNode> = {
   all: '이 냉장고의 모든 품목을 알려 드려요',
-  watched: '내가 넣은 품목과 종을 누른 품목만 알려 드려요',
+  watched: (
+    <>
+      내가 넣은 품목과 종
+      <BellIcon
+        size={15}
+        aria-hidden
+        className="mx-0.5 inline-block align-middle text-[#6B46C1]"
+      />
+      을 누른 품목만 알려 드려요
+    </>
+  ),
   none: '이 냉장고 품목은 알려 드리지 않아요',
 };
 
 // iOS Safari는 16px 미만 입력을 누르면 화면을 확대하므로 text-base를 쓴다
 // 기본 화살표는 칸 오른쪽 끝에 붙어 그려져, 기본 모양을 끄고 안쪽 여백에 맞춘 화살표를 직접 둔다
+// 항목 이름(pl-3)은 선택칸 안 글자와 같은 시작점에 둔다
 const SELECT =
   'h-11 w-full appearance-none rounded-xl bg-[#F4F4F8] pr-9 pl-3 text-base text-gray-700 focus:ring-1 focus:ring-[#A794D6] focus:outline-none disabled:opacity-50';
 
@@ -89,15 +101,10 @@ const NotificationSettingsCard: React.FC = () => {
   return (
     <div className={`space-y-4 p-4 ${SURFACE}`}>
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-gray-800">요약 알림</h2>
-          <p className="mt-0.5 text-xs text-gray-500">
-            곧 먹어야 할 식재료를 정한 시각에 한 번에 모아 알려 드려요
-          </p>
-        </div>
+        <h2 className="text-sm font-semibold text-gray-800">알림 설정</h2>
         <Switch
           checked={settings.enabled}
-          label="요약 알림 받기"
+          label="알림 받기"
           onChange={enabled => update.mutate({ enabled })}
         />
       </div>
@@ -105,9 +112,9 @@ const NotificationSettingsCard: React.FC = () => {
       <div>
         <label
           htmlFor="daily-hour"
-          className="mb-1 block text-xs font-medium text-gray-500"
+          className="mb-1 block pl-3 text-xs font-medium text-gray-500"
         >
-          하루 요약 (오래 두는 식재료일수록 미리)
+          매일 알림
         </label>
         <Select
           id="daily-hour"
@@ -125,12 +132,12 @@ const NotificationSettingsCard: React.FC = () => {
 
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-500">
-            장보기 전 요약 (장 보는 날, 일주일 안)
+          <span className="pl-3 text-xs font-medium text-gray-500">
+            장보기 전 알림
           </span>
           <Switch
             checked={settings.weeklyEnabled}
-            label="장보기 전 요약 받기"
+            label="장보기 전 알림 받기"
             onChange={weeklyEnabled => update.mutate({ weeklyEnabled })}
           />
         </div>
@@ -143,12 +150,12 @@ const NotificationSettingsCard: React.FC = () => {
           >
             {WEEKDAY_LABELS.map((label, day) => (
               <option key={label} value={day}>
-                {label}요일에 장 봐요
+                {label}요일
               </option>
             ))}
           </Select>
           <Select
-            aria-label="장보기 전 요약 시각"
+            aria-label="장보기 전 알림 시각"
             value={settings.weeklyHour}
             disabled={off || !settings.weeklyEnabled}
             onChange={e =>
@@ -166,7 +173,7 @@ const NotificationSettingsCard: React.FC = () => {
 
       {fridge && (
         <div>
-          <p className="mb-1 text-xs font-medium text-gray-500">
+          <p className="mb-1 pl-3 text-xs font-medium text-gray-500">
             {fridge.name} 알림
           </p>
           <div
@@ -194,7 +201,7 @@ const NotificationSettingsCard: React.FC = () => {
               </button>
             ))}
           </div>
-          <p className="mt-1 text-xs text-gray-500">{LEVEL_HINT[level]}</p>
+          <p className="mt-1 pl-3 text-xs text-gray-500">{LEVEL_HINT[level]}</p>
         </div>
       )}
 
