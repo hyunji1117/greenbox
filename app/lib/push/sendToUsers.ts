@@ -11,6 +11,8 @@ import {
 export interface PushMessage {
   title: string;
   body: string;
+  // 알림을 눌렀을 때 열 주소 (없으면 홈)
+  url?: string;
 }
 
 export interface DeliveryResult {

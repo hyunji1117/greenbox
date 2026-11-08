@@ -15,11 +15,20 @@ self.addEventListener('push', event => {
     self.registration.showNotification(data.title || '알림', {
       body: data.body || '새로운 알림이 도착했습니다',
       icon: '/our-fridge_logo2_192_bgwhite.png',
+      // 누르면 열 주소. 같은 사이트 경로만 받는다
+      data: {
+        url:
+          typeof data.url === 'string' && data.url.startsWith('/')
+            ? data.url
+            : '/',
+      },
     }),
   );
 });
 
+// 요약 알림은 냉장고 탭과 함께 어떤 알림이었는지(종류, 문구, 날짜)를 주소에 담아 연다 (열기 기록용)
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  event.waitUntil(self.clients.openWindow('/'));
+  const url = event.notification.data?.url ?? '/';
+  event.waitUntil(self.clients.openWindow(url));
 });
