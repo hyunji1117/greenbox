@@ -4,6 +4,7 @@
 // 냉장고 바꾸기 안내와 함께 보는 사람 안내가 함께 쓴다
 
 import React, {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -11,8 +12,11 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { track, type GuideName } from '@/app/lib/analytics/gtag';
 
 interface SpotlightGuideProps {
+  // 측정용 안내 이름. 보였는지, 어느 버튼을 눌렀는지 GA에 남긴다
+  guide: GuideName;
   // 밝게 비출 화면 요소
   target: React.RefObject<HTMLElement | null>;
   title: string;
@@ -30,6 +34,7 @@ interface SpotlightGuideProps {
 const SPOTLIGHT_PADDING = 6;
 
 const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
+  guide,
   target,
   title,
   body,
@@ -41,6 +46,19 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
   spotShape = 'rounded-xl',
 }) => {
   const titleId = useId();
+  const handlePrimary = () => {
+    track('guide_action', { guide, action: 'primary' });
+    onPrimary();
+  };
+  const handleClose = useCallback(() => {
+    track('guide_action', { guide, action: 'close' });
+    onClose();
+  }, [guide, onClose]);
+
+  useEffect(() => {
+    track('guide_shown', { guide });
+  }, [guide]);
+
   const primaryRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
@@ -60,11 +78,11 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
   useEffect(() => {
     primaryRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [handleClose]);
 
   if (!rect) return null;
 
@@ -87,13 +105,13 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
         type="button"
         aria-label="안내 닫기"
         className="absolute inset-0 cursor-default"
-        onClick={onClose}
+        onClick={handleClose}
       />
       {/* 비출 곳만 밝게 남기고 나머지를 어둡게 덮는다. 비춘 자리를 누르면 바로 그 기능을 연다 */}
       <button
         type="button"
         aria-label={spotLabel}
-        onClick={onPrimary}
+        onClick={handlePrimary}
         className={`absolute ${spotShape} shadow-[0_0_0_9999px_rgba(17,12,34,0.55)] ring-2 ring-white/80`}
         style={spot}
       />
@@ -109,14 +127,14 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
           <button
             ref={primaryRef}
             type="button"
-            onClick={onPrimary}
+            onClick={handlePrimary}
             className="h-10 flex-1 rounded-xl bg-[#6B46C1] text-sm font-medium text-white"
           >
             {primaryLabel}
           </button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="h-10 flex-1 rounded-xl bg-[#F4F4F8] text-sm font-medium text-gray-700"
           >
             {closeLabel}

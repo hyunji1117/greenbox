@@ -15,6 +15,7 @@ import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
 import { useQueryClient } from '@tanstack/react-query';
 import { fridgeKeys, itemKeys } from '@/app/lib/query/keys';
+import { track } from '@/app/lib/analytics/gtag';
 
 interface SettingsPageProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
         setNicknameMessage({ type: 'error', text: result.error });
         return;
       }
+      track('nickname_saved');
       setMyProfile({ ...myProfile, familyNickname: result.familyNickname });
       // 품목과 댓글, 구성원 목록의 내 이름도 서버가 만들어 보내므로 새로 불러온다
       void queryClient.invalidateQueries({ queryKey: itemKeys.all });
@@ -76,6 +78,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   };
 
   const handleLogout = () => {
+    track('logged_out');
     startLoggingOut(async () => {
       await logout();
     });

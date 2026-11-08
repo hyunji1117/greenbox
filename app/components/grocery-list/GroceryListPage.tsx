@@ -17,6 +17,7 @@ import ActionToast from '@/app/components/common/ActionToast';
 import ScrollTopButton from '@/app/components/common/ScrollTopButton';
 import FrequentItemsPicker from '@/app/components/grocery-list/FrequentItemsPicker';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
+import { track } from '@/app/lib/analytics/gtag';
 import { useAddPurchasedItems } from '@/app/lib/items/useItems';
 import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
@@ -66,6 +67,7 @@ const GroceryListPage: React.FC = () => {
 
   // 같은 이름이 있으면 수량만 늘린다
   const addToList = (name: string) => {
+    track('grocery_item_added');
     setShoppingList(prev => {
       const existing = prev.find(i => i.name === name);
       if (existing) {
@@ -189,6 +191,7 @@ const GroceryListPage: React.FC = () => {
   const onLoadFavorite = (favoriteId: number) => {
     const fav = favorites.find(f => f.id === favoriteId);
     if (!fav) return;
+    track('grocery_favorite_loaded', { count: fav.items.length });
     setShoppingList(fav.items.map(i => ({ ...i, completed: false })));
     setActiveView('list');
     toast(`'${fav.name}' 목록을 불러왔어요`);
@@ -214,6 +217,7 @@ const GroceryListPage: React.FC = () => {
         quantity,
       })),
     };
+    track('grocery_favorite_saved', { count: fav.items.length });
     setFavorites(prev => [...prev, fav]);
     toast(`'${fav.name}' 즐겨찾기를 저장했어요`);
   };

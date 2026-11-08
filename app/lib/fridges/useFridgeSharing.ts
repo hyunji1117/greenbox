@@ -113,8 +113,10 @@ export function useRevokeInvite(fridgeId: string) {
       apiFetch(`${fridgeUrl(fridgeId)}/invite`, NoContent, {
         method: 'DELETE',
       }),
-    onSuccess: () =>
-      queryClient.setQueryData(fridgeKeys.invite(fridgeId), null),
+    onSuccess: () => {
+      track('invite_link_revoked');
+      queryClient.setQueryData(fridgeKeys.invite(fridgeId), null);
+    },
   });
 }
 
