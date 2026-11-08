@@ -2,53 +2,49 @@
 // app/components/common/PolicyNoticeBanner.tsx
 // 개인정보처리방침 시행 전에 앱 위쪽에서 미리 알린다 (시행 7일 전에 배포해 두면 그 기간 동안 보인다)
 // 시행일이 지나면 동의 화면이 대신 알린다. 다시 동의받지 않는 변경은 시행 뒤 7일 동안 여기서 알린다
-// 닫으면 같은 버전은 이 기기에서 다시 보이지 않는다
+// 닫으면 같은 버전은 이 기기에서 다시 보이지 않는다 (쿠키에 기록해 서버가 첫 HTML부터 빼고 그린다)
 
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { XIcon } from 'lucide-react';
+import { track } from '@/app/lib/analytics/gtag';
+import { policyDateLabel, upcomingPolicy } from '@/app/lib/consent/policies';
 import {
-  policyDateLabel,
-  recentAmendment,
-  upcomingPolicy,
-} from '@/app/lib/consent/policies';
+  LEGACY_DISMISSED_KEY_PREFIX,
+  rememberDismissed,
+} from '@/app/lib/consent/policyNotice';
 
-const DISMISSED_KEY_PREFIX = 'greenbox_policy_notice_dismissed_';
-
-// 서버에서 그릴 때는 기기의 닫음 기록을 모르므로 그리지 않고, 화면이 뜬 뒤 판단한다
-// 화면이 다시 그려져도 같은 값으로 보이도록 객체가 아니라 버전 문자열을 돌려준다
-function readNoticeVersion(): string | null {
-  const notice = upcomingPolicy() ?? recentAmendment();
-  if (!notice) return null;
-  try {
-    if (localStorage.getItem(DISMISSED_KEY_PREFIX + notice.version)) {
-      return null;
-    }
-  } catch {
-    // 저장소를 막은 브라우저는 매번 보여 준다
-  }
-  return notice.version;
+interface PolicyNoticeBannerProps {
+  // 서버가 쿠키를 보고 정한 버전. 첫 HTML에 바로 그려 화면이 뜬 뒤 끼어들지 않게 한다
+  noticeVersion: string | null;
 }
 
-const subscribe = () => () => {};
+const PolicyNoticeBanner: React.FC<PolicyNoticeBannerProps> = ({
+  noticeVersion,
+}) => {
+  const [isDismissed, setIsDismissed] = useState(false);
 
-const PolicyNoticeBanner: React.FC = () => {
-  const noticeVersion = useSyncExternalStore(
-    subscribe,
-    readNoticeVersion,
-    () => null,
-  );
-  const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
-  if (!noticeVersion || dismissedVersion === noticeVersion) return null;
+  // 예전 방식(기기 저장소)으로 닫은 기록이 있으면 쿠키로 옮기고 닫는다
+  useEffect(() => {
+    if (!noticeVersion) return;
+    try {
+      if (localStorage.getItem(LEGACY_DISMISSED_KEY_PREFIX + noticeVersion)) {
+        rememberDismissed(noticeVersion);
+        // 서버가 그린 배너를 기기 기록에 맞춰 한 번만 거둔다
+        setIsDismissed(true);
+      }
+    } catch {
+      // 저장소를 막은 브라우저는 쿠키 기록만 따른다
+    }
+  }, [noticeVersion]);
+
+  if (!noticeVersion || isDismissed) return null;
   const isUpcoming = upcomingPolicy()?.version === noticeVersion;
 
   const dismiss = () => {
-    try {
-      localStorage.setItem(DISMISSED_KEY_PREFIX + noticeVersion, '1');
-    } catch {
-      // 저장하지 못해도 지금 화면에서는 닫는다
-    }
-    setDismissedVersion(noticeVersion);
+    rememberDismissed(noticeVersion);
+    track('policy_notice_dismissed');
+    setIsDismissed(true);
   };
 
   return (

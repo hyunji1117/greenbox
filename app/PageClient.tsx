@@ -51,9 +51,14 @@ const SettingsPage = dynamic(
 interface PageClientProps {
   // 첫 탭이 냉장고일 때 서버에서 렌더링해 스트리밍하는 화면
   fridgeSlot?: React.ReactNode;
+  // 서버가 정한 방침 변경 안내 버전 (없으면 null)
+  policyNoticeVersion?: string | null;
 }
 
-export default function PageClient({ fridgeSlot }: PageClientProps) {
+export default function PageClient({
+  fridgeSlot,
+  policyNoticeVersion,
+}: PageClientProps) {
   const searchParams = useSearchParams();
   const activeTab = paramToTab(searchParams.get('tab'));
 
@@ -87,7 +92,7 @@ export default function PageClient({ fridgeSlot }: PageClientProps) {
         />
         <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           <div className="mt-0.5">
-            <PolicyNoticeBanner />
+            <PolicyNoticeBanner noticeVersion={policyNoticeVersion ?? null} />
             {renderContent()}
           </div>
         </div>
