@@ -29,6 +29,7 @@ import {
   PlusIcon,
   Trash2,
 } from 'lucide-react';
+import { track } from '@/app/lib/analytics/gtag';
 interface FridgeItemProps {
   item: {
     id: string;
@@ -63,18 +64,18 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
     item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
   const incrementQuantity = () => {
     if (item.quantity < QUANTITY_MAX) {
-      updateItem.mutate({
-        id: item.id,
-        updates: { quantity: item.quantity + 1 },
-      });
+      updateItem.mutate(
+        { id: item.id, updates: { quantity: item.quantity + 1 } },
+        { onSuccess: () => track('item_edited', { field: 'quantity' }) },
+      );
     }
   };
   const decrementQuantity = () => {
     if (item.quantity > 1) {
-      updateItem.mutate({
-        id: item.id,
-        updates: { quantity: item.quantity - 1 },
-      });
+      updateItem.mutate(
+        { id: item.id, updates: { quantity: item.quantity - 1 } },
+        { onSuccess: () => track('item_edited', { field: 'quantity' }) },
+      );
     }
   };
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +84,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
     if (isSavableExpiryDate(expiryDate) && expiryDate !== item.expiryDate) {
       updateItem.mutate(
         { id: item.id, updates: { expiryDate } },
-        { onError: () => setExpiryDraft(null) },
+        {
+          onSuccess: () => track('item_edited', { field: 'expiry' }),
+          onError: () => setExpiryDraft(null),
+        },
       );
     }
   };
@@ -200,7 +204,10 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
       <div className="mt-3 -mb-3 grid grid-cols-3 gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-gray-600">
         <button
           type="button"
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => {
+            if (!showComments) track('item_comments_opened');
+            setShowComments(!showComments);
+          }}
           aria-expanded={showComments}
           className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
         >

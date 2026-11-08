@@ -11,6 +11,7 @@ import ConsentChecklist from '@/app/components/auth/ConsentChecklist';
 import { privacyLink } from '@/app/lib/consent/privacyLink';
 import { agreeToCurrentPolicy, declineConsent } from '@/app/auth/actions';
 import { hasAllRequired, type ConsentType } from '@/app/lib/consent/policies';
+import { track } from '@/app/lib/analytics/gtag';
 
 interface ConsentFormProps {
   email: string | null;
@@ -33,6 +34,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   const handleAgree = () => {
     if (!agreed || isPending) return;
     setError(null);
+    track('consent_agreed');
     startTransition(async () => {
       const result = await agreeToCurrentPolicy(consents);
       if (result?.error) setError(result.error);
@@ -40,6 +42,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   };
 
   const handleDecline = () => {
+    track('consent_declined');
     startTransition(async () => {
       await declineConsent();
     });

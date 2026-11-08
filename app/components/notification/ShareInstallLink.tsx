@@ -2,6 +2,7 @@
 // PWA 설치 링크 공유 컴포넌트
 
 import { useState } from 'react';
+import { track } from '@/app/lib/analytics/gtag';
 
 export const ShareInstallLink = () => {
   const [copied, setCopied] = useState(false);
@@ -16,12 +17,14 @@ export const ShareInstallLink = () => {
           text: shareText,
           url: shareUrl,
         });
+        track('install_link_shared', { method: 'share' });
       } catch (error) {
         console.log('공유 취소됨:', error);
       }
     } else {
       // 클립보드에 복사
       await navigator.clipboard.writeText(shareUrl);
+      track('install_link_shared', { method: 'copy' });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

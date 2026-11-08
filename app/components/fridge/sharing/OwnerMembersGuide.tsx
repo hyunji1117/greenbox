@@ -84,6 +84,7 @@ const OwnerMembersGuide: React.FC<OwnerMembersGuideProps> = ({
 
   return (
     <SpotlightGuide
+      guide="owner_members"
       target={target}
       // 새로 들어온 사람만 알린다 (이미 확인한 사람은 다시 부르지 않는다)
       title={`${joinedLabel(unseenMembers(others, seenIds).map(m => m.name))} 이 냉장고에 참여했어요`}

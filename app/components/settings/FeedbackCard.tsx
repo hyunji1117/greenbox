@@ -10,6 +10,7 @@ import { useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import BottomSheet from '@/app/components/common/BottomSheet';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
+import { track } from '@/app/lib/analytics/gtag';
 import { apiFetch } from '@/app/lib/api/apiFetch';
 import { useSpeechInput } from '@/app/lib/speech/useSpeechInput';
 import {
@@ -33,7 +34,8 @@ const FeedbackCard: React.FC = () => {
   const send = useMutation({
     mutationFn: (input: CreateFeedback) =>
       apiFetch('/api/feedback', NoContent, { method: 'POST', body: input }),
-    onSuccess: () => {
+    onSuccess: (_, input) => {
+      track('feedback_sent', { input: input.inputMethod });
       setText('');
       setUsedVoice(false);
       setIsSent(true);

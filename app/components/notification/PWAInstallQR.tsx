@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
+import { track } from '@/app/lib/analytics/gtag';
 
 // BeforeInstallPromptEvent 타입 정의
 interface BeforeInstallPromptEvent extends Event {
@@ -82,6 +83,7 @@ export const PWAInstallQR: React.FC<PWAInstallQRProps> = ({
       try {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
+        track('install_prompt_result', { outcome });
 
         if (outcome === 'accepted') {
           console.log('PWA 설치 승인');

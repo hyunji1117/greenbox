@@ -27,6 +27,28 @@ type EventParams = {
   recipe_step_image_opened: undefined;
   recipe_missing_added: { count: number };
   recipe_cooked: { finished: number };
+  // 장보기 리스트에 담기 (찾기 결과나 사진 카드를 눌러서). 이름은 보내지 않는다
+  grocery_item_added: undefined;
+  // 개발 피드백 보내기. 글로 썼는지 말로 했는지만 보낸다
+  feedback_sent: { input: 'text' | 'voice' };
+  // 품목 카드에서 바로 고치기. 무엇을 고쳤는지만 보낸다
+  item_edited: { field: 'quantity' | 'expiry' };
+  item_comments_opened: undefined;
+  invite_link_revoked: undefined;
+  grocery_favorite_saved: { count: number };
+  grocery_favorite_loaded: { count: number };
+  // 동의 화면과 계정
+  consent_agreed: undefined;
+  consent_declined: undefined;
+  logged_out: undefined;
+  nickname_saved: undefined;
+  // 안내 (냉장고 바꾸기 / 함께 쓰는 사람)
+  guide_shown: { guide: GuideName };
+  guide_action: { guide: GuideName; action: 'primary' | 'close' };
+  // 앱 설치
+  install_link_shared: { method: 'share' | 'copy' };
+  install_prompt_result: { outcome: 'accepted' | 'dismissed' };
+  policy_notice_dismissed: undefined;
   // 알림 설정. source: 처음 묻는 화면(first)인지 설정 화면(settings)인지
   notify_level_selected: {
     level: 'all' | 'watched' | 'none';
@@ -50,6 +72,8 @@ type EventParams = {
   fridge_switched: undefined;
   fridge_renamed: undefined;
 };
+
+export type GuideName = 'fridge_switch' | 'owner_members';
 
 export type JoinPageState =
   | 'invalid'
@@ -121,11 +145,20 @@ export function initAnalytics(gaId: string): void {
   gtag('config', gaId, { send_page_view: false, ...traffic });
 }
 
+// 설치한 앱은 다시 열어도 페이지를 새로 불러오지 않을 수 있어, 테스트 기기 표시를 이벤트마다 다시 읽어 붙인다.
+// 표시를 끈 기기는 아무것도 붙이지 않는다 (debug_mode: false도 개발자 트래픽으로 취급될 수 있음)
+function liveTrafficParams(): TrafficParams {
+  return process.env.NODE_ENV === 'development' || isInternalDevice()
+    ? { debug_mode: true }
+    : {};
+}
+
 export function trackPageView(url: string): void {
   if (!initializedId) return;
   gtag('event', 'page_view', {
     page_location: url,
     page_title: document.title,
+    ...liveTrafficParams(),
   });
 }
 
@@ -134,10 +167,10 @@ export function track<N extends EventName>(
   ...params: EventParams[N] extends undefined ? [] : [EventParams[N]]
 ): void {
   if (!initializedId) return;
-  gtag('event', name, params[0] ?? {});
+  gtag('event', name, { ...(params[0] ?? {}), ...liveTrafficParams() });
 }
 
-// 설정 화면의 테스트 기기 스위치. GA 설정은 앱을 열 때 한 번 정하므로 다음에 열 때부터 적용된다
+// 설정 화면의 테스트 기기 스위치. 켜면 다음 이벤트부터 바로 개발자 트래픽으로 보낸다
 export function isInternalDevice(): boolean {
   try {
     return safeLocalStorage()?.getItem(INTERNAL_FLAG_KEY) === '1';
