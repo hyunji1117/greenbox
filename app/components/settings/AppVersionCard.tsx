@@ -6,6 +6,7 @@
 import React, { useRef, useState, useSyncExternalStore } from 'react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
+import OperatorTestPush from '@/app/components/settings/OperatorTestPush';
 import { isInternalDevice } from '@/app/lib/analytics/gtag';
 import { appVersionLabel } from '@/app/lib/app/version';
 
@@ -35,7 +36,10 @@ function saveHidden(hidden: boolean): void {
   }
 }
 
-const AppVersionCard: React.FC = () => {
+// isOperator: 운영자 계정이면 개발자 영역에 테스트 알림 버튼도 함께 보여 준다 (서버에서 다시 확인)
+const AppVersionCard: React.FC<{ isOperator?: boolean }> = ({
+  isOperator = false,
+}) => {
   const isInternal = useSyncExternalStore(
     subscribe,
     isInternalDevice,
@@ -69,6 +73,7 @@ const AppVersionCard: React.FC = () => {
         </span>
       </div>
       {isVisible && <InternalDeviceToggle />}
+      {isVisible && isOperator && <OperatorTestPush />}
     </>
   );
 };

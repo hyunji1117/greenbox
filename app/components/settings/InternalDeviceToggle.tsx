@@ -29,7 +29,7 @@ const InternalDeviceToggle: React.FC = () => {
           테스트 기기로 표시
         </p>
         <p className="mt-0.5 text-xs text-gray-500">
-          개발자용이에요. 이용 통계에서 이 기기를 빼요. 앱을 다시 열면 적용돼요
+          개발자용이에요. 켜면 바로 이용 통계에서 이 기기를 빼요
         </p>
       </div>
       <button
