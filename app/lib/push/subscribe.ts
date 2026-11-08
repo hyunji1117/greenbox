@@ -2,6 +2,7 @@
 // 브라우저 푸시 구독을 현재 키로 맞추고 서버에 저장한다
 
 import { isSameKey, urlBase64ToUint8Array } from '@/app/lib/push/key';
+import { APP_VERSION, APP_VERSION_HEADER } from '@/app/lib/app/version';
 
 export type PushStatus = 'unsupported' | NotificationPermission;
 
@@ -39,7 +40,10 @@ export async function syncPushSubscription(): Promise<boolean> {
 
   const saved = await fetch('/api/save-subscription', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      [APP_VERSION_HEADER]: APP_VERSION,
+    },
     body: JSON.stringify(sub),
   });
   return saved.ok;

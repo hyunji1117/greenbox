@@ -35,7 +35,8 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string; slot: string }> },
 ) {
-  const { userId, response } = await requireUser();
+  // <img>로 불러와 버전을 붙일 수 없어 버전은 확인하지 않는다
+  const { userId, response } = await requireUser({ allowAnyVersion: true });
   if (response) return response;
   const { id, slot: rawSlot } = await params;
   const slot = RecipeImageSlotSchema.safeParse(rawSlot);
