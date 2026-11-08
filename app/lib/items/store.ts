@@ -32,6 +32,7 @@ export interface ItemRow {
   name: string;
   category: string;
   quantity: number;
+  eaten_quantity: number;
   created_at: Date;
   finished: boolean;
   expiry_date: string | null;
@@ -54,7 +55,7 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
 // viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
 const selectItems = (viewerParam: string) => `
-  SELECT i.id, i.name, i.category, i.quantity, i.created_at, i.finished,
+  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.finished,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
     EXISTS (
       SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
@@ -85,6 +86,7 @@ export function toItemJson(row: ItemRow) {
     name: row.name,
     category: row.category,
     quantity: row.quantity,
+    eatenQuantity: row.eaten_quantity,
     addedBy: row.added_by,
     addedAt: row.created_at.toISOString(),
     // json_build_object의 시간은 +00:00 형식이라 toISOString으로 맞춘다
@@ -167,6 +169,11 @@ export async function updateItem(
        name = COALESCE($3, name),
        category = COALESCE($4, category),
        quantity = COALESCE($5::integer, quantity),
+       -- 먹은 개수는 처음 산 수량을 넘지 않는다 (수량을 줄이면 함께 맞춘다)
+       eaten_quantity = LEAST(
+         COALESCE($8::integer, eaten_quantity),
+         COALESCE($5::integer, quantity)
+       ),
        expiry_date = COALESCE($6::date, expiry_date),
        finished = COALESCE($7::boolean, finished),
        updated_at = now()
@@ -179,6 +186,7 @@ export async function updateItem(
       input.quantity ?? null,
       input.expiryDate ?? null,
       input.finished ?? null,
+      input.eatenQuantity ?? null,
     ],
   );
   return rowCount ? findItem(itemId, userId) : null;

@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ApiSchemaError } from '@/app/lib/api/apiFetch';
 import { useItems } from '@/app/lib/items/useItems';
 import { goToTab } from '@/app/lib/navigation/tabs';
@@ -14,6 +14,7 @@ import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import FridgeItem from '@/app/components/fridge/FridgeItem';
 import GroceriesIcon from '@/app/components/icons/GroceriesIcon';
 import FridgeQuickAdd from '@/app/components/fridge/FridgeQuickAdd';
+import FridgeItemSearch from '@/app/components/fridge/FridgeItemSearch';
 import FridgeHeader from '@/app/components/fridge/sharing/FridgeHeader';
 import NotifyFirstSheet from '@/app/components/fridge/NotifyFirstSheet';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
@@ -35,7 +36,8 @@ const goToShoppingList = () => goToTab('shoppingList');
 const FridgeBoard: React.FC = () => {
   const { data: items = [], isPending, error, refetch } = useItems();
   const [activeCategory, setActiveCategory] = useState<Category>('fridge');
-  const { notice, isNoticeVisible, finish, undo, notify } = useFinishWithUndo();
+  const { notice, isNoticeVisible, finish, eatSome, undo, notify } =
+    useFinishWithUndo();
   // 방금 추가한 카드를 잠깐 강조한다. 칸을 옮겼다 돌아왔을 때 다시 강조되지 않게 비운다
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const activeLabel = CATEGORY_TABS.find(
@@ -44,6 +46,29 @@ const FridgeBoard: React.FC = () => {
   const filteredItems = items.filter(
     item => item.category === activeCategory && !item.finished,
   );
+  const unfinishedItems = items.filter(item => !item.finished);
+  // 찾기로 옮겨 간 카드. 칸을 바꾼 뒤 그려지면 화면 가운데로 옮기고 잠깐 강조한다
+  const [jumpedId, setJumpedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const jumpTo = (item: { id: string; category: Category }) => {
+    if (item.category !== activeCategory) {
+      setActiveCategory(item.category);
+      setNewItemId(null);
+    }
+    // 같은 카드를 다시 찾아도 강조가 다시 보이도록 한 번 비웠다가 넣는다
+    setJumpedId(null);
+    requestAnimationFrame(() => setJumpedId(item.id));
+  };
+  useEffect(() => {
+    if (!jumpedId) return;
+    const reduceMotion = window.matchMedia?.(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    document.getElementById(`fridge-item-${jumpedId}`)?.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  }, [jumpedId, activeCategory]);
   const handleRebuy = (name: string) => {
     shoppingListStorage.addToShoppingList(name);
     notify({
@@ -118,14 +143,34 @@ const FridgeBoard: React.FC = () => {
                 새로 살 땐 리스트에 담기
                 <ChevronRightIcon size={16} className="shrink-0" />
               </button>
+              {unfinishedItems.length > 0 && (
+                <FridgeItemSearch
+                  items={unfinishedItems}
+                  query={searchQuery}
+                  onQueryChange={setSearchQuery}
+                  onJump={jumpTo}
+                  jumpedId={jumpedId}
+                  onAddToList={handleRebuy}
+                />
+              )}
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredItems.map(item => (
-                  <FridgeItem
+                  <div
                     key={item.id}
-                    item={item}
-                    isNew={item.id === newItemId}
-                    onFinish={kind => finish(item, kind)}
-                  />
+                    id={`fridge-item-${item.id}`}
+                    className={
+                      item.id === jumpedId
+                        ? 'motion-safe:animate-item-added scroll-mt-4 rounded-2xl'
+                        : 'scroll-mt-4'
+                    }
+                  >
+                    <FridgeItem
+                      item={item}
+                      isNew={item.id === newItemId}
+                      onFinish={kind => finish(item, kind)}
+                      onEatSome={count => eatSome(item, count)}
+                    />
+                  </div>
                 ))}
               </div>
             </>

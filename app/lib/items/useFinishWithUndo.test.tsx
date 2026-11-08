@@ -8,11 +8,12 @@ import { fridgeKeys, itemKeys } from '@/app/lib/query/keys';
 import type { Item } from '@/app/lib/schemas/item';
 import { UNDO_WINDOW_MS, useFinishWithUndo } from './useFinishWithUndo';
 
-const itemJson = (finished: boolean) => ({
+const itemJson = (finished: boolean, eatenQuantity = 0) => ({
   id: '1',
   name: '당근',
   category: 'fridge',
   quantity: 1,
+  eatenQuantity,
   addedBy: { id: '7', name: '현지', isMember: true },
   addedAt: '2026-10-30T03:00:00.000Z',
   comments: [],
@@ -28,7 +29,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 const cached = () => queryClient.getQueryData<Item[]>(itemKeys.list('5'))?.[0];
-const item = { id: '1', name: '당근' };
+const item = { id: '1', name: '당근', quantity: 1, eatenQuantity: 0 };
 
 describe('useFinishWithUndo', () => {
   beforeEach(() => {
@@ -94,9 +95,36 @@ describe('useFinishWithUndo', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [, init] = fetchMock.mock.calls[1];
-    expect(JSON.parse(init.body)).toEqual({ finished: false });
+    expect(JSON.parse(init.body)).toEqual({
+      finished: false,
+      eatenQuantity: 0,
+    });
     await waitFor(() => expect(cached()?.finished).toBe(false));
     expect(result.current.isNoticeVisible).toBe(false);
+  });
+
+  it('일부만 먹으면 처음 산 수량은 두고 먹은 개수만 늘리며, 되돌리면 원래 개수로 돌린다', async () => {
+    fetchMock.mockImplementation(async () => json(itemJson(false, 2)));
+    const { result } = renderHook(() => useFinishWithUndo(), { wrapper });
+    const eggs = { id: '1', name: '계란', eatenQuantity: 0 };
+
+    act(() => result.current.eatSome(eggs, 2));
+    expect(result.current.notice).toEqual({
+      subject: '계란',
+      message: '2개 먹었어요',
+      canUndo: true,
+    });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      eatenQuantity: 2,
+    });
+
+    await act(async () => {
+      await result.current.undo();
+    });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      eatenQuantity: 0,
+    });
   });
 
   it('저장에 실패하면 카드를 되돌리고 실패를 알린다', async () => {

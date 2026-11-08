@@ -25,17 +25,18 @@ import {
   CalendarDaysIcon,
   CircleCheckBig,
   MessageCircleIcon,
-  MinusIcon,
-  PlusIcon,
   Trash2,
 } from 'lucide-react';
 import { track } from '@/app/lib/analytics/gtag';
+import QuantityStepper from '@/app/components/common/QuantityStepper';
 interface FridgeItemProps {
   item: {
     id: string;
     name: string;
     category: 'fridge' | 'freezer' | 'pantry';
     quantity: number;
+    // 개수별로 먹은 수. 남은 수량은 quantity - eatenQuantity (처음 산 수량은 그대로 둔다)
+    eatenQuantity: number;
     addedBy: Person;
     addedAt: Date;
     comments: Comment[];
@@ -45,11 +46,14 @@ interface FridgeItemProps {
   };
   isNew?: boolean;
   onFinish: (kind: FinishKind) => void;
+  // 일부만 먹었을 때 (남은 수량보다 적게)
+  onEatSome: (count: number) => void;
 }
 const FridgeItem: React.FC<FridgeItemProps> = ({
   item,
   isNew = false,
   onFinish,
+  onEatSome,
 }) => {
   const updateItem = useUpdateItem(item.id);
   const toggleWatch = useToggleWatch(item.id);
@@ -57,26 +61,26 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   const notifyLevel = useCurrentFridge().data?.myNotifyLevel ?? 'watched';
   const showsBell = notifyLevel === 'watched';
   const [showComments, setShowComments] = useState(false);
+  const remaining = item.quantity - item.eatenQuantity;
+  // 남은 게 2개 이상이면 다 먹음을 누를 때 몇 개 먹었는지 고른다
+  const [eatCount, setEatCount] = useState<number | null>(null);
+  const confirmEat = () => {
+    if (eatCount === null) return;
+    if (eatCount >= remaining) onFinish('eaten');
+    else onEatSome(eatCount);
+    setEatCount(null);
+  };
   // 날짜를 입력하는 도중의 값. 저장 전이거나 저장에 실패하면 서버 값과 다를 수 있다
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
   const expiryValue = expiryDraft ?? item.expiryDate ?? '';
   const expiryDays =
     item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
-  const incrementQuantity = () => {
-    if (item.quantity < QUANTITY_MAX) {
-      updateItem.mutate(
-        { id: item.id, updates: { quantity: item.quantity + 1 } },
-        { onSuccess: () => track('item_edited', { field: 'quantity' }) },
-      );
-    }
-  };
-  const decrementQuantity = () => {
-    if (item.quantity > 1) {
-      updateItem.mutate(
-        { id: item.id, updates: { quantity: item.quantity - 1 } },
-        { onSuccess: () => track('item_edited', { field: 'quantity' }) },
-      );
-    }
+  // 수량 칸에서 빼기, 더하기를 누르거나 직접 적은 값 (범위는 QuantityStepper가 맞춘다)
+  const setQuantity = (quantity: number) => {
+    updateItem.mutate(
+      { id: item.id, updates: { quantity } },
+      { onSuccess: () => track('item_edited', { field: 'quantity' }) },
+    );
   };
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const expiryDate = e.target.value;
@@ -174,33 +178,20 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
             />
           </span>
         </label>
-        <div className="flex h-10 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
-          <button
-            type="button"
-            onClick={decrementQuantity}
-            aria-label={`${item.name} 수량 줄이기`}
-            disabled={item.quantity <= 1}
-            className="flex h-10 w-9 items-center justify-center rounded-l-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
-          >
-            <MinusIcon size={16} />
-          </button>
-          <span
-            aria-label={`수량 ${item.quantity}`}
-            className="min-w-6 text-center text-sm font-semibold"
-          >
-            {item.quantity}
-          </span>
-          <button
-            type="button"
-            onClick={incrementQuantity}
-            aria-label={`${item.name} 수량 늘리기`}
-            disabled={item.quantity >= QUANTITY_MAX}
-            className="flex h-10 w-9 items-center justify-center rounded-r-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
-          >
-            <PlusIcon size={16} />
-          </button>
-        </div>
+        {/* 처음 산 수량. 숫자를 눌러 직접 적을 수 있고, 이미 먹은 개수보다 작게는 줄이지 않는다 */}
+        <QuantityStepper
+          value={item.quantity}
+          onChange={quantity => setQuantity(quantity)}
+          label={`${item.name} 수량`}
+          min={Math.max(1, item.eatenQuantity)}
+          max={QUANTITY_MAX}
+        />
       </div>
+      {item.eatenQuantity > 0 && (
+        <p className="mt-1.5 text-right text-xs font-medium text-[#553C9A]">
+          {item.eatenQuantity}개 먹고 {remaining}개 남았어요
+        </p>
+      )}
       <div className="mt-3 -mb-3 grid grid-cols-3 gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-gray-600">
         <button
           type="button"
@@ -216,8 +207,15 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => onFinish('eaten')}
-          className="flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100"
+          onClick={() =>
+            remaining > 1
+              ? setEatCount(count => (count === null ? 1 : null))
+              : onFinish('eaten')
+          }
+          aria-expanded={remaining > 1 ? eatCount !== null : undefined}
+          className={`flex h-11 items-center justify-center gap-1.5 rounded-xl transition-colors hover:bg-gray-100 ${
+            eatCount !== null ? 'bg-[#F1EDFA] text-[#553C9A]' : ''
+          }`}
         >
           <CircleCheckBig size={18} />다 먹음
         </button>
@@ -230,6 +228,27 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
           버림
         </button>
       </div>
+      {eatCount !== null && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#F8F6FD] p-2 pl-3">
+          <span className="min-w-0 flex-1 text-sm font-medium text-gray-700">
+            몇 개 먹었어요?
+          </span>
+          <QuantityStepper
+            value={eatCount}
+            onChange={setEatCount}
+            label={`${item.name} 먹은 개수`}
+            max={remaining}
+            tone="white"
+          />
+          <button
+            type="button"
+            onClick={confirmEat}
+            className="h-10 shrink-0 rounded-xl bg-[#6B46C1] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#603fad]"
+          >
+            {eatCount >= remaining ? '모두 먹음' : `${eatCount}개 먹음`}
+          </button>
+        </div>
+      )}
       {updateItem.isError && (
         <p className="mt-2 text-xs text-red-500">
           저장하지 못해 이전 상태로 되돌렸어요.

@@ -25,6 +25,7 @@ const itemJson = (id: string, overrides = {}) => ({
   name: `품목${id}`,
   category: 'fridge',
   quantity: 1,
+  eatenQuantity: 0,
   addedBy: me,
   addedAt: '2026-10-30T03:00:00.000Z',
   comments: [],

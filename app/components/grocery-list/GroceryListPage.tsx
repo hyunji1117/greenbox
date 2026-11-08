@@ -4,19 +4,12 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Check,
-  MinusIcon,
-  PlusIcon,
-  ShoppingBasket,
-  Star,
-  Trash2,
-  XIcon,
-} from 'lucide-react';
+import { Check, ShoppingBasket, Star, Trash2, XIcon } from 'lucide-react';
 import ActionToast from '@/app/components/common/ActionToast';
 import ScrollTopButton from '@/app/components/common/ScrollTopButton';
 import FrequentItemsPicker from '@/app/components/grocery-list/FrequentItemsPicker';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
+import QuantityStepper from '@/app/components/common/QuantityStepper';
 import { track } from '@/app/lib/analytics/gtag';
 import { useAddPurchasedItems } from '@/app/lib/items/useItems';
 import { QUANTITY_MAX } from '@/app/lib/schemas/item';
@@ -79,17 +72,35 @@ const GroceryListPage: React.FC = () => {
     });
   };
 
-  // 담기에서 잘못 누른 것을 되돌린다. 하나씩 빼고, 0개가 되면 리스트에서 지운다
-  const removeOneFromList = (name: string) => {
-    setShoppingList(prev =>
-      prev.flatMap(i =>
-        i.name !== name
-          ? [i]
-          : i.quantity > 1
-            ? [{ ...i, quantity: i.quantity - 1 }]
-            : [],
-      ),
-    );
+  // 사진에서 찾아 고른 식재료를 한 번에 담는다. 이미 있는 이름은 수량을 더한다
+  const addManyToList = (picked: { name: string; quantity: number }[]) => {
+    setShoppingList(prev => {
+      let next = prev;
+      picked.forEach(({ name, quantity }, index) => {
+        const existing = next.find(i => i.name === name);
+        next = existing
+          ? next.map(i =>
+              i === existing
+                ? {
+                    ...i,
+                    quantity: Math.min(QUANTITY_MAX, i.quantity + quantity),
+                  }
+                : i,
+            )
+          : [
+              ...next,
+              { id: Date.now() + index, name, quantity, completed: false },
+            ];
+      });
+      return next;
+    });
+    track('grocery_item_added');
+    toast(`${picked.length}개를 리스트에 담았어요`);
+  };
+
+  // 식재료 담기에서 담은 카드를 다시 누르면 리스트에서 뺀다
+  const removeFromList = (name: string) => {
+    setShoppingList(prev => prev.filter(i => i.name !== name));
   };
 
   const [toastMessage, setToastMessage] = useState('');
@@ -123,11 +134,10 @@ const GroceryListPage: React.FC = () => {
       prev.map(i => (i.id === id ? { ...i, completed: !i.completed } : i)),
     );
   };
-  const onUpdateQuantity = (id: number, change: number) => {
+  // 수량 칸에서 직접 적거나 빼기, 더하기로 바꾼 값 (QuantityStepper가 범위를 맞춰 준다)
+  const onSetQuantity = (id: number, quantity: number) => {
     setShoppingList(prev =>
-      prev.map(i =>
-        i.id === id ? { ...i, quantity: Math.max(1, i.quantity + change) } : i,
-      ),
+      prev.map(i => (i.id === id ? { ...i, quantity } : i)),
     );
   };
   const onDeleteItem = (id: number) => {
@@ -284,28 +294,13 @@ const GroceryListPage: React.FC = () => {
                       >
                         {item.name}
                       </span>
-                      <div className="flex h-9 shrink-0 items-center rounded-xl bg-[#F4F4F8] text-gray-700">
-                        <button
-                          type="button"
-                          onClick={() => onUpdateQuantity(item.id, -1)}
-                          aria-label={`${item.name} 수량 줄이기`}
-                          disabled={item.quantity <= 1}
-                          className="flex h-9 w-8 items-center justify-center rounded-l-xl transition-colors hover:bg-gray-200 disabled:opacity-30"
-                        >
-                          <MinusIcon size={14} />
-                        </button>
-                        <span className="min-w-5 text-center text-sm font-semibold">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onUpdateQuantity(item.id, 1)}
-                          aria-label={`${item.name} 수량 늘리기`}
-                          className="flex h-9 w-8 items-center justify-center rounded-r-xl transition-colors hover:bg-gray-200"
-                        >
-                          <PlusIcon size={14} />
-                        </button>
-                      </div>
+                      <QuantityStepper
+                        value={item.quantity}
+                        onChange={quantity => onSetQuantity(item.id, quantity)}
+                        label={`${item.name} 수량`}
+                        max={QUANTITY_MAX}
+                        size="sm"
+                      />
                       <button
                         type="button"
                         onClick={() => onDeleteItem(item.id)}
@@ -352,7 +347,8 @@ const GroceryListPage: React.FC = () => {
             )}
             <FrequentItemsPicker
               onPick={addToList}
-              onUnpick={removeOneFromList}
+              onUnpick={removeFromList}
+              onPickMany={addManyToList}
               quantities={listQuantities}
               purchaseCounts={purchaseCounts}
             />

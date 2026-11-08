@@ -1,12 +1,14 @@
 'use client';
 // app/components/grocery-list/FrequentItemsPicker.tsx
-// 장보기 리스트 아래의 식재료 담기: 이름으로 찾거나 사진을 눌러 리스트에 담는다
+// 장보기 리스트 아래의 식재료 담기: 이름으로 찾거나 사진을 눌러 리스트에 담는다 (다시 누르면 빼기, 수량은 리스트에서)
 // 찾는 식재료가 사진 목록에 없으면 적은 이름 그대로 담는다 (리스트 위 입력창을 이곳으로 합침)
 // 종류마다 6~16개라 옆으로 넘기지 않고 격자로 한 번에 보여 준다
 
 import React, { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { MicIcon, Minus, Plus, SearchIcon, XIcon } from 'lucide-react';
+import { Check, Plus, SearchIcon, XIcon } from 'lucide-react';
+import InputAddActions from '@/app/components/common/InputAddActions';
+import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { mockItems, type FridgeItem } from '@/app/data/mockItems';
 import { ITEM_NAME_MAX } from '@/app/lib/schemas/item';
@@ -15,7 +17,7 @@ import {
   type SpeechError,
 } from '@/app/lib/speech/useSpeechInput';
 
-const SPEECH_ERROR_TEXT: Record<SpeechError, string> = {
+export const SPEECH_ERROR_TEXT: Record<SpeechError, string> = {
   denied: '마이크 사용이 막혀 있어요. 브라우저 설정에서 마이크를 허용해 주세요',
   'no-speech': '말소리를 듣지 못했어요. 다시 눌러 말해 주세요',
   failed: '음성으로 찾지 못했어요. 글자로 찾아 주세요',
@@ -44,8 +46,10 @@ function imageUrl(item: FridgeItem): string {
 
 interface FrequentItemsPickerProps {
   onPick: (name: string) => void;
-  // 담은 것을 하나 빼기 (0개가 되면 리스트에서 빠진다)
+  // 담은 카드를 다시 누르면 리스트에서 뺀다 (수량은 위쪽 리스트에서 바꾼다)
   onUnpick: (name: string) => void;
+  // 사진에서 찾아 고른 식재료를 한 번에 담는다
+  onPickMany: (items: { name: string; quantity: number }[]) => void;
   // 리스트에 이미 담긴 수량 (이름 기준)
   quantities: Map<string, number>;
   // 이 기기에서 구매 완료한 횟수 (이름 기준)
@@ -55,6 +59,7 @@ interface FrequentItemsPickerProps {
 const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
   onPick,
   onUnpick,
+  onPickMany,
   quantities,
   purchaseCounts,
 }) => {
@@ -63,6 +68,9 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // 사진으로 담기: 사진 속 식재료를 찾아 골라서 리스트에 한 번에 담는다
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
   const keyword = query.trim();
   // 찾는 동안에는 종류와 상관없이 이름에 들어간 식재료를 모두 보여 준다 (탭에 없는 기타 품목 포함)
   const items = useMemo(
@@ -101,31 +109,11 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
           value={query}
           onChange={event => setQuery(event.target.value)}
           aria-label="살 식재료 이름"
-          placeholder="식재료 찾기 (예: 우유)"
+          placeholder="식재료 직접 입력 (예: 오이)"
           maxLength={ITEM_NAME_MAX}
           enterKeyHint="done"
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
-        {speech.isSupported && (
-          <button
-            type="button"
-            aria-label={
-              speech.isListening ? '음성 입력 멈추기' : '음성으로 찾기'
-            }
-            aria-pressed={speech.isListening}
-            onClick={speech.isListening ? speech.stop : speech.start}
-            className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
-              speech.isListening
-                ? 'bg-[#6B46C1] text-white'
-                : 'text-[#6B46C1] hover:bg-[#F1EDFA]'
-            }`}
-          >
-            {speech.isListening && (
-              <span className="absolute inset-0 rounded-xl bg-[#6B46C1]/40 motion-safe:animate-ping" />
-            )}
-            <MicIcon size={18} className="relative" />
-          </button>
-        )}
         {query && !speech.isListening && (
           <button
             type="button"
@@ -134,12 +122,39 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
               setQuery('');
               inputRef.current?.focus();
             }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100"
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl text-gray-400 active:bg-gray-100"
           >
             <XIcon size={18} />
           </button>
         )}
+        <InputAddActions
+          canSubmit={Boolean(keyword)}
+          submitLabel="적은 이름 그대로 담기"
+          onCamera={() => cameraRef.current?.click()}
+          speech={speech}
+        />
       </form>
+      {/* 휴대폰에서는 뒤쪽 카메라를 바로 열고, PC에서는 사진 파일을 고른다 */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={event => {
+          const file = event.target.files?.[0] ?? null;
+          // 같은 사진을 다시 골라도 변경으로 잡히도록 비운다
+          event.target.value = '';
+          if (file) setPhoto(file);
+        }}
+      />
+      <PhotoAddSheet
+        file={photo}
+        onClose={() => setPhoto(null)}
+        onRetake={() => cameraRef.current?.click()}
+        onPickToList={onPickMany}
+        onAdded={() => setPhoto(null)}
+      />
       {/* 화면 읽기 프로그램에도 듣는 중과 오류를 알린다 */}
       <p aria-live="polite" className="-mt-1 mb-3 px-1 text-xs empty:hidden">
         {speech.isListening ? (
@@ -178,18 +193,21 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
         className="motion-safe:animate-tab-fade grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5"
       >
         {items.map(item => {
-          const quantity = quantities.get(item.name) ?? 0;
+          const isPicked = (quantities.get(item.name) ?? 0) > 0;
           const purchaseCount = purchaseCounts.get(item.name) ?? 0;
           return (
             <li key={item.id} className="relative">
               <button
                 type="button"
                 aria-label={
-                  quantity > 0
-                    ? `${item.name} 하나 더 담기, 지금 ${quantity}개`
+                  isPicked
+                    ? `${item.name} 담음, 누르면 리스트에서 빼기`
                     : `${item.name} 리스트에 담기`
                 }
-                onClick={() => onPick(item.name)}
+                aria-pressed={isPicked}
+                onClick={() =>
+                  isPicked ? onUnpick(item.name) : onPick(item.name)
+                }
                 className={`block w-full overflow-hidden text-left ${SURFACE}`}
               >
                 <span className="relative block aspect-square w-full">
@@ -218,11 +236,10 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
                       {purchaseCount}회
                     </span>
                   )}
-                  {quantity > 0 && (
-                    <span className="absolute inset-0 flex items-center justify-center gap-0.5 bg-[#4B2F8C]/55 text-white">
-                      <Plus size={28} strokeWidth={2.5} aria-hidden />
-                      <span className="text-4xl leading-none font-bold">
-                        {quantity}
+                  {isPicked && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-[#4B2F8C]/45">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#553C9A] shadow-md">
+                        <Check size={24} strokeWidth={3} aria-hidden />
                       </span>
                     </span>
                   )}
@@ -231,17 +248,6 @@ const FrequentItemsPicker: React.FC<FrequentItemsPickerProps> = ({
                   {item.name}
                 </span>
               </button>
-              {/* 담은 카드는 오른쪽 위 빼기로 되돌린다 (카드를 누르면 하나 더 담기) */}
-              {quantity > 0 && (
-                <button
-                  type="button"
-                  aria-label={`${item.name} 하나 빼기, 지금 ${quantity}개`}
-                  onClick={() => onUnpick(item.name)}
-                  className="absolute top-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#553C9A] shadow-md ring-1 ring-black/5"
-                >
-                  <Minus size={18} strokeWidth={2.5} />
-                </button>
-              )}
             </li>
           );
         })}

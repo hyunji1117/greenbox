@@ -20,6 +20,7 @@ const item = (
     name,
     category: 'fridge',
     quantity: 1,
+    eatenQuantity: 0,
     addedBy: { id: '1', name: 'A', isMember: true },
     addedAt: '2026-11-01T00:00:00.000Z',
     comments: [],
