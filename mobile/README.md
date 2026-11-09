@@ -6,6 +6,7 @@
 
 1. 폰에 **Expo Go** 앱을 설치합니다 (앱스토어, 플레이스토어)
 2. 이 폴더에서 `npm install` 후 `npx expo start`
+   - 배포 전 웹 화면을 확인할 때는 `EXPO_PUBLIC_WEB_URL=http://<맥 IP>:3033 npx expo start -c`로 맥의 개발 서버를 엽니다 (로그인이 필요 없는 화면만 확인할 수 있습니다)
 3. 터미널에 나온 QR을 아이폰은 카메라로, 안드로이드는 Expo Go로 찍습니다 (폰과 컴퓨터가 같은 와이파이)
 
 ## 구조
