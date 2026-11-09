@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { track } from '@/app/lib/analytics/gtag';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
+import { isInNativeApp, shareViaApp } from '@/app/lib/app/nativeBridge';
 import {
   inviteUrl,
   useCreateInvite,
@@ -37,16 +38,24 @@ const InviteSection: React.FC<{ fridgeId: string; isOpen: boolean }> = ({
   const [copied, setCopied] = useState(false);
 
   const link = invite.data ? inviteUrl(invite.data.code) : null;
-  const canShare = typeof navigator !== 'undefined' && 'share' in navigator;
+  // 앱 안에서는 앱의 공유 시트를 쓴다 (안드로이드 웹뷰는 navigator.share가 없다)
+  const canShare =
+    isInNativeApp() ||
+    (typeof navigator !== 'undefined' && 'share' in navigator);
 
   const share = async () => {
     if (!link) return;
+    const shareData = {
+      title: '우리집 냉장고 함께 보기',
+      text: '냉장고를 같이 보려면 이 링크로 참여를 요청해 주세요.',
+      url: link,
+    };
+    if (shareViaApp(shareData)) {
+      track('invite_link_shared', { method: 'share' });
+      return;
+    }
     try {
-      await navigator.share({
-        title: '우리집 냉장고 함께 보기',
-        text: '냉장고를 같이 보려면 이 링크로 참여를 요청해 주세요.',
-        url: link,
-      });
+      await navigator.share(shareData);
       track('invite_link_shared', { method: 'share' });
     } catch {
       // 공유 창을 닫은 경우
