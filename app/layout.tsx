@@ -1,7 +1,7 @@
 // app/layout.tsx
 // RootLayout 컴포넌트에 PWA 설정 추가
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Nanum_Gothic } from 'next/font/google';
 import './globals.css';
 import PushSubscriber from './_client/PushSubscriber';
@@ -26,6 +26,14 @@ const nanumGothic = Nanum_Gothic({
   variable: '--font-nanum-gothic',
 });
 
+// Next.js가 head에 기본 viewport 태그를 넣으므로 직접 쓴 태그는 뒤에 오는 기본값에 덮인다. viewport는 여기서만 정한다
+// viewport-fit=cover: 상태 표시줄과 홈 바 자리까지 화면을 채우고, 화면마다 env(safe-area-inset-*)으로 기기 높이만큼 비켜 선다
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   applicationName: APP_NAME,
@@ -48,11 +56,6 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/our-fridge_logo2_192_bgwhite.png" />
 
         {/* PWA 메타 태그 */}
-        {/* viewport-fit=cover: 홈 바 영역까지 화면을 채우고, 아래 고정 요소가 env(safe-area-inset-bottom)으로 직접 비켜 선다 (앱 웹뷰와 사파리 공통) */}
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
-        />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
