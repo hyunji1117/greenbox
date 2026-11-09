@@ -9,6 +9,7 @@ import Analytics from './_client/Analytics';
 import Telemetry from './_client/Telemetry';
 import PushOpenTracker from './_client/PushOpenTracker';
 import UpdateWatcher from './_client/UpdateWatcher';
+import NativeAppReady from './_client/NativeAppReady';
 import { APP_NAME, APP_SHORT_NAME } from '@/app/lib/brand';
 import QueryProvider from '@/app/lib/query/QueryProvider';
 import DevServerBadge from '@/app/components/common/DevServerBadge';
@@ -59,6 +60,7 @@ export default function RootLayout({
         <Telemetry />
         <PushOpenTracker />
         <UpdateWatcher />
+        <NativeAppReady />
 
         <PushSubscriber />
         <QueryProvider>{children}</QueryProvider>
