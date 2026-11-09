@@ -112,7 +112,9 @@ function Shell() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    // 아래쪽은 웹이 홈 바 높이만큼 직접 비켜 서므로(viewport-fit=cover) 위쪽 상태 표시줄만 비운다
+    // 아래까지 비우면 페이지 바탕색과 다른 띠가 홈 바 자리에 남는다
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
       {hasError ? (
         <View style={styles.center}>
