@@ -579,7 +579,7 @@ const QuickAddItems: React.FC<QuickAddItemProps> = ({ onClose }) => {
       <div className="flex h-135 flex-col" ref={modalRef}>
         {/* Toast notification */}
         {showToast && (
-          <div className="animate-fade-in fixed top-3 left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-3xl bg-white px-4 py-3 text-sm text-black shadow-lg">
+          <div className="animate-fade-in fixed top-[calc(0.75rem+env(safe-area-inset-top,0px))] left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-3xl bg-white px-4 py-3 text-sm text-black shadow-lg">
             {toastMessage}
           </div>
         )}

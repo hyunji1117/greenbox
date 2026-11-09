@@ -48,7 +48,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/our-fridge_logo2_192_bgwhite.png" />
 
         {/* PWA 메타 태그 */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* viewport-fit=cover: 홈 바 영역까지 화면을 채우고, 아래 고정 요소가 env(safe-area-inset-bottom)으로 직접 비켜 선다 (앱 웹뷰와 사파리 공통) */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

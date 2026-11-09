@@ -8,7 +8,7 @@ const Skeleton: React.FC = () => {
   return (
     <div className="flex h-screen bg-white">
       {/* 하단 내비게이션 자리 */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/90">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/90 pb-[env(safe-area-inset-bottom,0px)]">
         <div className="mx-auto flex h-16 max-w-screen-sm items-end justify-between px-4">
           {[1, 2, 3, 4, 5].map(i => (
             <div

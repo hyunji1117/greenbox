@@ -12,7 +12,7 @@ const Toast: React.FC<ToastProps> = ({ message, isVisible }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="animate-fade-in fixed top-3 left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-full border border-gray-300 bg-white px-4 py-3 text-base whitespace-nowrap text-black shadow-lg">
+    <div className="animate-fade-in fixed top-[calc(0.75rem+env(safe-area-inset-top,0px))] left-1/2 z-50 m-auto -translate-x-1/2 transform rounded-full border border-gray-300 bg-white px-4 py-3 text-base whitespace-nowrap text-black shadow-lg">
       {message}
     </div>
   );

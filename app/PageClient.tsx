@@ -85,12 +85,17 @@ export default function PageClient({
   return (
     <FridgeProvider>
       <div className="flex h-screen bg-white">
+        {/* 앱 웹뷰와 홈 화면 앱에서 상태 표시줄 자리를 바탕색으로 덮어 스크롤한 내용이 비치지 않게 한다 (기기마다 높이가 다름) */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top,0px)] bg-[#F0F0F4]"
+        />
         <BottomNavigation
           activeTab={activeTab}
           setActiveTab={goToTab}
           onSettingsClick={() => {}}
         />
-        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+        <div className="flex-1 overflow-auto bg-[#F0F0F4] p-0 pt-[env(safe-area-inset-top,0px)] max-md:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           <div className="mt-0.5">
             <PolicyNoticeBanner noticeVersion={policyNoticeVersion ?? null} />
             {renderContent()}
