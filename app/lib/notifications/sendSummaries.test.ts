@@ -89,7 +89,7 @@ describe('sendDueSummaries', () => {
     });
   });
 
-  it('하루 요약에는 보관 기간에 맞춰 알림 시작일이 된 품목만 넣는다', async () => {
+  it('하루 요약에는 3일 안 품목과 7일 안 냉동 품목을 넣는다', async () => {
     mocks.listNotificationCandidates.mockResolvedValue([
       person('1'),
       person('2'),
@@ -99,10 +99,11 @@ describe('sendDueSummaries', () => {
         {
           userId: '1',
           items: [
-            // 우유(10일 보관)는 1일 전부터, 냉동 만두(90일)는 7일 전부터, 두부(5일)는 아직
+            // 우유와 두부는 3일 안, 냉동 만두(90일 보관)는 7일 전부터, 요거트(10일 보관, 5일 남음)는 아직
             { name: '우유', daysLeft: 1, periodDays: 10 },
             { name: '두부', daysLeft: 2, periodDays: 5 },
             { name: '냉동 만두', daysLeft: 6, periodDays: 90 },
+            { name: '요거트', daysLeft: 5, periodDays: 10 },
           ],
         },
         // 알릴 품목이 하나도 없으면 보내지도, 보낸 기록을 남기지도 않는다
@@ -115,7 +116,7 @@ describe('sendDueSummaries', () => {
     expect(mocks.deliverToUser).toHaveBeenCalledTimes(1);
     expect(mocks.deliverToUser).toHaveBeenCalledWith('1', {
       title: '오늘은 우유 먼저 먹어 볼까요?',
-      body: '우유 외 1개, 유통기한 전에 꺼내 두면 좋아요',
+      body: '우유 외 2개, 유통기한 전에 꺼내 두면 좋아요',
       url: '/?tab=fridge&from=push&kind=daily&v=B&d=2026-11-06',
     });
     expect(mocks.claimSummarySend).toHaveBeenCalledTimes(1);
