@@ -88,7 +88,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 flex justify-end bg-black/50 transition-opacity duration-300">
-      <div className="flex h-full w-full flex-col overflow-y-auto bg-[#F2F2F6] p-4 pb-32 md:w-2/4 lg:w-1/3">
+      <div className="flex h-full w-full flex-col overflow-y-auto bg-[#F2F2F6] p-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-32 md:w-2/4 lg:w-1/3">
         <h1 className="mb-4 text-xl font-semibold">마이</h1>
         <SegmentedTabs
           tabs={SECTION_TABS}

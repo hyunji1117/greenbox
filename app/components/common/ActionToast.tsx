@@ -22,7 +22,7 @@ const ActionToast: React.FC<ActionToastProps> = ({
   <div
     role="status"
     inert={!isVisible}
-    className={`fixed inset-x-4 bottom-24 z-50 mx-auto flex min-h-14 max-w-md items-center justify-between gap-3 rounded-2xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none ${
+    className={`fixed inset-x-4 bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] z-50 mx-auto flex min-h-14 max-w-md items-center justify-between gap-3 rounded-2xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none ${
       isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
     }`}
   >

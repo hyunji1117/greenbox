@@ -36,7 +36,7 @@ export default function PolicyDocument({
   ).reverse();
 
   return (
-    <main className="min-h-screen bg-gray-50 px-3 pb-8 sm:px-4">
+    <main className="min-h-screen bg-gray-50 px-3 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:px-4">
       {/* 긴 글을 읽는 중에도 바로 돌아갈 수 있게 위쪽에 붙여 둔다 */}
       <nav className="sticky top-0 z-10 -mx-3 mb-2 bg-gray-50/95 px-2 pt-[env(safe-area-inset-top,0px)] backdrop-blur sm:-mx-4">
         <div className="mx-auto flex h-14 max-w-2xl items-center">

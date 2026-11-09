@@ -112,7 +112,9 @@ function Shell() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    // 상태 표시줄과 홈 바 자리는 웹이 화면마다 제 바탕색으로 채운다(viewport-fit=cover와 env(safe-area-inset-*))
+    // 앱이 고정 색으로 비우면 페이지 바탕색과 다른 띠가 남으므로 여기서는 비우지 않는다
+    <SafeAreaView style={styles.container} edges={[]}>
       <StatusBar style="dark" />
       {hasError ? (
         <View style={styles.center}>

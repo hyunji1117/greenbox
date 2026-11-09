@@ -24,7 +24,7 @@ const AuthShell: React.FC<AuthShellProps> = ({
   hideFooter = false,
   strongPrivacyLink = false,
 }) => (
-  <main className="flex min-h-screen items-center justify-center bg-[#F0F0F4] px-4 py-10">
+  <main className="flex min-h-screen items-center justify-center bg-[#F0F0F4] px-4 pt-[calc(2.5rem+env(safe-area-inset-top,0px))] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
     <div className="w-full max-w-sm space-y-8">
       {/* 로고와 제목 사이를 넉넉히 띄워, 화면에 들어왔을 때 제목이 먼저 눈에 들어오게 한다 */}
       <header className="flex flex-col items-center gap-9 text-center">
