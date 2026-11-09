@@ -1,11 +1,13 @@
 // src/config.ts
 // 앱이 여는 웹 주소와 앱 정보. 웹 주소는 app.json의 extra.webUrl (운영 주소가 기본)
+// 배포 전 화면 확인은 EXPO_PUBLIC_WEB_URL로 맥의 개발 서버를 연다 (예: http://192.168.0.10:3033)
 
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 export const WEB_URL: string =
-  (Constants.expoConfig?.extra?.webUrl as string | undefined) ??
+  process.env.EXPO_PUBLIC_WEB_URL ||
+  (Constants.expoConfig?.extra?.webUrl as string | undefined) ||
   'https://greenbox-seven.vercel.app';
 
 export const WEB_ORIGIN = new URL(WEB_URL).origin;
