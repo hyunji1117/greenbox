@@ -1,2 +1,2 @@
-# 모바일 앱(Expo)은 웹 배포에 필요 없다
-mobile
+# 모바일 앱(Expo)은 웹 배포에 필요 없다. 루트의 mobile/ 폴더만 뺀다 (app/mobile 등 웹 코드는 포함)
+/mobile
