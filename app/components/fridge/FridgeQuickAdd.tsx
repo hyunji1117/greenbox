@@ -13,6 +13,11 @@ import { useVoiceFoodName } from '@/app/lib/speech/useVoiceFoodName';
 import VoiceCheckNotice from '@/app/components/common/VoiceCheckNotice';
 import { useCreateItem } from '@/app/lib/items/useItems';
 import {
+  addedPlaceMessage,
+  categoryToShow,
+  placeLabel,
+} from '@/app/lib/items/addedPlace';
+import {
   getHomeSuggestions,
   getRebuySuggestions,
 } from '@/app/lib/items/suggestions';
@@ -29,6 +34,11 @@ interface FridgeQuickAddProps {
   alwaysShowSuggestions?: boolean;
   onAdded?: (itemId: string) => void;
   onRebuy?: (name: string) => void;
+  // 넣은 곳을 알릴 때 쓰는 지금 냉장고 이름 ("기흥 냉장고 냉동실에 넣었어요")
+  fridgeName?: string;
+  // 사진으로 넣은 품목이 모두 다른 칸에 들어가면 그 칸을 보여 주고 문구를 띄운다
+  // (칸이 바뀌면 이 입력 영역이 다시 그려지므로 문구는 보드가 띄운다)
+  onShowCategory?: (category: Category, message: string) => void;
 }
 
 // 눌러도 입력창의 포커스를 유지해서 모바일 키보드가 닫히지 않게 한다
@@ -44,6 +54,8 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   alwaysShowSuggestions = false,
   onAdded,
   onRebuy,
+  fridgeName,
+  onShowCategory,
 }) => {
   const createItem = useCreateItem('fridge_quick_add');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,8 +89,10 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
         onSuccess: item => {
           onSuccess?.();
           onAdded?.(item.id);
-          // 서버가 권장 보관 기간으로 유통기한을 채웠다는 것을 알린다 (참고값이라 고칠 수 있다고 함께 안내)
-          setNotice(EXPIRY_FILLED_NOTICE);
+          // 넣은 곳과, 서버가 권장 보관 기간으로 유통기한을 채웠다는 것을 함께 알린다 (참고값이라 고칠 수 있다고 안내)
+          setNotice(
+            `${placeLabel(fridgeName, category)}에 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
+          );
         },
       },
     );
@@ -211,11 +225,20 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
         file={photo}
         onClose={() => setPhoto(null)}
         onRetake={openCamera}
-        onAdded={count => {
+        onAdded={(count, categories = []) => {
           setPhoto(null);
-          setNotice(
-            `사진에서 찾은 식재료 ${count}개를 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
-          );
+          // 사진은 AI가 품목마다 칸을 정하므로 지금 보는 칸과 다를 수 있다. 넣은 곳을 알리고, 모두 다른 칸이면 그 칸을 보여 준다
+          const message = `${
+            categories.length > 0
+              ? addedPlaceMessage(fridgeName, categories)
+              : `사진에서 찾은 식재료 ${count}개를 넣었어요`
+          }. ${EXPIRY_FILLED_NOTICE}`;
+          const target = categoryToShow(category, categories);
+          if (target && onShowCategory) {
+            onShowCategory(target, message);
+            return;
+          }
+          setNotice(message);
         }}
       />
       {notice && (

@@ -87,7 +87,7 @@ describe('PhotoAddSheet', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: '1개 냉장고에 넣기' }));
 
-    await waitFor(() => expect(onAdded).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(onAdded).toHaveBeenCalledWith(1, ['fridge']));
     expect(mocks.mutateAsync).toHaveBeenCalledWith([
       { name: '저지방 우유', category: 'fridge', quantity: 2 },
     ]);
