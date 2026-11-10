@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
+  Image,
   Platform,
   Pressable,
   Share,
@@ -25,6 +26,11 @@ import { loginWithSystemBrowser } from './src/login';
 // 웹앱 바탕색과 같게 해 안전 영역과 로딩 화면이 튀지 않게 한다
 const BACKGROUND = '#F0F0F4';
 const BRAND = '#6B46C1';
+
+// 웹 로그인 화면과 같은 로고(영문 손글씨와 "우리집 냉장고")
+const LOGO = require('./assets/logo-wordmark.png');
+// 로고 그림 비율 (가로 600 : 세로 401)
+const LOGO_WIDTH = 132;
 
 // 구글 로그인 화면으로 가려는 순간을 잡아 시스템 브라우저 로그인으로 바꾼다
 const isGoogleSignIn = (url: string) => {
@@ -154,6 +160,7 @@ function Shell() {
       )}
       {isLoading && !hasError && (
         <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
+          <Image source={LOGO} style={styles.logo} accessibilityLabel="우리집 냉장고" />
           <ActivityIndicator color={BRAND} />
         </View>
       )}
@@ -185,6 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: BACKGROUND,
   },
+  logo: { width: LOGO_WIDTH, height: Math.round((LOGO_WIDTH * 401) / 600), marginBottom: 16 },
   title: { fontSize: 17, fontWeight: '700', color: '#1F1A2E' },
   body: { fontSize: 14, color: '#625D75', textAlign: 'center' },
   button: {
