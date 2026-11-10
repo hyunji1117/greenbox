@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -17,8 +18,20 @@ const mutate = vi.hoisted(() => vi.fn());
 vi.mock('@/app/lib/items/useItems', () => ({
   useCreateItem: () => ({ mutate, isPending: false, isError: false }),
 }));
-// 사진으로 찾기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다
-vi.mock('./PhotoAddSheet', () => ({ default: () => null }));
+// 사진으로 찾기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다. 여기서는 넣은 뒤 알림만 보려고 onAdded만 잡아 둔다
+const photoSheet = vi.hoisted(() => ({
+  onAdded: undefined as
+    | undefined
+    | ((count: number, categories?: string[]) => void),
+}));
+vi.mock('./PhotoAddSheet', () => ({
+  default: (props: {
+    onAdded: (count: number, categories?: string[]) => void;
+  }) => {
+    photoSheet.onAdded = props.onAdded;
+    return null;
+  },
+}));
 
 const input = () => screen.getByLabelText('추가할 식재료 이름');
 const submit = () => fireEvent.click(screen.getByLabelText('식재료 추가'));
@@ -212,5 +225,53 @@ describe('FridgeQuickAdd', () => {
       name: '라면',
       category: 'pantry',
     });
+  });
+
+  it('넣은 냉장고와 칸을 알림 문구에 함께 보여 준다', () => {
+    mutate.mockImplementation((_input, options) =>
+      options.onSuccess({ id: '10' }),
+    );
+    render(
+      <FridgeQuickAdd category="freezer" items={[]} fridgeName="기흥 냉장고" />,
+    );
+    fireEvent.change(input(), { target: { value: '새우' } });
+    submit();
+    expect(screen.getByRole('status').textContent).toContain(
+      '기흥 냉장고 냉동실에 넣었어요',
+    );
+  });
+
+  it('사진으로 넣은 품목이 모두 다른 칸이면 그 칸을 보여 달라고 알린다', () => {
+    const onShowCategory = vi.fn();
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        fridgeName="기흥 냉장고"
+        onShowCategory={onShowCategory}
+      />,
+    );
+    act(() => photoSheet.onAdded?.(1, ['freezer']));
+    expect(onShowCategory).toHaveBeenCalledWith(
+      'freezer',
+      expect.stringContaining('기흥 냉장고 냉동실에 1개를 넣었어요'),
+    );
+  });
+
+  it('사진으로 넣은 품목이 지금 칸에도 있으면 칸을 바꾸지 않고 여기서 알린다', () => {
+    const onShowCategory = vi.fn();
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        fridgeName="기흥 냉장고"
+        onShowCategory={onShowCategory}
+      />,
+    );
+    act(() => photoSheet.onAdded?.(2, ['fridge', 'freezer']));
+    expect(onShowCategory).not.toHaveBeenCalled();
+    expect(screen.getByRole('status').textContent).toContain(
+      '기흥 냉장고에 냉장실 1개, 냉동실 1개를 넣었어요',
+    );
   });
 });

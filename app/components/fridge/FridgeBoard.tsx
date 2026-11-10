@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { ApiSchemaError } from '@/app/lib/api/apiFetch';
 import { useItems } from '@/app/lib/items/useItems';
+import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import { goToTab } from '@/app/lib/navigation/tabs';
 import { useFinishWithUndo } from '@/app/lib/items/useFinishWithUndo';
 import type { Category } from '@/app/lib/schemas/item';
@@ -38,6 +39,7 @@ const goToShoppingList = () => goToTab('shoppingList');
 
 const FridgeBoard: React.FC = () => {
   const { data: items = [], isPending, error, refetch } = useItems();
+  const { data: currentFridge } = useCurrentFridge();
   const [activeCategory, setActiveCategory] = useState<Category>('fridge');
   const { notice, isNoticeVisible, finish, eatSome, undo, notify } =
     useFinishWithUndo();
@@ -146,6 +148,14 @@ const FridgeBoard: React.FC = () => {
                 alwaysShowSuggestions={filteredItems.length === 0}
                 onAdded={setNewItemId}
                 onRebuy={handleRebuy}
+                fridgeName={currentFridge?.name}
+                onShowCategory={(category, message) => {
+                  // 넣은 품목이 다른 칸에 들어갔으면 그 칸을 열어, 넣었는데 안 보인다고 느끼지 않게 한다
+                  setActiveCategory(category);
+                  setNewItemId(null);
+                  setFound(null);
+                  notify({ message, canUndo: false });
+                }}
               />
               {/* 새로 산 품목이 리스트를 거쳐야 구매 기록이 쌓이므로 등록 입력 바로 아래에서 안내한다 */}
               <button

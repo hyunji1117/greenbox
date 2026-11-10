@@ -50,7 +50,8 @@ interface PhotoAddSheetProps {
   file: File | null;
   onClose: () => void;
   onRetake: () => void;
-  onAdded: (count: number) => void;
+  // 냉장고에 넣었을 때는 넣은 품목의 칸도 넘긴다 (넣은 곳을 보여 주기 위해)
+  onAdded: (count: number, categories?: Category[]) => void;
   // 장보기에서 쓰면 냉장고에 넣지 않고 리스트에 담는다 (보관 위치는 고르지 않는다)
   onPickToList?: (items: { name: string; quantity: number }[]) => void;
 }
@@ -127,7 +128,10 @@ const PhotoAddSheet: React.FC<PhotoAddSheetProps> = ({
     );
     const count = saved.filter(Boolean).length;
     if (failedKeys.size === 0) {
-      onAdded(count);
+      onAdded(
+        count,
+        chosen.filter((_, index) => saved[index]).map(c => c.category),
+      );
       return;
     }
     setCandidates(prev => prev.filter(c => failedKeys.has(c.key)));
