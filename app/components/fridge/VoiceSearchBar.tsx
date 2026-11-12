@@ -4,9 +4,11 @@
 // - 평소: 몽환적인 그라데이션이 테두리를 따라 천천히 흐르고 "음성으로 재료를 찾아요"
 // - 듣는 동안: 그라데이션이 빨라지고 빛이 번지며 음파가 움직이고, 들리는 말을 바로 보여 준다
 // - 움직임 줄이기 설정을 켠 사람에게는 그라데이션과 음파를 멈춘 채로 보여 준다
+// - 긴 문구는 말줄임표 대신 전광판처럼 흘린다 (MarqueeText)
 
 import React from 'react';
 import { XIcon } from 'lucide-react';
+import MarqueeText from '@/app/components/common/MarqueeText';
 
 // 보라, 분홍, 하늘색을 이어 붙여 끝과 처음이 자연스럽게 이어지게 한다
 const AI_GRADIENT =
@@ -78,15 +80,16 @@ const VoiceSearchBar: React.FC<VoiceSearchBarProps> = ({
               />
             ))}
           </span>
-          <span
-            aria-live="polite"
-            className={`min-w-0 truncate text-[15px] font-semibold ${
-              isListening || text
-                ? 'text-[#4B2F8C]'
-                : 'bg-gradient-to-r from-[#6B46C1] via-[#B65BC9] to-[#5B8DEF] bg-clip-text text-transparent'
-            }`}
-          >
-            {label}
+          {/* 긴 문구는 말줄임표로 자르지 않고 흘려서 끝까지 읽게 한다 (움직임 줄이기면 두 줄) */}
+          <span aria-live="polite" className="min-w-0">
+            <MarqueeText
+              text={label}
+              className={`text-[15px] font-semibold ${
+                isListening || text
+                  ? 'text-[#4B2F8C]'
+                  : 'bg-gradient-to-r from-[#6B46C1] via-[#B65BC9] to-[#5B8DEF] bg-clip-text text-transparent'
+              }`}
+            />
           </span>
         </span>
       </button>

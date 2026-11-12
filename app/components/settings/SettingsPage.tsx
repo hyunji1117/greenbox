@@ -12,6 +12,7 @@ import NotificationSettingsCard from '@/app/components/settings/NotificationSett
 import FeedbackCard from '@/app/components/settings/FeedbackCard';
 import AppVersionCard from '@/app/components/settings/AppVersionCard';
 import FaqCard from '@/app/components/settings/FaqCard';
+import MembersEntryCard from '@/app/components/settings/MembersEntryCard';
 import { OPERATOR } from '@/app/lib/consent/operator';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
@@ -194,6 +195,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
                   </p>
                 </div>
               </div>
+              <MembersEntryCard />
               <FaqCard />
               <button
                 type="button"

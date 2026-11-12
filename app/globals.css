@@ -28,6 +28,8 @@
   --animate-ai-wave: ai-wave 0.9s ease-in-out infinite;
   /* 녹음 중 표시: 빨간 불이 깜빡인다 */
   --animate-rec-blink: rec-blink 1s ease-in-out infinite;
+  /* 넘치는 글자를 전광판처럼 흘린다. 거리(--marquee-distance)와 시간은 MarqueeText가 정한다 */
+  --animate-marquee: marquee 6s linear infinite;
 
   @keyframes rec-blink {
     0%,
@@ -36,6 +38,18 @@
     }
     50% {
       opacity: 0.15;
+    }
+  }
+
+  /* 처음과 끝에서 잠깐 멈춰 읽을 시간을 준다 */
+  @keyframes marquee {
+    0%,
+    20% {
+      transform: translateX(0);
+    }
+    80%,
+    100% {
+      transform: translateX(var(--marquee-distance, 0));
     }
   }
 

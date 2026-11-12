@@ -7,7 +7,8 @@ import { track } from '@/app/lib/analytics/gtag';
 
 export type FinishKind = 'eaten' | 'discarded';
 
-export const UNDO_WINDOW_MS = 5000;
+// 친구 가족 테스트(2026-11-11): 5초는 안내를 읽고 되돌리기를 누르기에 짧았다는 의견으로 8초로 늘림
+export const UNDO_WINDOW_MS = 8000;
 
 // 품목 이름 뒤에 바로 붙어도 조사가 틀리지 않는 문구만 쓴다
 const FINISH_MESSAGE: Record<FinishKind, string> = {
