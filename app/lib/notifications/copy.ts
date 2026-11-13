@@ -4,27 +4,19 @@
 // 문구 규칙: 겁주거나 재촉하지 않는다, 사실(품목과 기한)을 담는다, 감시처럼 느껴지는 표현(누가 넣었는지 등)은 쓰지 않는다
 
 import type { PushMessage } from '@/app/lib/push/sendToUsers';
+import { pickVariant } from '@/app/lib/experiments/assign';
 
 export type SummaryKind = 'daily' | 'weekly';
 export const VARIANTS = ['A', 'B'] as const;
 export type Variant = (typeof VARIANTS)[number];
 
-// FNV-1a. 같은 입력이면 늘 같은 문구가 나오고, 문구가 고르게 나뉜다
-function hash(text: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i += 1) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return h >>> 0;
-}
-
+// 배정은 공용 실험 기반(app/lib/experiments)을 쓴다. 입력 문자열 형식을 바꾸면 진행 중인 실험의 배정이 바뀐다
 export function assignVariant(
   userId: string,
   date: string,
   kind: SummaryKind,
 ): Variant {
-  return VARIANTS[hash(`${userId}:${date}:${kind}`) % VARIANTS.length];
+  return pickVariant(`${userId}:${date}:${kind}`, VARIANTS);
 }
 
 const subjectOf = (itemNames: string[]) => {
