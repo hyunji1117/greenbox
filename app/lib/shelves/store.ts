@@ -19,10 +19,9 @@ async function readCounts(fridgeId: string): Promise<ShelfCounts> {
   const { rows } = await getPool().query<{
     category: Category;
     shelf_count: number;
-  }>(
-    'SELECT category, shelf_count FROM fridge_shelves WHERE fridge_id = $1',
-    [fridgeId],
-  );
+  }>('SELECT category, shelf_count FROM fridge_shelves WHERE fridge_id = $1', [
+    fridgeId,
+  ]);
   const counts = { ...DEFAULT_SHELF_COUNTS };
   for (const row of rows) counts[row.category] = row.shelf_count;
   return counts;

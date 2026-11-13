@@ -34,7 +34,7 @@ export function shelfToRemove(
 }
 
 // 선반에 붙일 스티커: 사진이 있는 품목을 먼저, 그 안에서는 유통기한이 가까운 순. 최대 STICKERS_PER_SHELF개
-export function pickStickers<T extends { expiryDate: string | null }>(
+export function pickStickers<T extends { expiryDate?: string | null }>(
   items: readonly T[],
   hasImage: (item: T) => boolean,
 ): { shown: T[]; hidden: number } {

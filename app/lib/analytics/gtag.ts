@@ -85,6 +85,30 @@ type EventParams = {
   fridge_left: undefined;
   fridge_switched: undefined;
   fridge_renamed: undefined;
+  // 선반 보기 베타 (docs/decisions/0012). variant/view로 목록과 선반을 나눠 본다
+  experiment_exposed: { experiment: string; variant: string };
+  shelf_view_toggled: {
+    view: 'list' | 'shelf';
+    by: 'owner_switch';
+  };
+  fridge_doors_opened: undefined;
+  fridge_doors_closed: undefined;
+  shelf_opened: {
+    category: string;
+    shelf: number | 'unassigned';
+    count: number;
+  };
+  item_shelf_set: {
+    category: string;
+    from: number | 'unassigned';
+    to: number | 'unassigned';
+  };
+  shelf_count_changed: { category: string; count: number };
+  // 선반 보기 아래 영역: 오늘 뭐 먹지에서 요리를 열고, 빠진 재료를 장보기에 담았는지
+  // (홈의 AI 레시피 이벤트 recipe_*와 나눠 본다)
+  meal_suggestion_opened: { recipe: string; rank: number; uses_soon: number };
+  meal_suggestion_missing_added: { recipe: string; count: number };
+  urgent_item_opened: { reason: 'expiry' | 'low_stock' };
 };
 
 export type GuideName = 'fridge_switch' | 'owner_members' | 'members_count';
