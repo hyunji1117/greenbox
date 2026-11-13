@@ -13,6 +13,9 @@ export const COMMENT_TEXT_MAX = 200;
 
 const isoDateTime = z.iso.datetime().transform(value => new Date(value));
 
+// 선반 번호. DB 제약(0015)과 app/lib/shelves/rules.ts의 MAX_SHELF_COUNT와 같은 범위
+export const ShelfSchema = z.number().int().min(1).max(7);
+
 // ---------- 응답 ----------
 // 품목을 넣은 사람과 댓글 작성자. 탈퇴하면 id와 이름이 비고, 냉장고에서 나갔으면 isMember가 false
 export const PersonSchema = z.object({
@@ -48,6 +51,8 @@ export const ItemSchema = z.object({
     .transform(value => value ?? undefined),
   // 보는 사람의 관심 품목인지 (종 버튼). 이 필드를 보내기 전의 서버 응답은 false로 읽는다
   watched: z.boolean().default(false),
+  // 선반 보기 베타의 선반 번호(1이 맨 위). 정하지 않았거나 이 필드를 보내기 전의 응답은 null
+  shelf: ShelfSchema.nullish().transform(value => value ?? null),
 });
 
 export const ItemListSchema = z.array(ItemSchema);
@@ -63,6 +68,8 @@ export const CreateItemSchema = z.object({
   category: CategorySchema,
   quantity: z.number().int().min(1).max(QUANTITY_MAX),
   expiryDate: z.iso.date().optional(),
+  // 선반 보기에서 그 선반을 열고 넣으면 그 선반에 바로 놓는다
+  shelf: ShelfSchema.optional(),
 });
 
 // 어느 냉장고에 넣을지는 요청마다 밝힌다. 다른 탭에서 냉장고를 바꿔도 보던 냉장고에 들어가게 한다
@@ -74,6 +81,8 @@ export const UpdateItemSchema = CreateItemSchema.partial()
   .extend({
     finished: z.boolean().optional(),
     eatenQuantity: z.number().int().min(0).max(QUANTITY_MAX).optional(),
+    // null이면 선반에서 빼서 "선반 미정"으로 둔다
+    shelf: ShelfSchema.nullable().optional(),
   })
   .refine(value => Object.keys(value).length > 0, {
     message: '바꿀 항목이 없습니다',

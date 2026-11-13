@@ -89,6 +89,14 @@ export async function requireFridgeMember(
   return role ? { role } : { response: notFound() };
 }
 
+// 선반이 가득 찼거나(20개) 없는 선반일 때. 화면은 error 값으로 안내 문구를 고른다
+export function shelfConflict(reason: 'full' | 'no_shelf'): NextResponse {
+  return NextResponse.json(
+    { error: reason === 'full' ? 'shelf_full' : 'no_such_shelf' },
+    { status: 409 },
+  );
+}
+
 export function invalidRequest(error: ZodError): NextResponse {
   return NextResponse.json(
     { error: 'invalid_request', fields: z.flattenError(error).fieldErrors },

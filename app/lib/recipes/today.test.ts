@@ -27,6 +27,7 @@ const item = (
     finished,
     expiryDate,
     watched: false,
+    shelf: null,
   }) as ItemJson;
 
 // 2026-11-08 KST
