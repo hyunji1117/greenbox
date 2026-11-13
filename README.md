@@ -209,9 +209,7 @@ VAPID_SUBJECT=mailto:your_email@example.com
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
 
-선반 보기의 식재료 그림(`public/foods/`)은 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji)(MIT, Copyright (c) Microsoft Corporation)의 3D 그림을 96px로 줄여 사용합니다. 원문 라이선스는 `public/foods/LICENSE`에 있습니다.
-
-두부, 애호박, 느타리버섯, 대파, 된장, 된장찌개와 한국 음식 그림 48종(김치, 김밥, 떡볶이, 비빔밥, 김치찌개, 붕어빵 등. 목록은 `app/lib/shelves/foodIcons.ts`의 직접 만든 그림 항목)은 이 프로젝트에서 직접 만든 그림입니다.
+선반 보기의 식재료 그림(`public/foods/`)은 대부분 이 프로젝트에서 직접 만든 그림입니다(채소, 고기, 해산물, 장과 양념, 한국 음식, 외국 식재료, 세계 음식). 직접 만든 그림이 없는 과일 등 일부는 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji)(MIT, Copyright (c) Microsoft Corporation)의 3D 그림을 96px로 줄여 사용하며, 원문 라이선스는 `public/foods/LICENSE`에 있습니다. 어느 이름이 어느 그림인지는 `app/lib/shelves/foodIcons.ts`에 있습니다.
 
 ## 연락처
 

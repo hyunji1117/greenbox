@@ -33,17 +33,25 @@ describe('pickStickers', () => {
 
 describe('foodIconFor', () => {
   it('이름 안의 가장 긴 재료 이름으로 배경 없는 그림을 찾고, 없으면 null', () => {
-    expect(foodIconFor('방울토마토')).toBe('/foods/tomato.png');
-    expect(foodIconFor('양배추')).toBe('/foods/leafy_green.png');
-    expect(foodIconFor('닭가슴살')).toBe('/foods/chicken.png');
+    expect(foodIconFor('방울토마토')).toBe('/foods/cherry_tomato.png');
+    expect(foodIconFor('완숙토마토')).toBe('/foods/tomato.png');
+    expect(foodIconFor('양배추')).toBe('/foods/cabbage.png');
+    expect(foodIconFor('알배추')).toBe('/foods/napa_cabbage.png');
+    expect(foodIconFor('닭가슴살')).toBe('/foods/chicken_breast.png');
+    expect(foodIconFor('냉동새우')).toBe('/foods/shrimp.png');
+    expect(foodIconFor('청양고추')).toBe('/foods/gochu.png');
+    expect(foodIconFor('사과')).toBe('/foods/apple.png');
     expect(foodIconFor('달걀')).toBe('/foods/egg.png');
-    expect(foodIconFor('케첩')).toBeNull();
+    expect(foodIconFor('두유')).toBeNull();
   });
 
   it('직접 만든 한국 식재료와 요리 그림을 찾는다 (된장찌개는 된장보다 길어 요리 그림)', () => {
     expect(foodIconFor('부침두부')).toBe('/foods/tofu.png');
     expect(foodIconFor('애호박')).toBe('/foods/zucchini.png');
-    expect(foodIconFor('대파')).toBe('/foods/green_onion.png');
+    expect(foodIconFor('대파')).toBe('/foods/daepa.png');
+    expect(foodIconFor('김')).toBe('/foods/gim.png');
+    expect(foodIconFor('김치')).toBe('/foods/kimchi.png');
+    expect(foodIconFor('고추장')).toBe('/foods/gochujang.png');
     expect(foodIconFor('느타리버섯')).toBe('/foods/mushroom2.png');
     expect(foodIconFor('된장')).toBe('/foods/doenjang.png');
     expect(foodIconFor('된장찌개')).toBe('/foods/doenjang_stew.png');
@@ -55,6 +63,20 @@ describe('foodIconFor', () => {
     expect(foodIconFor('김치볶음밥')).toBe('/foods/kimchi_fried_rice.png');
     expect(foodIconFor('새우볶음밥')).toBe('/foods/kimchi_fried_rice.png');
     expect(foodIconFor('삼각김밥')).toBe('/foods/samgak_gimbap.png');
+    expect(foodIconFor('삼겹살')).toBe('/foods/pork_belly.png');
+    expect(foodIconFor('삼겹살구이')).toBe('/foods/samgyeopsal.png');
+  });
+
+  it('외국 식재료와 세계 음식도 더 긴 이름을 먼저 따른다', () => {
+    expect(foodIconFor('훈제연어')).toBe('/foods/smoked_salmon.png');
+    expect(foodIconFor('굴')).toBe('/foods/oyster.png');
+    expect(foodIconFor('굴비')).toBe('/foods/small_fish.png');
+    expect(foodIconFor('양상추')).toBe('/foods/iceberg.png');
+    expect(foodIconFor('브리오슈')).toBe('/foods/brioche.png');
+    expect(foodIconFor('치즈케이크')).toBe('/foods/cheesecake.png');
+    expect(foodIconFor('치킨커리')).toBe('/foods/butter_chicken.png');
+    expect(foodIconFor('토마토소스')).toBe('/foods/tomato_sauce.png');
+    expect(foodIconFor('초밥')).toBe('/foods/sushi.png');
     expect(foodIconFor('붕어빵')).toBe('/foods/bungeoppang.png');
     expect(foodIconFor('숙주나물')).toBe('/foods/bean_sprouts.png');
     expect(foodIconFor('비빔국수')).toBe('/foods/bibim_naengmyeon.png');
