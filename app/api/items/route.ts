@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { recommendedExpiryDate } from '@/app/lib/items/storageGuide';
 import { koreaClock } from '@/app/lib/notifications/schedule';
 import { createItem, listItems } from '@/app/lib/items/store';
+import { shelfSlotState } from '@/app/lib/shelves/store';
 import {
   CreateItemRequestSchema,
   FridgeIdSchema,
@@ -13,6 +14,7 @@ import {
   invalidRequest,
   notFound,
   requireFridgeMember,
+  shelfConflict,
   requireUser,
 } from './guard';
 
@@ -54,6 +56,11 @@ export async function POST(request: Request) {
       input.category,
       koreaClock(new Date()).date,
     );
+  // 선반 보기에서 넣을 때: 그 선반이 있고 가득 차지 않았을 때만 놓는다
+  if (input.shelf !== undefined) {
+    const slot = await shelfSlotState(fridgeId, input.category, input.shelf);
+    if (slot !== 'ok') return shelfConflict(slot);
+  }
   const item = await createItem(fridgeId, userId, { ...input, expiryDate });
   return NextResponse.json(item, { status: 201, headers: NO_STORE });
 }

@@ -45,6 +45,7 @@ const row: ItemRow = {
   finished: false,
   expiry_date: '2026-11-05',
   watched: true,
+  shelf: null,
   comments: [
     {
       id: '101',

@@ -37,6 +37,7 @@ export interface ItemRow {
   finished: boolean;
   expiry_date: string | null;
   watched: boolean;
+  shelf: number | null;
   added_by: PersonJson;
   comments: CommentJson[];
 }
@@ -55,7 +56,7 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
 // viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
 const selectItems = (viewerParam: string) => `
-  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.finished,
+  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.finished, i.shelf,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
     EXISTS (
       SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
@@ -100,6 +101,7 @@ export function toItemJson(row: ItemRow) {
     finished: row.finished,
     expiryDate: row.expiry_date,
     watched: row.watched,
+    shelf: row.shelf ?? null,
   };
 }
 
@@ -137,8 +139,8 @@ export async function createItem(
   input: CreateItemInput,
 ): Promise<ItemJson> {
   const { rows } = await getPool().query<{ id: string }>(
-    `INSERT INTO items (fridge_id, user_id, created_by, name, category, quantity, expiry_date)
-     VALUES ($1, $2, $2, $3, $4, $5, $6)
+    `INSERT INTO items (fridge_id, user_id, created_by, name, category, quantity, expiry_date, shelf)
+     VALUES ($1, $2, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
     [
       fridgeId,
@@ -147,6 +149,7 @@ export async function createItem(
       input.category,
       input.quantity,
       input.expiryDate ?? null,
+      input.shelf ?? null,
     ],
   );
   await getPool().query(
@@ -176,6 +179,8 @@ export async function updateItem(
        ),
        expiry_date = COALESCE($6::date, expiry_date),
        finished = COALESCE($7::boolean, finished),
+       -- 선반은 보냈을 때만 바꾼다 (null을 보내면 선반 미정으로)
+       shelf = CASE WHEN $9::boolean THEN $10::smallint ELSE shelf END,
        updated_at = now()
      WHERE i.id = $2 AND ${MEMBER_OF_ITEM_FRIDGE}`,
     [
@@ -187,6 +192,8 @@ export async function updateItem(
       input.expiryDate ?? null,
       input.finished ?? null,
       input.eatenQuantity ?? null,
+      input.shelf !== undefined,
+      input.shelf ?? null,
     ],
   );
   return rowCount ? findItem(itemId, userId) : null;
