@@ -109,6 +109,10 @@ type EventParams = {
   meal_suggestion_opened: { recipe: string; rank: number; uses_soon: number };
   meal_suggestion_missing_added: { recipe: string; count: number };
   urgent_item_opened: { reason: 'expiry' | 'low_stock' };
+  // 통계의 먹은 음식(위)과 버린 음식(쓰레기통): 들여다보기, 목록, 냉장고로 꺼내기
+  food_bin_opened: { bin: 'eaten' | 'discarded'; count: number };
+  food_bin_list_opened: { bin: 'eaten' | 'discarded' };
+  finished_item_restored: { from: 'eaten' | 'discarded' };
 };
 
 export type GuideName = 'fridge_switch' | 'owner_members' | 'members_count';

@@ -33,6 +33,7 @@ const itemJson = (id: string, overrides = {}) => ({
   expiryDate: null,
   watched: false,
   shelf: null,
+  updatedAt: null,
   ...overrides,
 });
 

@@ -38,6 +38,8 @@ export interface ItemRow {
   expiry_date: string | null;
   watched: boolean;
   shelf: number | null;
+  // 마지막으로 바뀐 때. 다 먹음/버림 품목을 최근 순으로 보여 줄 때 쓴다 (예전 테스트 행에는 없다)
+  updated_at?: Date;
   added_by: PersonJson;
   comments: CommentJson[];
 }
@@ -56,7 +58,7 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
 // viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
 const selectItems = (viewerParam: string) => `
-  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.finished, i.shelf,
+  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.updated_at, i.finished, i.shelf,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
     EXISTS (
       SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
@@ -102,6 +104,7 @@ export function toItemJson(row: ItemRow) {
     expiryDate: row.expiry_date,
     watched: row.watched,
     shelf: row.shelf ?? null,
+    updatedAt: row.updated_at ? row.updated_at.toISOString() : null,
   };
 }
 
