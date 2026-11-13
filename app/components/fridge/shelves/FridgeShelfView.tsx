@@ -94,14 +94,44 @@ const ShelfFoodImage: React.FC<{ name: string }> = ({ name }) => {
 
 const STICKERS_PER_ROW = 5;
 
-const Sticker: React.FC<{ item: Item }> = ({ item }) => (
-  <span className="motion-safe:animate-magnet flex min-w-0 flex-col items-center gap-0.5">
-    <ShelfFoodImage name={item.name} />
-    <span className="w-full truncate text-center text-[10px] leading-tight font-semibold text-gray-800">
-      {item.name}
+// 선반 한 칸(약 32px)에 이름을 "…" 없이 5글자까지 보인다. 3글자까지는 10px,
+// 4글자부터는 9px에 자간을 좁히고, 5글자는 옆으로 살짝 눌러 칸 안에 맞춘다 (전체 이름은 선반 목록에서)
+export const STICKER_NAME_MAX = 5;
+
+export function stickerName(name: string): {
+  text: string;
+  className: string;
+  scaleX: number;
+} {
+  const text = Array.from(name.replace(/\s+/g, ''))
+    .slice(0, STICKER_NAME_MAX)
+    .join('');
+  const length = Array.from(text).length;
+  if (length <= 3) return { text, className: 'text-[10px]', scaleX: 1 };
+  if (length === 4)
+    return { text, className: 'text-[9px] tracking-[-0.06em]', scaleX: 1 };
+  return { text, className: 'text-[9px] tracking-[-0.06em]', scaleX: 0.8 };
+}
+
+const Sticker: React.FC<{ item: Item }> = ({ item }) => {
+  const label = stickerName(item.name);
+  return (
+    <span className="motion-safe:animate-magnet flex min-w-0 flex-col items-center gap-0.5">
+      <ShelfFoodImage name={item.name} />
+      <span
+        aria-hidden
+        className={`block text-center leading-tight font-semibold whitespace-nowrap text-gray-800 ${label.className}`}
+        style={
+          label.scaleX < 1
+            ? { transform: `scaleX(${label.scaleX})` }
+            : undefined
+        }
+      >
+        {label.text}
+      </span>
     </span>
-  </span>
-);
+  );
+};
 
 const ShelfColumn: React.FC<{
   category: Category;

@@ -37,7 +37,7 @@ describe('foodIconFor', () => {
     expect(foodIconFor('양배추')).toBe('/foods/leafy_green.png');
     expect(foodIconFor('닭가슴살')).toBe('/foods/chicken.png');
     expect(foodIconFor('달걀')).toBe('/foods/egg.png');
-    expect(foodIconFor('김치')).toBeNull();
+    expect(foodIconFor('케첩')).toBeNull();
   });
 
   it('직접 만든 한국 식재료와 요리 그림을 찾는다 (된장찌개는 된장보다 길어 요리 그림)', () => {
@@ -47,5 +47,17 @@ describe('foodIconFor', () => {
     expect(foodIconFor('느타리버섯')).toBe('/foods/mushroom2.png');
     expect(foodIconFor('된장')).toBe('/foods/doenjang.png');
     expect(foodIconFor('된장찌개')).toBe('/foods/doenjang_stew.png');
+  });
+
+  it('남은 음식과 요리 이름은 재료보다 긴 요리 이름을 먼저 따른다', () => {
+    expect(foodIconFor('포기김치')).toBe('/foods/kimchi.png');
+    expect(foodIconFor('김치찌개')).toBe('/foods/kimchi_stew.png');
+    expect(foodIconFor('김치볶음밥')).toBe('/foods/kimchi_fried_rice.png');
+    expect(foodIconFor('새우볶음밥')).toBe('/foods/kimchi_fried_rice.png');
+    expect(foodIconFor('삼각김밥')).toBe('/foods/samgak_gimbap.png');
+    expect(foodIconFor('붕어빵')).toBe('/foods/bungeoppang.png');
+    expect(foodIconFor('숙주나물')).toBe('/foods/bean_sprouts.png');
+    expect(foodIconFor('비빔국수')).toBe('/foods/bibim_naengmyeon.png');
+    expect(foodIconFor('햇반')).toBe('/foods/bap.png');
   });
 });
