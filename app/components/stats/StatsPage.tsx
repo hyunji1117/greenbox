@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
+import FoodBins from '@/app/components/stats/FoodBins';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import { EXPIRY_SOON_DAYS } from '@/app/lib/items/expiry';
 import { computeItemStats } from '@/app/lib/items/stats';
@@ -170,6 +171,13 @@ const StatsPage: React.FC<StatsPageProps> = ({ onGoToFridge }) => {
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section
+        title="먹은 음식과 버린 음식"
+        hint="잘못 눌렀다면 눌러서 냉장고로 꺼낼 수 있어요"
+      >
+        <FoodBins items={items} />
       </Section>
 
       <Section title="유통기한">

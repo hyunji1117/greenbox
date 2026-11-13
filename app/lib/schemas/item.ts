@@ -53,6 +53,8 @@ export const ItemSchema = z.object({
   watched: z.boolean().default(false),
   // 선반 보기 베타의 선반 번호(1이 맨 위). 정하지 않았거나 이 필드를 보내기 전의 응답은 null
   shelf: ShelfSchema.nullish().transform(value => value ?? null),
+  // 마지막으로 바뀐 때. 통계의 다 먹은 음식과 버린 음식을 최근 순으로 놓는다. 이 필드를 보내기 전의 응답은 null
+  updatedAt: isoDateTime.nullish().transform(value => value ?? null),
 });
 
 export const ItemListSchema = z.array(ItemSchema);
