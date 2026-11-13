@@ -127,7 +127,7 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           value={name}
           onChange={e => setName(e.target.value)}
           aria-label="추가할 식재료 이름"
-          placeholder="식재료 직접 입력 (예: 오이)"
+          placeholder="식재료 직접 추가"
           maxLength={ITEM_NAME_MAX}
           enterKeyHint="done"
           className="h-full min-w-0 flex-1 bg-transparent text-base text-gray-800 placeholder:text-gray-400 focus:outline-none"

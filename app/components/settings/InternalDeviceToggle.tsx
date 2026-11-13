@@ -4,6 +4,7 @@
 // 표시한 기기의 이용 기록은 GA 보고서에서 빠지고 DebugView에서만 보인다 (설치한 앱은 주소에 ?internal=on을 붙이기 어려워 둠)
 
 import React, { useState, useSyncExternalStore } from 'react';
+import Switch from '@/app/components/common/Switch';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { isInternalDevice, setInternalDevice } from '@/app/lib/analytics/gtag';
 
@@ -32,22 +33,11 @@ const InternalDeviceToggle: React.FC = () => {
           개발자용이에요. 켜면 바로 이용 통계에서 이 기기를 빼요
         </p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={isOn}
-        aria-labelledby="internal-device-label"
-        onClick={toggle}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          isOn ? 'bg-[#6B46C1]' : 'bg-gray-300'
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-            isOn ? 'translate-x-5' : ''
-          }`}
-        />
-      </button>
+      <Switch
+        checked={isOn}
+        labelledBy="internal-device-label"
+        onChange={toggle}
+      />
     </div>
   );
 };

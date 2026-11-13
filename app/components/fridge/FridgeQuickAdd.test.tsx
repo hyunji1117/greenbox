@@ -42,34 +42,15 @@ describe('FridgeQuickAdd', () => {
   });
   afterEach(cleanup);
 
-  it('비어 있을 때 + 를 누르면 카메라와 음성을 펼치고, 이름을 적으면 + 가 바로 추가가 된다', () => {
+  it('비어 있을 때 카메라와 음성이 처음부터 보이고, 이름을 적으면 그 자리에 + (바로 추가)가 나온다', () => {
     render(<FridgeQuickAdd category="fridge" items={[]} />);
-    expect(input().getAttribute('placeholder')).toBe(
-      '식재료 직접 입력 (예: 오이)',
-    );
-
-    const toggle = screen.getByRole('button', {
-      name: '사진이나 음성으로 넣기',
-    });
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(toggle);
-    expect(
-      screen
-        .getByRole('button', { name: '사진, 음성 접기' })
-        .getAttribute('aria-expanded'),
-    ).toBe('true');
+    expect(input().getAttribute('placeholder')).toBe('식재료 직접 추가');
     expect(screen.getByRole('button', { name: '사진으로 찾기' })).toBeTruthy();
-
-    // 버튼 밖을 누르면 다시 + 로 접는다
-    fireEvent.pointerDown(document.body);
-    expect(
-      screen
-        .getByRole('button', { name: '사진이나 음성으로 넣기' })
-        .getAttribute('aria-expanded'),
-    ).toBe('false');
+    expect(screen.queryByRole('button', { name: '식재료 추가' })).toBeNull();
 
     fireEvent.change(input(), { target: { value: '오이' } });
     expect(screen.getByRole('button', { name: '식재료 추가' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '사진으로 찾기' })).toBeNull();
   });
 
   // 말한 글자를 차례로 들려준 뒤 끝내는 가짜 음성 인식 (말하는 도중 "오" → 끝에 "오이")
@@ -101,9 +82,6 @@ describe('FridgeQuickAdd', () => {
   const speak = async (transcripts: string[]) => {
     vi.stubGlobal('webkitSpeechRecognition', fakeRecognition(transcripts));
     render(<FridgeQuickAdd category="fridge" items={[]} />);
-    fireEvent.click(
-      screen.getByRole('button', { name: '사진이나 음성으로 넣기' }),
-    );
     fireEvent.click(screen.getByRole('button', { name: '말로 넣기' }));
   };
 

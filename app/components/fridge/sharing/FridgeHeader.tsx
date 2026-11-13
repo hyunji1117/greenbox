@@ -1,17 +1,21 @@
 'use client';
 // app/components/fridge/sharing/FridgeHeader.tsx
-// 냉장고 화면 상단: 지금 보는 냉장고 이름(누르면 바꾸기)과 함께 보는 사람 수(누르면 구성원 관리)
-// 누가 보고 있는지 항상 보이게 하고, 승인을 기다리는 요청이 있으면 점으로 알린다
-// 만든 사람에게는 함께 보는 사람이 새로 생기면 사람 수 버튼을 비추는 안내를 띄운다
+// 냉장고 화면 상단: 지금 보는 냉장고 이름(누르면 바꾸기)과 이 냉장고를 보는 사람 수, 오른쪽 끝 버튼 자리(선반 보기의 문 닫기)
+// 사람 수는 보기 전용이다. 초대와 구성원 관리, 참여 요청은 마이에서 한다 (누를 수 없는 칸에 점을 두면 누르고 싶어져 빼었다)
+// 처음 들어온 사람에게는 사람 수 칸이 무엇인지, 만든 사람에게는 함께 보는 사람이 새로 생겼다고 칸을 비추는 안내를 띄운다
 // 휴대폰 폭에서 한 줄로 들어가도록 사람 수는 아이콘과 숫자로 짧게 쓴다 (호칭과 냉장고 이름 글자 수 제한과 맞춤)
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, UsersIcon } from 'lucide-react';
 import FridgeSwitcherSheet from '@/app/components/fridge/sharing/FridgeSwitcherSheet';
-import MembersSheet from '@/app/components/fridge/sharing/MembersSheet';
+import MembersCountGuide, {
+  hasSeenMembersCountGuide,
+  markMembersCountGuideSeen,
+} from '@/app/components/fridge/sharing/MembersCountGuide';
 import SwitchGuide from '@/app/components/fridge/sharing/SwitchGuide';
 import OwnerMembersGuide from '@/app/components/fridge/sharing/OwnerMembersGuide';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
+import { goToTab } from '@/app/lib/navigation/tabs';
 
 // 안내는 사람마다 한 번만 보여 준다 (기기별로 기억)
 const guideSeenKey = (userId: string) =>
@@ -34,13 +38,18 @@ function markGuideSeen(userId: string): void {
   }
 }
 
-const FridgeHeader: React.FC = () => {
+interface FridgeHeaderProps {
+  // 오른쪽 끝에 둘 버튼 (선반 보기에서 문이 열렸을 때 문 닫기)
+  trailing?: React.ReactNode;
+}
+
+const FridgeHeader: React.FC<FridgeHeaderProps> = ({ trailing }) => {
   const { data: fridge } = useCurrentFridge();
-  const [openSheet, setOpenSheet] = useState<'switch' | 'members' | null>(null);
+  const [openSheet, setOpenSheet] = useState<'switch' | null>(null);
   // 서버가 그린 첫 화면과 맞추기 위해, 안내를 볼지는 화면이 붙은 뒤에 저장소를 읽어 정한다
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const titleRef = useRef<HTMLButtonElement>(null);
-  const membersRef = useRef<HTMLButtonElement>(null);
+  const membersRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpenSheet(null), []);
 
   const myUserId = fridge?.myUserId;
@@ -55,6 +64,17 @@ const FridgeHeader: React.FC = () => {
     if (myUserId) markGuideSeen(myUserId);
     setIsGuideOpen(false);
   }, [myUserId]);
+  // 사람 수 칸 안내: 처음 들어온 사람마다 한 번
+  const [isCountGuideOpen, setIsCountGuideOpen] = useState(false);
+  useEffect(() => {
+    if (myUserId && !hasSeenMembersCountGuide(myUserId)) {
+      setIsCountGuideOpen(true);
+    }
+  }, [myUserId]);
+  const closeCountGuide = useCallback(() => {
+    if (myUserId) markMembersCountGuideSeen(myUserId);
+    setIsCountGuideOpen(false);
+  }, [myUserId]);
 
   if (!fridge) {
     return (
@@ -64,55 +84,56 @@ const FridgeHeader: React.FC = () => {
     );
   }
 
-  const hasRequests = fridge.pendingRequestCount > 0;
+  // 알림 첫 질문, 냉장고 바꾸기 안내, 시트가 끝난 뒤에 하나씩 보여 겹치지 않게 한다
+  const isBusy =
+    isGuideOpen || openSheet !== null || fridge.myNotifyLevel === null;
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <button
-        ref={titleRef}
-        type="button"
-        onClick={() => setOpenSheet('switch')}
-        className="flex min-h-10 min-w-0 items-center gap-1 rounded-xl text-left"
-        aria-label={`${fridge.name}, 냉장고 바꾸기`}
-      >
-        <h1 className="truncate text-xl font-semibold">{fridge.name}</h1>
-        <ChevronDownIcon size={20} className="shrink-0 text-gray-500" />
-      </button>
-      <button
-        ref={membersRef}
-        type="button"
-        onClick={() => setOpenSheet('members')}
-        className="relative flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-white px-3 text-sm font-medium text-[#553C9A] shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5"
-        aria-label={
-          hasRequests
-            ? `함께 보는 사람 ${fridge.members.length}명, 참여 요청 ${fridge.pendingRequestCount}건`
-            : `함께 보는 사람 ${fridge.members.length}명`
-        }
-      >
-        <UsersIcon size={16} />
-        {fridge.members.length}명
-        {hasRequests && (
-          <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-red-500 ring-2 ring-[#F0F0F4]" />
-        )}
-      </button>
+    <div className="mb-4 flex items-center justify-between gap-2">
+      {/* 사람 수는 이 냉장고에 속한 정보라 이름 바로 옆에 둔다. 이름(냉장고 바꾸기 버튼) 밖에 두어 눌러도 바꾸기가 열리지 않게 하고,
+          이름이 길면 이름이 먼저 줄어든다. 오른쪽 끝은 문 닫기 같은 버튼 자리 */}
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          ref={titleRef}
+          type="button"
+          onClick={() => setOpenSheet('switch')}
+          className="flex min-h-10 min-w-0 items-center gap-1 rounded-xl text-left"
+          aria-label={`${fridge.name}, 냉장고 바꾸기`}
+        >
+          <h1 className="truncate text-xl font-semibold">{fridge.name}</h1>
+          <ChevronDownIcon size={20} className="shrink-0 text-gray-500" />
+        </button>
+        <div
+          ref={membersRef}
+          role="status"
+          aria-label={`이 냉장고를 보는 사람 ${fridge.members.length}명`}
+          className="flex h-7 shrink-0 items-center gap-1 rounded-full px-1 text-sm font-medium whitespace-nowrap text-[#7b6d99]"
+        >
+          <UsersIcon size={15} aria-hidden />
+          <span aria-hidden>{fridge.members.length}명</span>
+        </div>
+      </div>
+      {trailing}
       <FridgeSwitcherSheet
         isOpen={openSheet === 'switch'}
         onClose={close}
         current={fridge}
       />
-      <MembersSheet
-        isOpen={openSheet === 'members'}
-        onClose={close}
-        fridge={fridge}
-      />
-      {/* 냉장고 바꾸기 안내, 시트, 알림 첫 질문이 끝난 뒤에 보여 겹치지 않게 한다 */}
+      {isCountGuideOpen && !isBusy && (
+        <MembersCountGuide
+          target={membersRef}
+          onGoToMy={() => {
+            closeCountGuide();
+            goToTab('settings');
+          }}
+          onClose={closeCountGuide}
+        />
+      )}
       <OwnerMembersGuide
         fridge={fridge}
         target={membersRef}
-        isBlocked={
-          isGuideOpen || openSheet !== null || fridge.myNotifyLevel === null
-        }
-        onOpenMembers={() => setOpenSheet('members')}
+        isBlocked={isBusy || isCountGuideOpen}
+        onOpenMembers={() => goToTab('settings')}
       />
       {isGuideOpen && (
         <SwitchGuide

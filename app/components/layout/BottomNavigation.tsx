@@ -52,6 +52,8 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
+      // 안내(SpotlightGuide)가 이 탭을 함께 비출 때 찾는 표시
+      data-nav-tab={item.id}
       className={`flex h-[64px] max-[500px]:h-[54px] max-[353px]:h-[48px] w-full shrink-0 grow basis-0 flex-col items-center justify-center rounded-3xl px-2 max-[500px]:px-1 max-[353px]:px-0.5 transition-all duration-150 ${
         isActive
           ? 'text-[#4b2f8c]'

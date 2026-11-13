@@ -87,7 +87,7 @@ type EventParams = {
   fridge_renamed: undefined;
 };
 
-export type GuideName = 'fridge_switch' | 'owner_members';
+export type GuideName = 'fridge_switch' | 'owner_members' | 'members_count';
 
 export type JoinPageState =
   | 'invalid'

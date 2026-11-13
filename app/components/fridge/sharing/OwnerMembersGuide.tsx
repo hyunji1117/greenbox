@@ -2,7 +2,8 @@
 // app/components/fridge/sharing/OwnerMembersGuide.tsx
 // 냉장고를 만든 사람에게 누구와 함께 쓰고 있는지 알리고, 함께 쓸 사람을 직접 고를 수 있다고 안내한다
 // 내보내기를 앞세우면 함께 쓰는 사람을 경계하는 말로 들려, 고르는 쪽으로 안내한다
-// 배경을 살짝 어둡게 하고 위쪽 "N명" 버튼만 비춘다 (냉장고 바꾸기 안내와 같은 모양)
+// 배경을 살짝 어둡게 하고 위쪽 "N명" 칸만 비춘다 (냉장고 바꾸기 안내와 같은 모양)
+// "N명" 칸은 보기 전용이라, 함께 쓰는 사람 목록은 마이로 안내한다
 // 가족이 대신 초대하고 승인해 줬어도 만든 사람이 직접 알 수 있게 한다 (가족 응답 26.11.06)
 // 확인하면 사라지고, 새로운 사람이 들어오면 다시 보인다 (기기별로 기억)
 
@@ -48,10 +49,11 @@ export function joinedLabel(names: (string | null)[]): string {
 
 interface OwnerMembersGuideProps {
   fridge: CurrentFridge;
-  // 비출 "N명" 버튼
+  // 비출 "N명" 칸
   target: React.RefObject<HTMLElement | null>;
   // 다른 안내나 시트가 떠 있으면 겹치지 않게 기다린다
   isBlocked: boolean;
+  // 마이로 가서 함께 쓰는 사람을 본다
   onOpenMembers: () => void;
 }
 
@@ -88,10 +90,11 @@ const OwnerMembersGuide: React.FC<OwnerMembersGuideProps> = ({
       target={target}
       // 새로 들어온 사람만 알린다 (이미 확인한 사람은 다시 부르지 않는다)
       title={`${joinedLabel(unseenMembers(others, seenIds).map(m => m.name))} 이 냉장고에 참여했어요`}
-      body="사람 수를 눌러 함께 쓰는 사람을 볼 수 있어요."
-      primaryLabel="함께 쓰는 사람 보기"
-      spotLabel="함께 쓰는 사람 열기"
+      body="함께 쓰는 사람은 마이에서 보고 초대할 수 있어요."
+      primaryLabel="마이에서 보기"
+      spotLabel="마이에서 함께 쓰는 사람 보기"
       spotShape="rounded-full"
+      alsoHighlight='[data-nav-tab="settings"]'
       onPrimary={() => {
         acknowledge();
         onOpenMembers();

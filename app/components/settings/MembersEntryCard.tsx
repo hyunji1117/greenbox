@@ -34,7 +34,7 @@ const MembersEntryCard: React.FC = () => {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-gray-800">
-            함께 보는 사람과 초대
+            사용자 초대하기
           </span>
           <span className="block truncate text-xs text-gray-500">
             {fridge.name}, {fridge.members.length}명

@@ -19,6 +19,8 @@ interface QuantityStepperProps {
   size?: 'md' | 'sm';
   // 카드 위에 겹쳐 보일 때처럼 흰 바탕이 필요한 곳
   tone?: 'gray' | 'white';
+  // 숫자 옆에 붙일 단위 (구, 모, 단). 없으면 숫자만
+  unit?: string;
 }
 
 const SIZE = {
@@ -40,6 +42,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
   max,
   size = 'md',
   tone = 'gray',
+  unit,
 }) => {
   // 적는 중인 글자. 없으면 저장된 값을 보여 준다
   const [draft, setDraft] = useState<string | null>(null);
@@ -96,6 +99,11 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
         }}
         className={`h-full bg-transparent text-center text-base font-semibold tabular-nums focus:rounded-md focus:bg-white focus:ring-1 focus:ring-[#A794D6] focus:outline-none ${s.input}`}
       />
+      {unit && (
+        <span aria-hidden className="-ml-1 text-sm font-medium text-gray-500">
+          {unit}
+        </span>
+      )}
       <button
         type="button"
         onClick={() => step(1)}

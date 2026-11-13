@@ -5,6 +5,8 @@
 
 import React from 'react';
 import { BellIcon, ChevronDownIcon } from 'lucide-react';
+import Collapse from '@/app/components/common/Collapse';
+import Switch from '@/app/components/common/Switch';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import {
@@ -65,29 +67,6 @@ const Select: React.FC<
   </div>
 );
 
-const Switch: React.FC<{
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}> = ({ checked, label, onChange }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    aria-label={label}
-    onClick={() => onChange(!checked)}
-    className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-      checked ? 'bg-[#6B46C1]' : 'bg-gray-300'
-    }`}
-  >
-    <span
-      className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-        checked ? 'translate-x-5' : ''
-      }`}
-    />
-  </button>
-);
-
 const NotificationSettingsCard: React.FC = () => {
   const { data } = useNotificationSettings();
   const fridge = useCurrentFridge().data;
@@ -99,9 +78,17 @@ const NotificationSettingsCard: React.FC = () => {
   const off = !settings.enabled;
 
   return (
-    <div className={`space-y-4 p-4 ${SURFACE}`}>
+    <div className={`p-4 ${SURFACE}`}>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-gray-800">알림 설정</h2>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-gray-800">알림 설정</h2>
+          {/* 꺼 두면 상세를 접고, 무슨 알림인지만 짧게 남긴다 */}
+          <Collapse isOpen={off}>
+            <p className="mt-0.5 text-xs text-gray-500">
+              곧 먹어야 할 식재료와 장보기 전 알림을 정한 시각에 보내요
+            </p>
+          </Collapse>
+        </div>
         <Switch
           checked={settings.enabled}
           label="알림 받기"
@@ -109,104 +96,118 @@ const NotificationSettingsCard: React.FC = () => {
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="daily-hour"
-          className="mb-1 block pl-3 text-xs font-medium text-gray-500"
-        >
-          매일 알림
-        </label>
-        <Select
-          id="daily-hour"
-          value={settings.dailyHour}
-          disabled={off}
-          onChange={e => update.mutate({ dailyHour: Number(e.target.value) })}
-        >
-          {HOURS.map(hour => (
-            <option key={hour} value={hour}>
-              매일 {hourLabel(hour)}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <span className="pl-3 text-xs font-medium text-gray-500">
-            장보기 전 알림
-          </span>
-          <Switch
-            checked={settings.weeklyEnabled}
-            label="장보기 전 알림 받기"
-            onChange={weeklyEnabled => update.mutate({ weeklyEnabled })}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Select
-            aria-label="장 보는 요일"
-            value={settings.weeklyDay}
-            disabled={off || !settings.weeklyEnabled}
-            onChange={e => update.mutate({ weeklyDay: Number(e.target.value) })}
-          >
-            {WEEKDAY_LABELS.map((label, day) => (
-              <option key={label} value={day}>
-                {label}요일
-              </option>
-            ))}
-          </Select>
-          <Select
-            aria-label="장보기 전 알림 시각"
-            value={settings.weeklyHour}
-            disabled={off || !settings.weeklyEnabled}
-            onChange={e =>
-              update.mutate({ weeklyHour: Number(e.target.value) })
-            }
-          >
-            {HOURS.map(hour => (
-              <option key={hour} value={hour}>
-                {hourLabel(hour)}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </div>
-
-      {fridge && (
-        <div>
-          <p className="mb-1 pl-3 text-xs font-medium text-gray-500">
-            {fridge.name} 알림
-          </p>
-          <div
-            role="radiogroup"
-            aria-label={`${fridge.name} 알림 수준`}
-            className="grid grid-cols-3 gap-1 rounded-xl bg-[#F4F4F8] p-1"
-          >
-            {LEVEL_OPTIONS.map(option => (
-              <button
-                key={option.level}
-                type="button"
-                role="radio"
-                aria-checked={level === option.level}
-                disabled={off}
-                onClick={() =>
-                  setLevel.mutate({ level: option.level, source: 'settings' })
-                }
-                className={`h-10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                  level === option.level
-                    ? 'bg-white text-[#553C9A] shadow-sm'
-                    : 'text-gray-500'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+      {/* 알림을 켠 사람만 상세가 보인다. 처음에는 켜져 있어 상세가 열린 채로 보인다 */}
+      <Collapse isOpen={!off}>
+        <div className="space-y-4 pt-4">
+          <div>
+            <label
+              htmlFor="daily-hour"
+              className="mb-1 block pl-3 text-xs font-medium text-gray-500"
+            >
+              매일 알림
+            </label>
+            <Select
+              id="daily-hour"
+              value={settings.dailyHour}
+              disabled={off}
+              onChange={e =>
+                update.mutate({ dailyHour: Number(e.target.value) })
+              }
+            >
+              {HOURS.map(hour => (
+                <option key={hour} value={hour}>
+                  매일 {hourLabel(hour)}
+                </option>
+              ))}
+            </Select>
           </div>
-          <p className="mt-1 pl-3 text-xs text-gray-500">{LEVEL_HINT[level]}</p>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="pl-3 text-xs font-medium text-gray-500">
+                장보기 전 알림
+              </span>
+              <Switch
+                checked={settings.weeklyEnabled}
+                label="장보기 전 알림 받기"
+                onChange={weeklyEnabled => update.mutate({ weeklyEnabled })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select
+                aria-label="장 보는 요일"
+                value={settings.weeklyDay}
+                disabled={off || !settings.weeklyEnabled}
+                onChange={e =>
+                  update.mutate({ weeklyDay: Number(e.target.value) })
+                }
+              >
+                {WEEKDAY_LABELS.map((label, day) => (
+                  <option key={label} value={day}>
+                    {label}요일
+                  </option>
+                ))}
+              </Select>
+              <Select
+                aria-label="장보기 전 알림 시각"
+                value={settings.weeklyHour}
+                disabled={off || !settings.weeklyEnabled}
+                onChange={e =>
+                  update.mutate({ weeklyHour: Number(e.target.value) })
+                }
+              >
+                {HOURS.map(hour => (
+                  <option key={hour} value={hour}>
+                    {hourLabel(hour)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          {fridge && (
+            <div>
+              <p className="mb-1 pl-3 text-xs font-medium text-gray-500">
+                {fridge.name} 알림
+              </p>
+              <div
+                role="radiogroup"
+                aria-label={`${fridge.name} 알림 수준`}
+                className="grid grid-cols-3 gap-1 rounded-xl bg-[#F4F4F8] p-1"
+              >
+                {LEVEL_OPTIONS.map(option => (
+                  <button
+                    key={option.level}
+                    type="button"
+                    role="radio"
+                    aria-checked={level === option.level}
+                    disabled={off}
+                    onClick={() =>
+                      setLevel.mutate({
+                        level: option.level,
+                        source: 'settings',
+                      })
+                    }
+                    className={`h-10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                      level === option.level
+                        ? 'bg-white text-[#553C9A] shadow-sm'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 pl-3 text-xs text-gray-500">
+                {LEVEL_HINT[level]}
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </Collapse>
 
       {(update.isError || setLevel.isError) && (
-        <p role="alert" className="text-xs text-red-500">
+        <p role="alert" className="mt-3 text-xs text-red-500">
           저장하지 못해 원래대로 되돌렸어요. 다시 시도해 주세요.
         </p>
       )}

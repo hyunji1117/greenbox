@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { track } from '@/app/lib/analytics/gtag';
 import QuantityStepper from '@/app/components/common/QuantityStepper';
+import { unitFor, withUnit } from '@/app/lib/items/units';
 interface FridgeItemProps {
   item: {
     id: string;
@@ -185,11 +186,13 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
           label={`${item.name} 수량`}
           min={Math.max(1, item.eatenQuantity)}
           max={QUANTITY_MAX}
+          unit={unitFor(item.name)}
         />
       </div>
       {item.eatenQuantity > 0 && (
         <p className="mt-1.5 text-right text-xs font-medium text-[#553C9A]">
-          {item.eatenQuantity}개 먹고 {remaining}개 남았어요
+          {withUnit(item.eatenQuantity, item.name)} 먹고{' '}
+          {withUnit(remaining, item.name)} 남았어요
         </p>
       )}
       <div className="mt-3 -mb-3 grid grid-cols-3 gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-gray-600">
@@ -231,7 +234,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
       {eatCount !== null && (
         <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#F8F6FD] p-2 pl-3">
           <span className="min-w-0 flex-1 text-sm font-medium text-gray-700">
-            몇 개 먹었어요?
+            몇 {unitFor(item.name)} 먹었어요?
           </span>
           <QuantityStepper
             value={eatCount}
@@ -239,13 +242,16 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
             label={`${item.name} 먹은 개수`}
             max={remaining}
             tone="white"
+            unit={unitFor(item.name)}
           />
           <button
             type="button"
             onClick={confirmEat}
             className="h-10 shrink-0 rounded-xl bg-[#6B46C1] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#603fad]"
           >
-            {eatCount >= remaining ? '모두 먹음' : `${eatCount}개 먹음`}
+            {eatCount >= remaining
+              ? '모두 먹음'
+              : `${withUnit(eatCount, item.name)} 먹음`}
           </button>
         </div>
       )}
