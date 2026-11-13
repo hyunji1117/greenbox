@@ -12,6 +12,7 @@ import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import { useVoiceFoodName } from '@/app/lib/speech/useVoiceFoodName';
 import VoiceCheckNotice from '@/app/components/common/VoiceCheckNotice';
 import { useCreateItem } from '@/app/lib/items/useItems';
+import { ApiError } from '@/app/lib/api/apiFetch';
 import {
   addedPlaceMessage,
   categoryToShow,
@@ -39,6 +40,8 @@ interface FridgeQuickAddProps {
   // 사진으로 넣은 품목이 모두 다른 칸에 들어가면 그 칸을 보여 주고 문구를 띄운다
   // (칸이 바뀌면 이 입력 영역이 다시 그려지므로 문구는 보드가 띄운다)
   onShowCategory?: (category: Category, message: string) => void;
+  // 선반 보기 베타에서 선반을 열고 넣으면 그 선반에 바로 놓는다
+  shelf?: number;
 }
 
 // 눌러도 입력창의 포커스를 유지해서 모바일 키보드가 닫히지 않게 한다
@@ -56,6 +59,7 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   onRebuy,
   fridgeName,
   onShowCategory,
+  shelf,
 }) => {
   const createItem = useCreateItem('fridge_quick_add');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,14 +88,14 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   const add = (itemName: string, onSuccess?: () => void) => {
     if (createItem.isPending) return;
     createItem.mutate(
-      { name: itemName, category, quantity: 1 },
+      { name: itemName, category, quantity: 1, shelf },
       {
         onSuccess: item => {
           onSuccess?.();
           onAdded?.(item.id);
           // 넣은 곳과, 서버가 권장 보관 기간으로 유통기한을 채웠다는 것을 함께 알린다 (참고값이라 고칠 수 있다고 안내)
           setNotice(
-            `${placeLabel(fridgeName, category)}에 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
+            `${placeLabel(fridgeName, category)}${shelf ? ` ${shelf}번 선반` : ''}에 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
           );
         },
       },
@@ -248,7 +252,11 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
       )}
       {createItem.isError && (
         <p role="alert" className="mt-2 text-center text-xs text-red-500">
-          추가하지 못했어요. 다시 시도해 주세요.
+          {createItem.error instanceof ApiError &&
+          (createItem.error.body as { error?: string } | null)?.error ===
+            'shelf_full'
+            ? '이 선반이 가득 찼어요 (20개). 다른 선반에 넣어 주세요.'
+            : '추가하지 못했어요. 다시 시도해 주세요.'}
         </p>
       )}
     </div>

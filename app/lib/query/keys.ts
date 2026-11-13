@@ -17,6 +17,11 @@ export const fridgeKeys = {
     [...fridgeKeys.all, 'requests', fridgeId] as const,
 };
 
+// 선반 보기 베타 설정 (켜짐, 칸별 선반 수). 냉장고마다 다르다
+export const shelfKeys = {
+  settings: (fridgeId: string) => ['shelves', fridgeId] as const,
+};
+
 export const notificationKeys = {
   settings: () => ['notifications', 'settings'] as const,
 };

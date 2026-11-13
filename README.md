@@ -5,7 +5,6 @@
 <img width="222" height="448" alt="Page-3" src="https://github.com/user-attachments/assets/2c8151ef-bf67-41a5-993f-b17c679ae82b" />
 <img width="222" height="448" alt="Page-4" src="https://github.com/user-attachments/assets/19683eb4-67b3-4342-9a1a-3cc645903277" />
 
-
 **집에 있는 식재료를 한눈에 관리해 식품 낭비를 줄이는 PWA**
 
 [데모 보기](https://greenbox-seven.vercel.app)
@@ -36,13 +35,13 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 
 ### 결과 (Lighthouse, 모바일 / Slow 4G 동일 조건)
 
-| 지표 | Before | After | 변화 |
-|---|---|---|---|
-| `/` First Load JS | 240 kB | **117 kB** | **−51%** |
-| Performance | 62 | **72** | +10 |
-| Largest Contentful Paint | 6.2s | **4.7s** | −24% |
-| Speed Index | 7.2s | **4.9s** | −32% |
-| Total Blocking Time | 50ms | **10ms** | −80% |
+| 지표                     | Before | After      | 변화     |
+| ------------------------ | ------ | ---------- | -------- |
+| `/` First Load JS        | 240 kB | **117 kB** | **−51%** |
+| Performance              | 62     | **72**     | +10      |
+| Largest Contentful Paint | 6.2s   | **4.7s**   | −24%     |
+| Speed Index              | 7.2s   | **4.9s**   | −32%     |
+| Total Blocking Time      | 50ms   | **10ms**   | −80%     |
 
 <div align="center">
 
@@ -62,7 +61,7 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 
 </div>
 
-> **다음 단계:** 번들을 걷어내자 가려져 있던 다음 병목(render-blocking ~1.8s)이 드러났습니다. *첫 방문은 초기 로딩 최적화로, 재방문은 Service Worker 캐싱으로* - 약한 네트워크를 두 겹으로 방어하는 방향으로 이어가고 있습니다.
+> **다음 단계:** 번들을 걷어내자 가려져 있던 다음 병목(render-blocking ~1.8s)이 드러났습니다. _첫 방문은 초기 로딩 최적화로, 재방문은 Service Worker 캐싱으로_ - 약한 네트워크를 두 겹으로 방어하는 방향으로 이어가고 있습니다.
 
 ## 3. 서버 상태 설계: React Query + zod
 
@@ -70,14 +69,14 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 
 ### 설계 결정
 
-| 결정 | 이유 |
-|---|---|
-| 요청/응답 zod 스키마를 한 파일에 모아 서버 요청과 클라이언트 응답을 각각 검증 | API 계약을 한곳에 두고, 타입이 사라지는 런타임에서 불일치를 네트워크 경계에서 잡기 위해 |
-| `apiFetch(url, schema)`로 호출 창구 통일 | 재시도할 수 있는 실패(5xx, 네트워크)와 다시 보내도 같은 실패(4xx, 응답 형식 불일치)를 구분하기 위해 |
-| 계층형 쿼리 키 `itemKeys` | 무효화 범위를 키 하나로 표현하고, 키 오타를 막기 위해 |
-| 수량 변경과 소진에 낙관적 업데이트 | 약한 네트워크(마트)에서도 바로 반응해야 하고, 결과를 미리 알 수 있는 변경이라서 |
-| 등록은 성공 후 무효화, 댓글은 응답을 캐시에 반영 | 서버가 id를 만드는 변경이라 결과를 미리 알 수 없어서 |
-| 첫 화면은 정적으로 유지하고 클라이언트에서 조회 | 로그인 뒤 사용자별 데이터이고 검색 노출이 필요 없어서 |
+| 결정                                                                          | 이유                                                                                                |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 요청/응답 zod 스키마를 한 파일에 모아 서버 요청과 클라이언트 응답을 각각 검증 | API 계약을 한곳에 두고, 타입이 사라지는 런타임에서 불일치를 네트워크 경계에서 잡기 위해             |
+| `apiFetch(url, schema)`로 호출 창구 통일                                      | 재시도할 수 있는 실패(5xx, 네트워크)와 다시 보내도 같은 실패(4xx, 응답 형식 불일치)를 구분하기 위해 |
+| 계층형 쿼리 키 `itemKeys`                                                     | 무효화 범위를 키 하나로 표현하고, 키 오타를 막기 위해                                               |
+| 수량 변경과 소진에 낙관적 업데이트                                            | 약한 네트워크(마트)에서도 바로 반응해야 하고, 결과를 미리 알 수 있는 변경이라서                     |
+| 등록은 성공 후 무효화, 댓글은 응답을 캐시에 반영                              | 서버가 id를 만드는 변경이라 결과를 미리 알 수 없어서                                                |
+| 첫 화면은 정적으로 유지하고 클라이언트에서 조회                               | 로그인 뒤 사용자별 데이터이고 검색 노출이 필요 없어서                                               |
 
 ### 낙관적 업데이트에서 막은 경쟁 상태
 
@@ -88,12 +87,12 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 
 ### 결과
 
-| 지표 | Before | After |
-|---|---|---|
-| 새로고침 후 품목 유지 | 사라짐 | **유지** (Postgres) |
-| `FridgeContext.tsx` | 320줄 | **152줄** |
-| 응답 런타임 검증 | 없음 (`as` 단언) | **zod 스키마** |
-| 단위 테스트 | 0개 | **75개** (Vitest) |
+| 지표                  | Before           | After               |
+| --------------------- | ---------------- | ------------------- |
+| 새로고침 후 품목 유지 | 사라짐           | **유지** (Postgres) |
+| `FridgeContext.tsx`   | 320줄            | **152줄**           |
+| 응답 런타임 검증      | 없음 (`as` 단언) | **zod 스키마**      |
+| 단위 테스트           | 0개              | **75개** (Vitest)   |
 
 같은 개발 환경(StrictMode)의 첫 화면에서 직접 `fetch`하는 `/api/me`는 2회, React Query를 쓰는 `/api/items`는 1회 요청합니다. 운영 빌드에서는 StrictMode의 이중 실행이 없어 직접 `fetch`도 1회이므로, 이 수치는 운영 성능 개선이 아니라 중복 제거 동작의 확인입니다.
 
@@ -125,6 +124,7 @@ UI, 인터랙션은 동작하지만, 일부는 목업 데이터 또는 클라이
 ## 5. 기술 스택
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS
 - **Server State**: TanStack Query (React Query), zod
@@ -133,11 +133,13 @@ UI, 인터랙션은 동작하지만, 일부는 목업 데이터 또는 클라이
 - **Data Viz**: Recharts (지연 로딩)
 
 ### Backend
+
 - **API**: Next.js Route Handlers
 - **DB**: PostgreSQL (`pg`)
 - **Auth**: Auth.js (Google)
 
 ### PWA & Local Data
+
 - **PWA**: `@ducanh2912/next-pwa` (Next 15 호환, Workbox 기반 Service Worker)
 - **로컬 저장소**: localStorage (장바구니, 즐겨찾기, 알림 설정), IndexedDB (구매 데이터)
 - **푸시**: Web Push API, web-push, VAPID, Vercel Cron
@@ -145,6 +147,7 @@ UI, 인터랙션은 동작하지만, 일부는 목업 데이터 또는 클라이
 ## 6. 시작하기
 
 ### 요구사항
+
 - Node.js 20 이상
 - npm
 
@@ -206,9 +209,14 @@ VAPID_SUBJECT=mailto:your_email@example.com
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
 
+선반 보기의 식재료 그림(`public/foods/`)은 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji)(MIT, Copyright (c) Microsoft Corporation)의 3D 그림을 96px로 줄여 사용합니다. 원문 라이선스는 `public/foods/LICENSE`에 있습니다.
+
+두부, 애호박, 느타리버섯, 대파, 된장, 된장찌개 그림(`public/foods/tofu.png`, `zucchini.png`, `mushroom2.png`, `green_onion.png`, `doenjang.png`, `doenjang_stew.png`)은 이 프로젝트에서 직접 만든 그림입니다.
+
 ## 연락처
 
 **김현지**
+
 - GitHub: [@hyunji1117](https://github.com/hyunji1117)
 
 ---
