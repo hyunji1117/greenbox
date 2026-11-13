@@ -29,6 +29,8 @@ interface SpotlightGuideProps {
   closeLabel?: string;
   // 비추는 자리의 모서리. 둥근 버튼을 비출 때는 rounded-full
   spotShape?: 'rounded-xl' | 'rounded-full';
+  // 함께 밝게 비출 곳 (예: 하단 메뉴의 마이 탭). CSS 선택자로 찾는다
+  alsoHighlight?: string;
 }
 
 const SPOTLIGHT_PADDING = 6;
@@ -44,6 +46,7 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
   onClose,
   closeLabel = '알겠어요',
   spotShape = 'rounded-xl',
+  alsoHighlight,
 }) => {
   const titleId = useId();
   const handlePrimary = () => {
@@ -61,11 +64,20 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
 
   const primaryRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [extraRect, setExtraRect] = useState<DOMRect | null>(null);
 
   // 화면 크기가 바뀌거나 스크롤돼도 비추는 자리가 이름 위에 있게 한다
   useLayoutEffect(() => {
-    const measure = () =>
+    const measure = () => {
       setRect(target.current?.getBoundingClientRect() ?? null);
+      setExtraRect(
+        alsoHighlight
+          ? (document
+              .querySelector<HTMLElement>(alsoHighlight)
+              ?.getBoundingClientRect() ?? null)
+          : null,
+      );
+    };
     measure();
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
@@ -73,7 +85,7 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure, true);
     };
-  }, [target]);
+  }, [target, alsoHighlight]);
 
   useEffect(() => {
     primaryRef.current?.focus();
@@ -86,12 +98,16 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
 
   if (!rect) return null;
 
-  const spot = {
-    top: rect.top - SPOTLIGHT_PADDING,
-    left: rect.left - SPOTLIGHT_PADDING,
-    width: rect.width + SPOTLIGHT_PADDING * 2,
-    height: rect.height + SPOTLIGHT_PADDING * 2,
-  };
+  const toSpot = (r: DOMRect) => ({
+    top: r.top - SPOTLIGHT_PADDING,
+    left: r.left - SPOTLIGHT_PADDING,
+    width: r.width + SPOTLIGHT_PADDING * 2,
+    height: r.height + SPOTLIGHT_PADDING * 2,
+  });
+  const spot = toSpot(rect);
+  const extraSpot = extraRect ? toSpot(extraRect) : null;
+  const radius = spotShape === 'rounded-full' ? spot.height / 2 : 12;
+  const maskId = `spot-mask-${titleId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   return createPortal(
     <div
@@ -107,14 +123,59 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
         className="absolute inset-0 cursor-default"
         onClick={handleClose}
       />
-      {/* 비출 곳만 밝게 남기고 나머지를 어둡게 덮는다. 비춘 자리를 누르면 바로 그 기능을 연다 */}
+      {/* 비출 곳(한 곳 또는 두 곳)만 구멍을 내고 나머지를 어둡게 덮는다 */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      >
+        <defs>
+          <mask id={maskId}>
+            <rect width="100%" height="100%" fill="white" />
+            <rect
+              x={spot.left}
+              y={spot.top}
+              width={spot.width}
+              height={spot.height}
+              rx={radius}
+              fill="black"
+            />
+            {extraSpot && (
+              <rect
+                x={extraSpot.left}
+                y={extraSpot.top}
+                width={extraSpot.width}
+                height={extraSpot.height}
+                rx={20}
+                fill="black"
+              />
+            )}
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill="rgba(17,12,34,0.55)"
+          mask={`url(#${maskId})`}
+        />
+      </svg>
+      {/* 비춘 자리를 누르면 바로 그 기능을 연다 */}
       <button
         type="button"
         aria-label={spotLabel}
         onClick={handlePrimary}
-        className={`absolute ${spotShape} shadow-[0_0_0_9999px_rgba(17,12,34,0.55)] ring-2 ring-white/80`}
+        className={`absolute ${spotShape} ring-2 ring-white/80`}
         style={spot}
       />
+      {extraSpot && (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden
+          onClick={handlePrimary}
+          className="absolute rounded-[20px] ring-2 ring-white/90 motion-safe:animate-pulse"
+          style={extraSpot}
+        />
+      )}
       <div
         className="absolute right-4 left-4 max-w-sm rounded-2xl bg-white p-4 shadow-xl"
         style={{ top: spot.top + spot.height + 12 }}

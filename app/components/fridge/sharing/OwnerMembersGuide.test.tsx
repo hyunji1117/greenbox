@@ -48,7 +48,7 @@ describe('OwnerMembersGuide', () => {
     );
     expect(guide()?.textContent).toContain('엄마님이 이 냉장고에 참여했어요');
     expect(guide()?.textContent).toContain(
-      '사람 수를 눌러 함께 쓰는 사람을 볼 수 있어요',
+      '함께 쓰는 사람은 마이에서 보고 초대할 수 있어요',
     );
     expect(guide()?.textContent).not.toContain('내보낼');
   });
@@ -128,7 +128,7 @@ describe('OwnerMembersGuide', () => {
     expect(guide()?.textContent).toContain('아빠님이 이 냉장고에 참여했어요');
   });
 
-  it('함께 쓰는 사람 보기를 누르면 목록을 열고 안내는 확인한 것으로 한다', () => {
+  it('마이에서 보기를 누르면 마이로 가고 안내는 확인한 것으로 한다', () => {
     const onOpenMembers = vi.fn();
     render(
       <OwnerMembersGuide
@@ -138,9 +138,7 @@ describe('OwnerMembersGuide', () => {
         onOpenMembers={onOpenMembers}
       />,
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: '함께 쓰는 사람 보기' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '마이에서 보기' }));
     expect(onOpenMembers).toHaveBeenCalledOnce();
     expect(guide()).toBeNull();
   });

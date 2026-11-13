@@ -50,7 +50,7 @@ describe('FridgeItem', () => {
     const count = screen.getByRole('textbox', { name: '계란 먹은 개수' });
     fireEvent.change(count, { target: { value: '6' } });
     fireEvent.blur(count);
-    fireEvent.click(screen.getByRole('button', { name: '6개 먹음' }));
+    fireEvent.click(screen.getByRole('button', { name: '6구 먹음' }));
 
     expect(onEatSome).toHaveBeenCalledWith(6);
     expect(onFinish).not.toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe('FridgeItem', () => {
         onEatSome={vi.fn()}
       />,
     );
-    expect(screen.getByText('1개 먹고 2개 남았어요')).toBeTruthy();
+    expect(screen.getByText('1구 먹고 2구 남았어요')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /다 먹음/ }));
     fireEvent.click(
       screen.getByRole('button', { name: '계란 먹은 개수 늘리기' }),

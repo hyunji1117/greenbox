@@ -28,7 +28,7 @@ describe('MembersEntryCard', () => {
       pendingRequestCount: 1,
     };
     render(<MembersEntryCard />);
-    const entry = screen.getByRole('button', { name: /함께 보는 사람과 초대/ });
+    const entry = screen.getByRole('button', { name: /사용자 초대하기/ });
     expect(entry.textContent).toContain('가족 냉장고, 3명, 참여 요청 1건');
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(entry);

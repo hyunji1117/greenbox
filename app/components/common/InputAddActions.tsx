@@ -1,13 +1,12 @@
 'use client';
 // app/components/common/InputAddActions.tsx
-// 입력창 오른쪽의 + 버튼. 냉장고 등록과 장보기 식재료 담기에서 같은 모양과 동작으로 쓴다
-// - 글자를 적었으면 + 는 바로 넣기(제출)
-// - 비어 있으면 + 를 눌러 카메라와 음성을 옆으로 펼친다 (다시 누르면 접힘, + 가 x 모양으로 돈다)
-// - 말하는 동안에는 펼친 채로 두어 멈추기 버튼이 보이게 한다
-// - 버튼 터치 영역은 42x42로 맞추고, 버튼 사이는 4px 띄운다 (접히면 간격도 함께 사라지게 펼침 칸 안에 둔다)
-// - 펼친 뒤 버튼 밖을 누르면 다시 + 로 접는다
+// 입력창 오른쪽의 카메라, 음성, 넣기 버튼. 냉장고 등록과 장보기 식재료 담기에서 같은 모양과 동작으로 쓴다
+// - 비어 있으면 카메라와 음성을 처음부터 보여 준다 (+ 안에 숨겨 두었더니 가족들이 기능이 있는 줄 몰랐다)
+// - 글자를 적으면 두 버튼 자리에 + (바로 넣기)가 나온다
+// - 말하는 동안에는 음성 버튼을 남겨 멈추기를 누를 수 있게 한다
+// - 버튼 터치 영역은 42x42로 맞추고, 버튼 사이는 4px 띄운다
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { CameraIcon, Loader2Icon, MicIcon, PlusIcon } from 'lucide-react';
 
 interface SpeechControls {
@@ -30,7 +29,7 @@ interface InputAddActionsProps {
 }
 
 const TRAY_BUTTON =
-  'flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl text-[#6B46C1] transition-colors active:bg-[#E6DFF7]';
+  'flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-[#F1EDFA] text-[#6B46C1] transition-colors active:bg-[#E6DFF7]';
 
 const InputAddActions: React.FC<InputAddActionsProps> = ({
   canSubmit,
@@ -40,59 +39,43 @@ const InputAddActions: React.FC<InputAddActionsProps> = ({
   speech,
   keepFocus,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!isOpen) return;
-    const closeOnOutside = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('pointerdown', closeOnOutside);
-    return () => document.removeEventListener('pointerdown', closeOnOutside);
-  }, [isOpen]);
-  const isTrayVisible = speech.isListening || (isOpen && !canSubmit);
+  const showsTools = speech.isListening || !canSubmit;
 
   return (
-    <div ref={rootRef} className="flex shrink-0 items-center">
-      <div
-        className={`flex items-center gap-1 overflow-hidden pr-1 transition-[max-width,opacity] duration-200 ease-out motion-reduce:transition-none ${
-          isTrayVisible ? 'max-w-24 opacity-100' : 'max-w-0 opacity-0'
-        }`}
-        inert={!isTrayVisible}
-      >
-        <button
-          type="button"
-          aria-label="사진으로 찾기"
-          onClick={() => {
-            setIsOpen(false);
-            onCamera();
-          }}
-          className={TRAY_BUTTON}
-        >
-          <CameraIcon size={20} />
-        </button>
-        {speech.isSupported && (
+    <div className="flex shrink-0 items-center gap-1">
+      {showsTools && (
+        <>
           <button
             type="button"
-            aria-label={speech.isListening ? '음성 입력 멈추기' : '말로 넣기'}
-            aria-pressed={speech.isListening}
-            onClick={speech.isListening ? speech.stop : speech.start}
-            className={`relative ${TRAY_BUTTON} ${
-              speech.isListening ? 'bg-[#F1EDFA]' : ''
-            }`}
+            aria-label="사진으로 찾기"
+            onClick={onCamera}
+            className={TRAY_BUTTON}
           >
-            {/* 듣는 동안 빨간 녹음 불이 깜빡인다 */}
-            {speech.isListening && (
-              <span
-                aria-hidden
-                className="motion-safe:animate-rec-blink absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
-              />
-            )}
-            <MicIcon size={18} />
+            <CameraIcon size={20} />
           </button>
-        )}
-      </div>
-      {canSubmit ? (
+          {speech.isSupported && (
+            <button
+              type="button"
+              aria-label={speech.isListening ? '음성 입력 멈추기' : '말로 넣기'}
+              aria-pressed={speech.isListening}
+              onClick={speech.isListening ? speech.stop : speech.start}
+              className={`relative ${TRAY_BUTTON} ${
+                speech.isListening ? 'ring-2 ring-[#A794D6]' : ''
+              }`}
+            >
+              {/* 듣는 동안 빨간 녹음 불이 깜빡인다 */}
+              {speech.isListening && (
+                <span
+                  aria-hidden
+                  className="motion-safe:animate-rec-blink absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                />
+              )}
+              <MicIcon size={18} />
+            </button>
+          )}
+        </>
+      )}
+      {canSubmit && (
         <button
           type="submit"
           aria-label={isSubmitting ? '넣는 중' : submitLabel}
@@ -105,26 +88,6 @@ const InputAddActions: React.FC<InputAddActionsProps> = ({
           ) : (
             <PlusIcon size={20} />
           )}
-        </button>
-      ) : (
-        <button
-          type="button"
-          aria-label={
-            isTrayVisible ? '사진, 음성 접기' : '사진이나 음성으로 넣기'
-          }
-          aria-expanded={isTrayVisible}
-          onClick={() => {
-            if (speech.isListening) speech.stop();
-            setIsOpen(open => !open);
-          }}
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-[#F1EDFA] text-[#6B46C1] transition-colors active:bg-[#E6DFF7]"
-        >
-          <PlusIcon
-            size={20}
-            className={`transition-transform duration-200 motion-reduce:transition-none ${
-              isTrayVisible ? 'rotate-45' : ''
-            }`}
-          />
         </button>
       )}
     </div>
