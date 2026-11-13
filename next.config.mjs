@@ -18,6 +18,9 @@ const pwaConfig = withPWAInit({
   // 런타임 캐싱 경로는 dynamicStartUrl이 만들어서 함께 꺼야 사라진다
   cacheStartUrl: false,
   dynamicStartUrl: false,
+  // 식재료 그림(public/foods, 수백 장)은 화면이 next/image로 필요한 것만 줄여 불러온다.
+  // 설치할 때 원본을 모두 미리 받지 않도록 미리 저장(precache)에서 뺀다 (기본 제외 noprecache는 유지)
+  publicExcludes: ['!noprecache/**/*', '!foods/**/*'],
   workboxOptions: {
     skipWaiting: true,
     runtimeCaching: [], // 추가 런타임 캐싱 없음
