@@ -135,7 +135,9 @@ const FitLabel: React.FC<{ text: string; className: string }> = ({
     <span
       ref={boxRef}
       aria-hidden
-      className="block w-full overflow-hidden text-center"
+      // 바깥 칸도 글자 크기와 줄 높이를 이름과 맞춘다. 기본 16px 줄 높이(약 24px)를 물려받으면
+      // 두 줄일 때 고정 높이 선반을 넘쳐 위 줄 그림이 선반 번호를 덮는다 (2026-11-15 재테스트에서 확인)
+      className="block h-[10px] w-full overflow-hidden text-center text-[9px] leading-none"
     >
       {/* 넘치면 칸의 왼쪽 끝부터 그려지므로 왼쪽을 기준으로 줄여 칸 안에 맞춘다 */}
       <span
@@ -245,19 +247,31 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
     ) !== null;
 
   // 줄일 수 없을 때도 버튼을 누를 수 있게 두고, 누르면 서버에 묻지 않고 이유를 알려 준다 (ADR 0012)
-  const [blockedNotice, setBlockedNotice] = useState('');
+  // 안내는 누른 버튼 바로 아래에 보인다 (아래쪽에 모아 두면 스크롤해야 보였다)
+  const [blocked, setBlocked] = useState<{
+    category: Category;
+    text: string;
+  } | null>(null);
   const removeShelf = (category: Category) => {
     if (canRemove(category)) {
-      setBlockedNotice('');
+      setBlocked(null);
       onRemoveShelf(category);
       return;
     }
-    setBlockedNotice(
-      counts[category] <= MIN_SHELF_COUNT
-        ? '선반은 하나 이상 있어야 해요'
-        : '식재료가 있는 선반은 줄일 수 없어요. 옮기거나 다 먹음으로 비운 뒤 줄여 주세요',
-    );
+    setBlocked({
+      category,
+      text:
+        counts[category] <= MIN_SHELF_COUNT
+          ? '선반은 하나 이상 있어야 해요'
+          : '식재료가 있는 선반은 줄일 수 없어요. 옮기거나 다 먹음으로 비운 뒤 줄여 주세요',
+    });
   };
+  const blockedNoticeFor = (categories: Category[]) =>
+    blocked && categories.includes(blocked.category) ? (
+      <p role="status" className="text-center text-xs text-[#553C9A]">
+        {blocked.text}
+      </p>
+    ) : null;
 
   const open = (category: Category, shelf: number | null) => {
     const count =
@@ -277,7 +291,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       <button
         type="button"
         onClick={() => {
-          setBlockedNotice('');
+          setBlocked(null);
           onAddShelf(category);
         }}
         disabled={isChanging || counts[category] >= MAX_SHELF_COUNT}
@@ -371,6 +385,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             {controls('freezer')}
             {controls('fridge')}
           </div>
+          {blockedNoticeFor(['freezer', 'fridge'])}
           <ShelfColumn
             category="pantry"
             count={counts.pantry}
@@ -378,6 +393,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             onOpen={shelf => open('pantry', shelf)}
           />
           {controls('pantry')}
+          {blockedNoticeFor(['pantry'])}
           {unassignedChips.length > 0 && (
             <div className="flex flex-wrap gap-2 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-100">
               <p className="w-full text-xs font-semibold text-amber-900">
@@ -395,9 +411,9 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
               ))}
             </div>
           )}
-          {(blockedNotice || notice) && (
+          {notice && (
             <p role="status" className="text-center text-xs text-[#553C9A]">
-              {blockedNotice || notice}
+              {notice}
             </p>
           )}
         </>
