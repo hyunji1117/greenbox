@@ -4,7 +4,7 @@
 // 이미 만든 레시피가 있으면 바로 열고, 없으면 버튼을 눌렀을 때만 새로 만든다 (만들 때마다 비용이 든다)
 // 처음 만들거나 열 때 한 번, 품목 이름을 Anthropic, OpenAI(미국)로 보내는 것에 동의를 받는다 (방침 2026-11-09)
 
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ChefHat, ChevronRightIcon, Loader2Icon } from 'lucide-react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
@@ -23,6 +23,13 @@ export function withDirectionParticle(word: string): string {
   if (code < 0 || code > 11171) return `${word}로`;
   const batchim = code % 28;
   return batchim === 0 || batchim === 8 ? `${word}로` : `${word}으로`;
+}
+
+// "두부를", "계란을": 받침이 없으면 를, 있으면 을
+export function withObjectParticle(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 11171) return `${word}를`;
+  return code % 28 === 0 ? `${word}를` : `${word}을`;
 }
 
 function errorText(error: unknown): string {
@@ -46,6 +53,23 @@ function readAgreed(): boolean {
   }
 }
 
+// 실측(2026-11-15) 글이 보이기까지 약 5초. 역카운트는 실제 시간이 들쭉날쭉해 0초가 지나도 안 끝나면 신뢰가 깨지므로,
+// 보통 걸리는 시간과 그동안 할 수 있는 일을 알려 주고, 그 시간을 넘기면 "거의 다 됐어요"로 바꾼다
+const USUAL_RECIPE_SECONDS = 5;
+
+function useIsOverdue(isRunning: boolean, seconds: number): boolean {
+  const [isOverdue, setIsOverdue] = useState(false);
+  useEffect(() => {
+    if (!isRunning) return;
+    const timer = setTimeout(() => setIsOverdue(true), seconds * 1000);
+    return () => {
+      clearTimeout(timer);
+      setIsOverdue(false);
+    };
+  }, [isRunning, seconds]);
+  return isOverdue;
+}
+
 const RecipeCard: React.FC = () => {
   const today = useTodayRecipe();
   const make = useMakeRecipe();
@@ -54,6 +78,7 @@ const RecipeCard: React.FC = () => {
   const [agreedNow, setAgreedNow] = useState(false);
   const isAgreed = storedAgreed || agreedNow;
   const [isAsking, setIsAsking] = useState(false);
+  const isOverdue = useIsOverdue(make.isPending, USUAL_RECIPE_SECONDS + 2);
 
   const data = today.data;
   if (!data || !data.available || data.soonNames.length === 0) return null;
@@ -162,11 +187,17 @@ const RecipeCard: React.FC = () => {
           )}
         </button>
       )}
-      {/* 버튼 글자만 바뀌면 화면 읽기 프로그램이 알아채지 못해, 만드는 중을 따로 알린다 */}
-      <p role="status" className="sr-only">
-        {make.isPending
-          ? 'AI가 레시피를 만들고 있어요. 수십 초 걸릴 수 있어요'
-          : ''}
+      {/* 버튼 글자만 바뀌면 무엇이 진행 중인지 알기 어려워, 기다리는 동안 할 일을 함께 보여 주고 화면 읽기 프로그램에도 알린다 */}
+      <p
+        role="status"
+        className={
+          make.isPending ? 'mt-2 text-center text-sm text-gray-600' : 'sr-only'
+        }
+      >
+        {make.isPending &&
+          (isOverdue
+            ? '거의 다 됐어요. 조금만 기다려 주세요'
+            : `보통 ${USUAL_RECIPE_SECONDS}초쯤 걸려요. 그동안 ${withObjectParticle(names)} 꺼내 두면 바로 시작할 수 있어요`)}
       </p>
       {make.isError && (
         <p role="alert" className="mt-2 text-center text-xs text-red-500">

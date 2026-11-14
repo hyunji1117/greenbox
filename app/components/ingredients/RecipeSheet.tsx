@@ -24,20 +24,35 @@ import {
 import type { Recipe } from '@/app/lib/schemas/recipe';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
 
-// 그림을 만드는 동안(수십 초까지)과 실패를 함께 보여 주는 그림 칸
+// 그림을 만드는 동안과 실패를 함께 보여 주는 그림 칸
 // AI 기본법(31조): 실제 사진과 헷갈릴 수 있는 생성 그림이라 그림 위에 "AI 그림"을 늘 보이게 표시한다
 // 화면 읽기 프로그램에는 그리는 중, 실패를 상태로 알린다 (aria-live)
-const RecipeImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+// 실측(2026-11-15): 글은 약 5초, 완성 그림은 그 뒤 약 9초. 그동안 정사각형 빈 칸이 첫 화면을 차지해
+// 이미 온 글과 재료가 아래로 밀려 "덜 됐다"처럼 보였다. 그리는 동안은 얇은 띠로 두고, 다 그려지면 펼친다
+const RecipeImage: React.FC<{ src: string; alt: string; hint?: string }> = ({
+  src,
+  alt,
+  hint,
+}) => {
   const [state, setState] = useState<'loading' | 'done' | 'error'>('loading');
   return (
-    <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#F4F4F8]">
+    <div
+      className={`relative w-full overflow-hidden rounded-2xl bg-[#F4F4F8] ${
+        state === 'done' ? 'aspect-square' : ''
+      }`}
+    >
       {state !== 'error' && (
+        // 그리는 동안에도 받아 오도록 이미지는 그려 두고 보이지만 않게 한다
         <img
           src={src}
           alt={alt}
           onLoad={() => setState('done')}
           onError={() => setState('error')}
-          className={`h-full w-full object-cover transition-opacity ${state === 'done' ? 'opacity-100' : 'opacity-0'}`}
+          className={
+            state === 'done'
+              ? 'motion-safe:animate-tab-fade h-full w-full object-cover'
+              : 'absolute h-px w-px opacity-0'
+          }
         />
       )}
       {state === 'done' && (
@@ -48,20 +63,25 @@ const RecipeImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
       {state === 'loading' && (
         <div
           role="status"
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm text-gray-500"
+          className="flex items-center gap-2 px-4 py-3 text-sm text-gray-600"
         >
           <Loader2Icon
-            size={24}
+            size={18}
             aria-hidden
-            className="text-[#6B46C1] motion-safe:animate-spin"
+            className="shrink-0 text-[#6B46C1] motion-safe:animate-spin"
           />
-          AI가 그림을 그리고 있어요
+          <span>
+            AI가 그림을 그리고 있어요 (보통 10초쯤)
+            {hint && (
+              <span className="block text-xs text-gray-500">{hint}</span>
+            )}
+          </span>
         </div>
       )}
       {state === 'error' && (
         <div
           role="status"
-          className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-600"
+          className="px-4 py-3 text-center text-sm text-gray-600"
         >
           그림을 만들지 못했어요. 글을 보고 따라 해 주세요
         </div>
@@ -131,6 +151,7 @@ const RecipeSheet: React.FC<RecipeSheetProps> = ({ recipe, onClose }) => {
           <RecipeImage
             src={recipeImageUrl(recipe.id, 0)}
             alt={`AI가 그린 ${recipe.title} 완성 그림`}
+            hint="그동안 아래 재료와 순서를 먼저 읽어 보세요"
           />
           <p className="flex items-center gap-1.5 px-1 text-sm text-gray-600">
             <Clock size={16} aria-hidden />약 {recipe.minutes}분
