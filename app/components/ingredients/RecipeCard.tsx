@@ -81,9 +81,15 @@ const RecipeCard: React.FC = () => {
           <ChefHat size={22} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold text-gray-900">
-            {recipe ? recipe.title : '초간단 레시피 어때요?'}
-          </h2>
+          {/* AI 기본법(31조): 생성형 AI가 만든 추천임을 카드에서부터 알린다 */}
+          <div className="flex items-center gap-1.5">
+            <h2 className="min-w-0 truncate text-base font-semibold text-gray-900">
+              {recipe ? recipe.title : '초간단 레시피 어때요?'}
+            </h2>
+            <span className="shrink-0 rounded-full bg-[#F1EDFA] px-2 py-0.5 text-xs font-semibold text-[#553C9A]">
+              AI 추천
+            </span>
+          </div>
           <p className="mt-0.5 text-sm text-gray-600">
             곧 먹어야 할 {withDirectionParticle(names)}{' '}
             {recipe ? `약 ${recipe.minutes}분이면 돼요` : '금방 만들 수 있어요'}
@@ -93,8 +99,9 @@ const RecipeCard: React.FC = () => {
       {isAsking && !isAgreed ? (
         <div className="mt-3 rounded-xl bg-[#F8F6FD] p-3">
           <p className="text-xs leading-relaxed text-gray-700">
-            레시피를 만들려고 냉장고 품목 이름을 Anthropic(미국)에, 요리와 재료
-            이름을 OpenAI(미국)에 보내요. 누가 만들었는지는 보내지 않아요.
+            생성형 AI가 레시피 글(Anthropic Claude)과 그림(OpenAI)을 만들어요.
+            그래서 냉장고 품목 이름을 Anthropic(미국)에, 요리와 재료 이름을
+            OpenAI(미국)에 보내요. 누가 만들었는지는 보내지 않아요.
           </p>
           <div className="mt-2 flex items-center gap-2">
             <Link
@@ -140,8 +147,12 @@ const RecipeCard: React.FC = () => {
         >
           {make.isPending ? (
             <>
-              <Loader2Icon size={16} className="motion-safe:animate-spin" />
-              레시피를 만들고 있어요
+              <Loader2Icon
+                size={16}
+                aria-hidden
+                className="motion-safe:animate-spin"
+              />
+              AI가 레시피를 만들고 있어요
             </>
           ) : (
             <>
@@ -151,6 +162,12 @@ const RecipeCard: React.FC = () => {
           )}
         </button>
       )}
+      {/* 버튼 글자만 바뀌면 화면 읽기 프로그램이 알아채지 못해, 만드는 중을 따로 알린다 */}
+      <p role="status" className="sr-only">
+        {make.isPending
+          ? 'AI가 레시피를 만들고 있어요. 수십 초 걸릴 수 있어요'
+          : ''}
+      </p>
       {make.isError && (
         <p role="alert" className="mt-2 text-center text-xs text-red-500">
           {errorText(make.error)}

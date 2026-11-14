@@ -43,6 +43,13 @@ describe('RecipeCard', () => {
     expect(mocks.mutateAsync).toHaveBeenCalledTimes(1);
   });
 
+  it('카드에서부터 AI 추천임을 보이고, 동의 화면에서 생성형 AI가 글과 그림을 만든다고 미리 알린다', () => {
+    render(<RecipeCard />);
+    expect(screen.getByText('AI 추천')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /레시피 만들기/ }));
+    expect(screen.getByText(/생성형 AI가 레시피 글/)).toBeTruthy();
+  });
+
   it('이미 동의한 기기에서는 바로 만든다', () => {
     localStorage.setItem(RECIPE_AGREED_KEY, RECIPE_POLICY_VERSION);
     render(<RecipeCard />);
