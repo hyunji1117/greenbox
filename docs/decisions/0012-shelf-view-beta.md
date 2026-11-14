@@ -44,7 +44,7 @@
 - 가족은 같은 냉장고의 같은 선반 배치를 본다 (선반은 냉장고에 속함)
 
 ### 4. 계측
-- `experiment_exposed`(experiment, variant), `shelf_view_toggled`(view), `item_shelf_set`(from, to), `shelf_count_changed`(category, count)
+- `experiment_exposed`(experiment, variant), `shelf_view_toggled`(view), `item_shelf_set`(from, to), `shelf_count_changed`(category, count, action: add/remove)
 - 냉장고 아래: `meal_suggestion_opened`(recipe, rank, uses_soon), `meal_suggestion_missing_added`(recipe, count), `urgent_item_opened`(reason)
 - 기존 찾기 이동과 품목 이벤트에 `view`(list/shelf)를 붙인다
 - 맞춤 측정기준(experiment, variant, view)을 등록하고 BigQuery로 순서를 본다

@@ -38,9 +38,11 @@ export function useChangeShelfCount() {
         shelfKeys.settings(fridgeId),
         settings,
       );
+      // 추가와 줄이기를 보고서에서 바로 나눠 보도록 방향(action)을 함께 보낸다 (GA4 맞춤 측정기준 action)
       track('shelf_count_changed', {
         category: input.category,
         count: settings.counts[input.category],
+        action: input.action,
       });
       // 선반을 빼면 아래 품목의 선반 번호가 한 칸씩 올라가므로 품목도 다시 읽는다
       if (input.action === 'remove') {

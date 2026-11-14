@@ -103,7 +103,11 @@ type EventParams = {
     from: number | 'unassigned';
     to: number | 'unassigned';
   };
-  shelf_count_changed: { category: string; count: number };
+  shelf_count_changed: {
+    category: string;
+    count: number;
+    action: 'add' | 'remove';
+  };
   // 선반 보기 아래 영역: 오늘 뭐 먹지에서 요리를 열고, 빠진 재료를 장보기에 담았는지
   // (홈의 AI 레시피 이벤트 recipe_*와 나눠 본다)
   meal_suggestion_opened: { recipe: string; rank: number; uses_soon: number };
