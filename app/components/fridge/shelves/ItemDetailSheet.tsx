@@ -61,24 +61,24 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
     if (!item || shelf === item.shelf) return;
     setError('');
     const from = item.shelf;
-    updateItem.mutate(
-      { id: item.id, updates: { shelf } },
-      {
-        onSuccess: () =>
-          track('item_shelf_set', {
-            category: item.category,
-            from: placeLabel(from),
-            to: placeLabel(shelf),
-          }),
-        onError: cause =>
-          setError(
-            cause instanceof ApiError &&
-              (cause.body as { error?: string } | null)?.error === 'shelf_full'
-              ? '이 선반이 가득 찼어요 (20개). 다른 선반에 놓아 주세요'
-              : '옮기지 못했어요. 다시 시도해 주세요',
-          ),
-      },
-    );
+    // 시트가 닫혀도 이벤트가 빠지지 않도록 저장이 끝나기를 기다렸다가 보낸다 (선반 정하기와 같은 방식)
+    updateItem
+      .mutateAsync({ id: item.id, updates: { shelf } })
+      .then(() =>
+        track('item_shelf_set', {
+          category: item.category,
+          from: placeLabel(from),
+          to: placeLabel(shelf),
+        }),
+      )
+      .catch(cause =>
+        setError(
+          cause instanceof ApiError &&
+            (cause.body as { error?: string } | null)?.error === 'shelf_full'
+            ? '이 선반이 가득 찼어요 (20개). 다른 선반에 놓아 주세요'
+            : '옮기지 못했어요. 다시 시도해 주세요',
+        ),
+      );
   };
 
   const shelves = Array.from({ length: shelfCount }, (_, i) => i + 1);
@@ -152,7 +152,7 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
               </span>
             </label>
             <p className="mt-1.5 text-xs text-gray-500">
-              넣을 때 권장 보관 기간으로 채워 두었어요. 다르면 바꿔 주세요
+              넣을 때 권장 보관 기간으로 채워요. 실제와 다르면 바꿔 주세요
             </p>
           </section>
 

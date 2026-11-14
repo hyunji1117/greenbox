@@ -53,18 +53,20 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
     else onEatSome(eatCount);
     setEatCount(null);
   };
+  // 선반을 고르면 품목이 "선반 미정" 목록에서 바로 빠져 이 줄이 화면에서 사라진다.
+  // 화면에 묶인 성공 콜백은 사라진 뒤 불리지 않으므로, 저장이 끝나기를 기다렸다가 이벤트를 보낸다
+  // (실패하면 useUpdateItem이 이전 상태로 되돌리고, 줄이 남아 있으면 아래 안내가 보인다)
   const placeOn = (shelf: number) =>
-    updateItem.mutate(
-      { id: item.id, updates: { shelf } },
-      {
-        onSuccess: () =>
-          track('item_shelf_set', {
-            category: item.category,
-            from: 'unassigned',
-            to: shelf,
-          }),
-      },
-    );
+    updateItem
+      .mutateAsync({ id: item.id, updates: { shelf } })
+      .then(() =>
+        track('item_shelf_set', {
+          category: item.category,
+          from: 'unassigned',
+          to: shelf,
+        }),
+      )
+      .catch(() => {});
 
   return (
     <article
