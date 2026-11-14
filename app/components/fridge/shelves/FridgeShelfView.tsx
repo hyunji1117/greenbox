@@ -6,12 +6,13 @@
 // - 선반을 누르면 그 선반의 목록(등록, 수량, 알림)으로 들어간다
 // - 선반 추가는 언제나, 줄이기는 비어 있는 선반이 있을 때만 (서버도 같은 규칙으로 거부)
 
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { track } from '@/app/lib/analytics/gtag';
 import type { Category, Item } from '@/app/lib/schemas/item';
 import {
   MAX_SHELF_COUNT,
+  MIN_SHELF_COUNT,
   pickStickers,
   shelfToRemove,
   type ShelfCounts,
@@ -75,18 +76,19 @@ export const ItemThumb: React.FC<{ name: string; size?: 'sm' | 'md' }> = ({
 
 // 선반 위 식재료: 배경 없는 그림과 바로 아래 이름(간격은 작게). 한 칸(선반 폭의 1/5)에 하나씩
 // 배경 없는 식재료 그림. 그림이 없으면 연한 원에 첫 글자
+// 고정 높이 선반(104px)에 두 줄이 차도 왼쪽 위 선반 번호와 겹치지 않도록 그림은 26px로 둔다
 const ShelfFoodImage: React.FC<{ name: string }> = ({ name }) => {
   const image = foodIconFor(name);
   return image ? (
     <Image
       src={image}
       alt=""
-      width={30}
-      height={30}
-      className="h-[30px] w-[30px] object-contain drop-shadow-[0_1px_1px_rgba(31,26,46,0.15)]"
+      width={26}
+      height={26}
+      className="h-[26px] w-[26px] object-contain drop-shadow-[0_1px_1px_rgba(31,26,46,0.15)]"
     />
   ) : (
-    <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/80 text-xs font-bold text-[#553C9A] ring-1 ring-black/5">
+    <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-white/80 text-[11px] font-bold text-[#553C9A] ring-1 ring-black/5">
       {name.slice(0, 1)}
     </span>
   );
@@ -94,41 +96,65 @@ const ShelfFoodImage: React.FC<{ name: string }> = ({ name }) => {
 
 const STICKERS_PER_ROW = 5;
 
-// 선반 한 칸(약 32px)에 이름을 "…" 없이 5글자까지 보인다. 3글자까지는 10px,
-// 4글자부터는 9px에 자간을 좁히고, 5글자는 옆으로 살짝 눌러 칸 안에 맞춘다 (전체 이름은 선반 목록에서)
+// 선반 한 칸에 이름을 "…" 없이 5글자까지 보인다 (전체 이름은 선반 목록에서)
+// 글자 크기, 굵기, 자간은 모두 같게 두어 줄이 가지런해 보이게 하고, 칸 너비는 화면마다 달라
+// 그린 뒤 실제 너비를 재서 넘칠 때만 그 칸에 딱 맞게 옆으로 누른다 (옆 칸 이름과 겹치지 않게)
 export const STICKER_NAME_MAX = 5;
+const STICKER_NAME_CLASS = 'text-[9px] tracking-[-0.02em]';
 
-export function stickerName(name: string): {
-  text: string;
-  className: string;
-  scaleX: number;
-} {
+export function stickerName(name: string): { text: string; className: string } {
   const text = Array.from(name.replace(/\s+/g, ''))
     .slice(0, STICKER_NAME_MAX)
     .join('');
-  const length = Array.from(text).length;
-  if (length <= 3) return { text, className: 'text-[10px]', scaleX: 1 };
-  if (length === 4)
-    return { text, className: 'text-[9px] tracking-[-0.06em]', scaleX: 1 };
-  return { text, className: 'text-[9px] tracking-[-0.06em]', scaleX: 0.8 };
+  return { text, className: STICKER_NAME_CLASS };
 }
+
+const FitLabel: React.FC<{ text: string; className: string }> = ({
+  text,
+  className,
+}) => {
+  const boxRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const label = textRef.current;
+    if (!box || !label) return;
+    const fit = () => {
+      const available = box.clientWidth;
+      const needed = label.scrollWidth;
+      setScale(available > 0 && needed > available ? available / needed : 1);
+    };
+    fit();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [text, className]);
+  return (
+    <span
+      ref={boxRef}
+      aria-hidden
+      className="block w-full overflow-hidden text-center"
+    >
+      {/* 넘치면 칸의 왼쪽 끝부터 그려지므로 왼쪽을 기준으로 줄여 칸 안에 맞춘다 */}
+      <span
+        ref={textRef}
+        className={`inline-block origin-left leading-none font-semibold whitespace-nowrap text-gray-800 ${className}`}
+        style={scale < 1 ? { transform: `scaleX(${scale})` } : undefined}
+      >
+        {text}
+      </span>
+    </span>
+  );
+};
 
 const Sticker: React.FC<{ item: Item }> = ({ item }) => {
   const label = stickerName(item.name);
   return (
     <span className="motion-safe:animate-magnet flex min-w-0 flex-col items-center gap-0.5">
       <ShelfFoodImage name={item.name} />
-      <span
-        aria-hidden
-        className={`block text-center leading-tight font-semibold whitespace-nowrap text-gray-800 ${label.className}`}
-        style={
-          label.scaleX < 1
-            ? { transform: `scaleX(${label.scaleX})` }
-            : undefined
-        }
-      >
-        {label.text}
-      </span>
+      <FitLabel text={label.text} className={label.className} />
     </span>
   );
 };
@@ -159,7 +185,7 @@ const ShelfColumn: React.FC<{
             type="button"
             onClick={() => onOpen(shelf)}
             aria-label={`${section.label} ${shelf}번 선반, ${onShelf.length}개`}
-            className="relative h-[104px] rounded-none border-b-4 border-white px-1 pt-3 pb-1 shadow-[0_3px_0_rgba(120,130,160,0.22)] transition-colors active:bg-black/5"
+            className="relative h-[104px] rounded-none border-b-4 border-white px-1 pt-4 pb-1 shadow-[0_3px_0_rgba(120,130,160,0.22)] transition-colors active:bg-black/5"
           >
             <span className="absolute top-0.5 left-1.5 text-[10px] font-semibold text-gray-400">
               {shelf}
@@ -170,7 +196,7 @@ const ShelfColumn: React.FC<{
               </span>
             ) : (
               // 고정 높이 선반에 아래 줄 5칸, 위 줄 5칸. 왼쪽 아래부터 채우고, 넘치면 위 줄 왼쪽부터 (전체는 선반을 눌러 목록에서)
-              <span className="flex h-full flex-col justify-end gap-1">
+              <span className="flex h-full flex-col justify-end gap-0.5">
                 {[
                   shown.slice(STICKERS_PER_ROW),
                   shown.slice(0, STICKERS_PER_ROW),
@@ -218,6 +244,21 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       ),
     ) !== null;
 
+  // 줄일 수 없을 때도 버튼을 누를 수 있게 두고, 누르면 서버에 묻지 않고 이유를 알려 준다 (ADR 0012)
+  const [blockedNotice, setBlockedNotice] = useState('');
+  const removeShelf = (category: Category) => {
+    if (canRemove(category)) {
+      setBlockedNotice('');
+      onRemoveShelf(category);
+      return;
+    }
+    setBlockedNotice(
+      counts[category] <= MIN_SHELF_COUNT
+        ? '선반은 하나 이상 있어야 해요'
+        : '식재료가 있는 선반은 줄일 수 없어요. 옮기거나 다 먹음으로 비운 뒤 줄여 주세요',
+    );
+  };
+
   const open = (category: Category, shelf: number | null) => {
     const count =
       shelf === null
@@ -235,7 +276,10 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
     <div className="flex gap-1.5">
       <button
         type="button"
-        onClick={() => onAddShelf(category)}
+        onClick={() => {
+          setBlockedNotice('');
+          onAddShelf(category);
+        }}
         disabled={isChanging || counts[category] >= MAX_SHELF_COUNT}
         className="h-11 flex-1 rounded-xl bg-white text-xs font-semibold text-[#553C9A] shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 disabled:opacity-40"
       >
@@ -243,9 +287,12 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       </button>
       <button
         type="button"
-        onClick={() => onRemoveShelf(category)}
-        disabled={isChanging || !canRemove(category)}
-        className="h-11 flex-1 rounded-xl bg-white text-xs font-semibold text-[#553C9A] shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 disabled:opacity-40"
+        onClick={() => removeShelf(category)}
+        disabled={isChanging}
+        aria-disabled={!canRemove(category)}
+        className={`h-11 flex-1 rounded-xl bg-white text-xs font-semibold text-[#553C9A] shadow-[0_4px_20px_rgba(75,47,140,0.07)] ring-1 ring-black/5 disabled:opacity-40 ${
+          canRemove(category) ? '' : 'opacity-40'
+        }`}
       >
         선반 줄이기
       </button>
@@ -348,9 +395,9 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
               ))}
             </div>
           )}
-          {notice && (
+          {(blockedNotice || notice) && (
             <p role="status" className="text-center text-xs text-[#553C9A]">
-              {notice}
+              {blockedNotice || notice}
             </p>
           )}
         </>
