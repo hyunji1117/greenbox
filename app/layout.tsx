@@ -53,7 +53,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#4b2f8c" />
-        <link rel="apple-touch-icon" href="/our-fridge_logo2_192_bgwhite.png" />
+        <link rel="apple-touch-icon" href="/greenbox_apple_touch_180.png" />
 
         {/* PWA 메타 태그 */}
         <meta name="mobile-web-app-capable" content="yes" />
