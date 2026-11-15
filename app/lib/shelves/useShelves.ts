@@ -68,7 +68,9 @@ export function useSetShelfView() {
       );
       track('shelf_view_toggled', {
         view: settings.enabled ? 'shelf' : 'list',
-        by: 'owner_switch',
+        // 주인인지 나중에 들어온 가족인지, 몇 번째로 들어왔는지 (다음 베타 대상을 정할 때 참고)
+        by: settings.myRole,
+        join_rank: settings.myJoinRank,
       });
     },
   });

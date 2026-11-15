@@ -38,13 +38,14 @@
 - 문이 열리면 "문 닫기"로 다시 닫을 수 있다 (문 앞은 다음 단계의 가족 게시판 자리). 선반 목록에 갔다 와도 문은 열린 채로 돌아온다
 - 선반을 정하지 않은 품목(예전 품목 포함)은 "선반 미정"에 모인다
 - 선반 추가와 줄이기는 칸 아래 버튼. 줄이기는 비어 있는 선반만 되고, 빈 선반이 없으면 버튼을 끄고 "옮기거나 다 먹음으로 비운 뒤"라고 알린다
-- 베타가 켜진 냉장고는 선반으로만 보인다. 화면 안 목록/선반 전환은 두 화면이 섞여 헷갈려 빼고, 비교는 설정의 베타 스위치(주인)로 끄고 켜서 한다
+- 베타가 켜진 냉장고는 선반으로만 보인다. 화면 안 목록/선반 전환은 두 화면이 섞여 헷갈려 빼고, 비교는 설정의 베타 스위치로 끄고 켜서 한다
+- 베타 스위치는 그 냉장고 가족 누구나 바꾼다 (2026-11-15, 전체 공개 전까지는 주인이 허용 목록에 있는 냉장고만). 바꿀 때마다 누가, 몇 번째로 들어온 가족인지 기록하고(0016) 설정에 마지막으로 바꾼 사람을 보여 준다. 알림은 보내지 않는다
 - 냉장고 아래: 나의 메모(이 기기에만 저장) | 지금 날씨(서울, Open-Meteo, 위치 권한 없음), "오늘 뭐 먹지" 3개, 빨리 먹어야 할 식재료(유통기한 3일 안, 1개 이하로 남은 것)
 - "오늘 뭐 먹지"는 앱에 넣어 둔 집밥 레시피에서 곧 먹어야 할 재료, 있는 재료, 계절과 날씨 순으로 고른다. 무엇을 먹을지 정해야 장을 보므로, 빠진 재료는 장보기에 바로 담는다. 외부 영상은 앱을 떠나게 해 쓰지 않는다
 - 가족은 같은 냉장고의 같은 선반 배치를 본다 (선반은 냉장고에 속함)
 
 ### 4. 계측
-- `experiment_exposed`(experiment, variant), `shelf_view_toggled`(view), `item_shelf_set`(from, to), `shelf_count_changed`(category, count, action: add/remove)
+- `experiment_exposed`(experiment, variant), `shelf_view_toggled`(view, by: owner/member, join_rank), `item_shelf_set`(from, to), `shelf_count_changed`(category, count, action: add/remove)
 - 냉장고 아래: `meal_suggestion_opened`(recipe, rank, uses_soon), `meal_suggestion_missing_added`(recipe, count), `urgent_item_opened`(reason)
 - 기존 찾기 이동과 품목 이벤트에 `view`(list/shelf)를 붙인다
 - 맞춤 측정기준(experiment, variant, view)을 등록하고 BigQuery로 순서를 본다
