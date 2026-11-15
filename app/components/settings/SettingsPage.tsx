@@ -90,137 +90,136 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   if (isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex justify-end bg-black/50 transition-opacity duration-300">
-      <div className="flex h-full w-full flex-col overflow-y-auto bg-[#F2F2F6] p-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-32 md:w-2/4 lg:w-1/3">
-        <h1 className="mb-4 text-xl font-semibold">마이</h1>
-        <SegmentedTabs
-          tabs={SECTION_TABS}
-          activeId={activeSection}
-          onChange={setActiveSection}
-          className="mb-4"
-        />
-        <div
-          key={activeSection}
-          className="motion-safe:animate-tab-fade space-y-3"
-        >
-          {activeSection === 'account' && (
-            <>
-              <div className={`flex items-center gap-3 p-4 ${SURFACE}`}>
-                {myProfile?.image ? (
-                  <Image
-                    src={myProfile.image}
-                    alt="프로필 사진"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F1EDFA] text-[#6B46C1]">
-                    <User size={22} />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-gray-900">
-                    {toDisplayName(myProfile) ?? '불러오는 중...'}
-                  </div>
-                  <div className="truncate text-xs text-gray-500">
-                    {myProfile?.familyNickname && myProfile.name
-                      ? `${myProfile.name} / `
-                      : ''}
-                    {myProfile?.email ?? ''}
-                  </div>
+    // 다른 탭처럼 본문 스크롤 영역(PageClient) 안에 그대로 그린다.
+    // 예전 서랍 디자인의 화면 전체 고정 상자(fixed inset-0) 안에서 따로 스크롤하던 구조가
+    // iOS 홈 화면 웹앱에서 마이만 아예 스크롤되지 않던 원인으로 보여 걷어냈다 (2026-11-15)
+    <div className="min-h-full bg-[#F2F2F6] p-4 pb-24 md:mx-auto md:w-2/4 lg:w-1/3">
+      <h1 className="mb-4 text-xl font-semibold">마이</h1>
+      <SegmentedTabs
+        tabs={SECTION_TABS}
+        activeId={activeSection}
+        onChange={setActiveSection}
+        className="mb-4"
+      />
+      <div
+        key={activeSection}
+        className="motion-safe:animate-tab-fade space-y-3"
+      >
+        {activeSection === 'account' && (
+          <>
+            <div className={`flex items-center gap-3 p-4 ${SURFACE}`}>
+              {myProfile?.image ? (
+                <Image
+                  src={myProfile.image}
+                  alt="프로필 사진"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F1EDFA] text-[#6B46C1]">
+                  <User size={22} />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold text-gray-900">
+                  {toDisplayName(myProfile) ?? '불러오는 중...'}
+                </div>
+                <div className="truncate text-xs text-gray-500">
+                  {myProfile?.familyNickname && myProfile.name
+                    ? `${myProfile.name} / `
+                    : ''}
+                  {myProfile?.email ?? ''}
                 </div>
               </div>
-              <div className={`space-y-4 p-4 ${SURFACE}`}>
-                <div>
-                  <label htmlFor="family-nickname" className={FIELD_LABEL}>
-                    가족 내 호칭
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="family-nickname"
-                      type="text"
-                      maxLength={FAMILY_NICKNAME_MAX}
-                      value={nicknameValue}
-                      placeholder={myProfile?.name ?? '예: 엄마, 첫째'}
-                      disabled={!myProfile || isSaving}
-                      onChange={e => {
-                        setNicknameDraft(e.target.value);
-                        setNicknameMessage(null);
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') saveNickname();
-                      }}
-                      className={`${FIELD} min-w-0`}
-                    />
-                    <button
-                      type="button"
-                      onClick={saveNickname}
-                      disabled={!isNicknameChanged || isSaving}
-                      className="h-11 shrink-0 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
-                    >
-                      {isSaving ? '저장 중' : '저장'}
-                    </button>
-                  </div>
-                  {nicknameMessage ? (
-                    <p
-                      className={`mt-1 text-xs ${nicknameMessage.type === 'error' ? 'text-red-500' : 'text-green-600'}`}
-                    >
-                      {nicknameMessage.text}
-                    </p>
-                  ) : (
-                    <p className="mt-1 flex justify-between gap-2 text-xs text-gray-400">
-                      <span>
-                        구글 이름 대신 호칭으로 보이고, 함께 보는 가족에게는 내
-                        냉장고가 &quot;호칭 냉장고&quot;로 보여요
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        {nicknameValue.length}/{FAMILY_NICKNAME_MAX}
-                      </span>
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="account-email" className={FIELD_LABEL}>
-                    이메일
-                  </label>
+            </div>
+            <div className={`space-y-4 p-4 ${SURFACE}`}>
+              <div>
+                <label htmlFor="family-nickname" className={FIELD_LABEL}>
+                  가족 내 호칭
+                </label>
+                <div className="flex gap-2">
                   <input
-                    id="account-email"
-                    type="email"
-                    className={FIELD}
-                    value={myProfile?.email ?? ''}
-                    readOnly
+                    id="family-nickname"
+                    type="text"
+                    maxLength={FAMILY_NICKNAME_MAX}
+                    value={nicknameValue}
+                    placeholder={myProfile?.name ?? '예: 엄마, 첫째'}
+                    disabled={!myProfile || isSaving}
+                    onChange={e => {
+                      setNicknameDraft(e.target.value);
+                      setNicknameMessage(null);
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveNickname();
+                    }}
+                    className={`${FIELD} min-w-0`}
                   />
-                  <p className="mt-1 text-xs text-gray-400">
-                    구글 계정 이메일이라 여기서 바꿀 수 없어요
-                  </p>
+                  <button
+                    type="button"
+                    onClick={saveNickname}
+                    disabled={!isNicknameChanged || isSaving}
+                    className="h-11 shrink-0 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#603fad] disabled:bg-[#F1EDFA] disabled:text-[#A794D6]"
+                  >
+                    {isSaving ? '저장 중' : '저장'}
+                  </button>
                 </div>
+                {nicknameMessage ? (
+                  <p
+                    className={`mt-1 text-xs ${nicknameMessage.type === 'error' ? 'text-red-500' : 'text-green-600'}`}
+                  >
+                    {nicknameMessage.text}
+                  </p>
+                ) : (
+                  <p className="mt-1 flex justify-between gap-2 text-xs text-gray-400">
+                    <span>
+                      구글 이름 대신 호칭으로 보이고, 함께 보는 가족에게는 내
+                      냉장고가 &quot;호칭 냉장고&quot;로 보여요
+                    </span>
+                    <span className="shrink-0 tabular-nums">
+                      {nicknameValue.length}/{FAMILY_NICKNAME_MAX}
+                    </span>
+                  </p>
+                )}
               </div>
-              <MembersEntryCard />
-              <FaqCard />
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className={`${DANGER_BUTTON} w-full`}
-              >
-                <LogOut size={16} />
-                {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-              </button>
-            </>
-          )}
-          {activeSection === 'app' && (
-            <>
-              <PushNotificationCard />
-              <NotificationSettingsCard />
-              <ShelfBetaCard />
-              <FeedbackCard />
-              <AppVersionCard
-                isOperator={myProfile?.email === OPERATOR.email}
-              />
-            </>
-          )}
-        </div>
+              <div>
+                <label htmlFor="account-email" className={FIELD_LABEL}>
+                  이메일
+                </label>
+                <input
+                  id="account-email"
+                  type="email"
+                  className={FIELD}
+                  value={myProfile?.email ?? ''}
+                  readOnly
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  구글 계정 이메일이라 여기서 바꿀 수 없어요
+                </p>
+              </div>
+            </div>
+            <MembersEntryCard />
+            <FaqCard />
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className={`${DANGER_BUTTON} w-full`}
+            >
+              <LogOut size={16} />
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+            </button>
+          </>
+        )}
+        {activeSection === 'app' && (
+          <>
+            <PushNotificationCard />
+            <NotificationSettingsCard />
+            <ShelfBetaCard />
+            <FeedbackCard />
+            <AppVersionCard isOperator={myProfile?.email === OPERATOR.email} />
+          </>
+        )}
       </div>
     </div>
   );
