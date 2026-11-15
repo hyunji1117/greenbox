@@ -82,4 +82,21 @@ describe('foodIconFor', () => {
     expect(foodIconFor('비빔국수')).toBe('/foods/bibim_naengmyeon.png');
     expect(foodIconFor('햇반')).toBe('/foods/bap.png');
   });
+
+  it('고깃집 부위와 불판 구이, 쌈 반찬은 더 긴 이름을 먼저 따른다', () => {
+    expect(foodIconFor('대패삼겹살')).toBe('/foods/daepae_samgyeop.png');
+    expect(foodIconFor('삼겹살')).toBe('/foods/pork_belly.png');
+    expect(foodIconFor('우삼겹')).toBe('/foods/woosamgyeop.png');
+    expect(foodIconFor('오겹살')).toBe('/foods/ogyeopsal.png');
+    expect(foodIconFor('고추장불고기')).toBe('/foods/gochujang_bulgogi.png');
+    expect(foodIconFor('소불고기')).toBe('/foods/bulgogi.png');
+    expect(foodIconFor('la갈비')).toBe('/foods/la_galbi.png');
+    expect(foodIconFor('갈비살구이')).toBe('/foods/galbisal_grill.png');
+    expect(foodIconFor('돼지막창')).toBe('/foods/makchang.png');
+    expect(foodIconFor('풋고추')).toBe('/foods/putgochu_garlic.png');
+    expect(foodIconFor('고추장')).toBe('/foods/gochujang.png');
+    expect(foodIconFor('쌈장')).toBe('/foods/sauces.png');
+    expect(foodIconFor('계란찜')).toBe('/foods/gyeranjjim.png');
+    expect(foodIconFor('계란')).toBe('/foods/egg.png');
+  });
 });
