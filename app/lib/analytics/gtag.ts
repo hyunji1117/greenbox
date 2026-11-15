@@ -91,8 +91,9 @@ type EventParams = {
     view: 'list' | 'shelf';
     by: 'owner_switch';
   };
-  fridge_doors_opened: undefined;
-  fridge_doors_closed: undefined;
+  // method: 버튼으로 열고 닫았는지, 손가락으로 밀었는지
+  fridge_doors_opened: { method: 'button' | 'swipe' };
+  fridge_doors_closed: { method: 'button' | 'swipe' };
   shelf_opened: {
     category: string;
     shelf: number | 'unassigned';

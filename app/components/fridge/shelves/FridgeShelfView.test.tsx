@@ -72,3 +72,58 @@ describe('FridgeShelfView 선반 줄이기', () => {
     expect(onRemoveShelf).toHaveBeenCalledWith('freezer');
   });
 });
+
+describe('FridgeShelfView 문 밀기', () => {
+  const renderDoors = (isOpen: boolean, onOpenShelf = vi.fn()) => {
+    const onOpenChange = vi.fn();
+    const { container } = render(
+      <FridgeShelfView
+        items={[item('1', 1)]}
+        counts={{ fridge: 2, freezer: 2, pantry: 2 }}
+        onOpenShelf={onOpenShelf}
+        onAddShelf={() => {}}
+        onRemoveShelf={() => {}}
+        isChanging={false}
+        notice=""
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+      />,
+    );
+    const doors = container.querySelector('.touch-pan-y') as HTMLElement;
+    doors.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 360, height: 600 }) as DOMRect;
+    return { doors, onOpenChange };
+  };
+
+  it('닫힌 문을 가운데에서 옆으로 밀면 열리고, 이어지는 클릭은 버튼 열기로 세지 않는다', () => {
+    const { doors, onOpenChange } = renderDoors(false);
+    fireEvent.pointerDown(doors, { clientX: 180, clientY: 300 });
+    fireEvent.pointerUp(doors, { clientX: 260, clientY: 305 });
+    fireEvent.click(screen.getByRole('button', { name: '눌러서 냉장고 열기' }));
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it('열린 문은 끝에서 안쪽으로 밀면 닫히고, 그 손길로 선반이 열리지 않는다', () => {
+    const onOpenShelf = vi.fn();
+    const { doors, onOpenChange } = renderDoors(true, onOpenShelf);
+    const shelf = screen.getByRole('button', { name: '냉동실 1번 선반, 0개' });
+    fireEvent.pointerDown(doors, { clientX: 20, clientY: 200 });
+    fireEvent.pointerUp(doors, { clientX: 110, clientY: 205 });
+    fireEvent.click(shelf);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenShelf).not.toHaveBeenCalled();
+  });
+
+  it('밀지 않고 누르면 선반이 그대로 열린다', () => {
+    const onOpenShelf = vi.fn();
+    const { doors, onOpenChange } = renderDoors(true, onOpenShelf);
+    fireEvent.pointerDown(doors, { clientX: 20, clientY: 200 });
+    fireEvent.pointerUp(doors, { clientX: 22, clientY: 201 });
+    fireEvent.click(
+      screen.getByRole('button', { name: '냉동실 1번 선반, 0개' }),
+    );
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onOpenShelf).toHaveBeenCalled();
+  });
+});

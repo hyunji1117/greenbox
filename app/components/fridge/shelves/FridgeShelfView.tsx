@@ -2,6 +2,7 @@
 // app/components/fridge/shelves/FridgeShelfView.tsx
 // 선반 보기 베타 (docs/decisions/0012-shelf-view-beta.md)
 // - 양문형 냉장고가 닫힌 채로 보이고, 누르면 문이 양쪽으로 열린다 (움직임 줄이기면 바로 열림)
+// - 가운데에서 옆으로 밀어도 열리고, 열린 뒤 양쪽 끝에서 안쪽으로 밀면 닫힌다 (app/lib/shelves/doorSwipe.ts)
 // - 왼쪽 냉동실, 오른쪽 냉장실, 아래 상온 선반. 선반마다 식재료를 사진 타일로 10개까지 가운데에 가지런히 놓는다 (전체는 선반을 눌러 목록에서)
 // - 선반을 누르면 그 선반의 목록(등록, 수량, 알림)으로 들어간다
 // - 선반 추가는 언제나, 줄이기는 비어 있는 선반이 있을 때만 (서버도 같은 규칙으로 거부)
@@ -18,6 +19,11 @@ import {
   type ShelfCounts,
 } from '@/app/lib/shelves/rules';
 import { foodIconFor } from '@/app/lib/shelves/foodIcons';
+import {
+  doorSwipeResult,
+  doorSwipeStart,
+  type DoorSwipeStart,
+} from '@/app/lib/shelves/doorSwipe';
 
 export interface ShelfTarget {
   category: Category;
@@ -290,6 +296,48 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       </p>
     ) : null;
 
+  // 문 밀기: 손가락을 댄 자리와 뗀 자리로 판정한다. 밀어서 열고 닫은 직후의 클릭(선반 열기)은 막는다
+  const swipeRef = useRef<{
+    x: number;
+    y: number;
+    start: DoorSwipeStart | null;
+  } | null>(null);
+  const swipedRef = useRef(false);
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    swipedRef.current = false;
+    swipeRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      start: doorSwipeStart(event.clientX - rect.left, rect.width, isOpen),
+    };
+  };
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const swipe = swipeRef.current;
+    swipeRef.current = null;
+    if (!swipe) return;
+    const result = doorSwipeResult(
+      swipe.start,
+      event.clientX - swipe.x,
+      event.clientY - swipe.y,
+    );
+    if (result === 'open' && !isOpen) {
+      swipedRef.current = true;
+      onOpenChange(true);
+      track('fridge_doors_opened', { method: 'swipe' });
+    } else if (result === 'close' && isOpen) {
+      swipedRef.current = true;
+      onOpenChange(false);
+      track('fridge_doors_closed', { method: 'swipe' });
+    }
+  };
+  const onClickCapture = (event: React.MouseEvent) => {
+    if (!swipedRef.current) return;
+    swipedRef.current = false;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   const open = (category: Category, shelf: number | null) => {
     const count =
       shelf === null
@@ -336,7 +384,18 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="relative [perspective:1400px]">
+      {/* 세로 스크롤은 브라우저에 맡기고 가로 밀기만 받는다 */}
+      <div
+        className="relative touch-pan-y [perspective:1400px]"
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => {
+          swipeRef.current = null;
+        }}
+        onClickCapture={onClickCapture}
+        // 마우스로 식재료 그림 위에서 끌기 시작하면 브라우저가 그림 끌어 옮기기로 받아 밀기가 취소된다
+        onDragStart={event => event.preventDefault()}
+      >
         {/* 안쪽: 문이 닫혀 있을 때는 흐리게, 열리면 또렷하게 */}
         <div
           className={`grid grid-cols-2 gap-1.5 rounded-[22px] bg-[#D9DCE4] p-1.5 transition-opacity delay-200 duration-500 motion-reduce:transition-none ${
@@ -385,7 +444,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             type="button"
             onClick={() => {
               onOpenChange(true);
-              track('fridge_doors_opened');
+              track('fridge_doors_opened', { method: 'button' });
             }}
             className="absolute inset-0 flex items-end justify-center rounded-[22px] pb-6"
           >
