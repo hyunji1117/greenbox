@@ -8,7 +8,17 @@ import {
   expiryLabel,
 } from '@/app/lib/items/expiry';
 import type { Item } from '@/app/lib/schemas/item';
-import { withUnit } from '@/app/lib/items/units';
+import { isGram, unitFor, withUnit } from '@/app/lib/items/units';
+
+// 다 먹어 가는 것: 개수 단위는 2개 이상 산 것 중 1개 이하로 남았을 때,
+// g 단위는 처음 양의 20% 이하로 남았을 때 (300g 중 60g)
+const GRAM_LOW_RATIO = 0.2;
+export function isLowStock(item: Item, remaining: number): boolean {
+  if (isGram(unitFor(item.name, item.unit))) {
+    return remaining <= item.quantity * GRAM_LOW_RATIO;
+  }
+  return item.quantity >= 2 && remaining <= 1;
+}
 
 export const MAX_URGENT = 12;
 
@@ -34,10 +44,10 @@ export function pickUrgent(items: Item[], now = new Date()): Urgent[] {
         isExpiry: true,
         order: days,
       });
-    } else if (item.quantity >= 2 && remaining <= 1) {
+    } else if (isLowStock(item, remaining)) {
       list.push({
         item,
-        label: `${withUnit(remaining, item.name)} 남음`,
+        label: `${withUnit(remaining, item.name, item.unit)} 남음`,
         isExpiry: false,
         order: LOW_STOCK_ORDER,
       });

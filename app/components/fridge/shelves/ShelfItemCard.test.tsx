@@ -41,6 +41,7 @@ const tofu = {
   watched: false,
   shelf: null,
   updatedAt: null,
+  unit: null,
 };
 
 const renderCard = () =>

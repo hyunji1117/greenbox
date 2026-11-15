@@ -29,6 +29,7 @@ const item = (
     watched: false,
     shelf: null,
     updatedAt: null,
+    unit: null,
   }) as ItemJson;
 
 // 2026-11-08 KST

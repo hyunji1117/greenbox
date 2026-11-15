@@ -142,8 +142,8 @@ const RestoreRow: React.FC<{ item: Item }> = ({ item }) => {
         <span className="text-xs text-gray-500">
           {at.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
           {isEatenUp(item)
-            ? `, ${withUnit(item.quantity, item.name)} 다 먹음`
-            : `, ${withUnit(item.quantity - item.eatenQuantity, item.name)} 버림`}
+            ? `, ${withUnit(item.quantity, item.name, item.unit)} 다 먹음`
+            : `, ${withUnit(item.quantity - item.eatenQuantity, item.name, item.unit)} 버림`}
         </span>
       </span>
       <button

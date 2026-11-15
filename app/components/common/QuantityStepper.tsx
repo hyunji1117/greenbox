@@ -21,6 +21,8 @@ interface QuantityStepperProps {
   tone?: 'gray' | 'white';
   // 숫자 옆에 붙일 단위 (구, 모, 단). 없으면 숫자만
   unit?: string;
+  // 버튼 한 번에 움직이는 양 (g 품목은 100)
+  step?: number;
 }
 
 const SIZE = {
@@ -43,10 +45,14 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
   size = 'md',
   tone = 'gray',
   unit,
+  step: stepSize = 1,
 }) => {
   // 적는 중인 글자. 없으면 저장된 값을 보여 준다
   const [draft, setDraft] = useState<string | null>(null);
   const s = SIZE[size];
+  // 그램처럼 네 자리까지 적는 칸은 넓힌다
+  const digits = String(max).length;
+  const inputWidth = digits > 2 ? 'w-12' : s.input;
 
   const commit = () => {
     if (draft === null) return;
@@ -71,7 +77,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
     >
       <button
         type="button"
-        onClick={() => step(-1)}
+        onClick={() => step(-stepSize)}
         aria-label={`${label} 줄이기`}
         disabled={value <= min}
         className={`flex items-center justify-center rounded-l-xl transition-colors active:bg-gray-200 disabled:opacity-30 ${s.button}`}
@@ -87,7 +93,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
         value={draft ?? String(value)}
         onFocus={event => event.currentTarget.select()}
         onChange={event =>
-          setDraft(event.target.value.replace(/\D/g, '').slice(0, 2))
+          setDraft(event.target.value.replace(/\D/g, '').slice(0, digits))
         }
         onBlur={commit}
         onKeyDown={event => {
@@ -97,7 +103,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
             event.currentTarget.blur();
           }
         }}
-        className={`h-full bg-transparent text-center text-base font-semibold tabular-nums focus:rounded-md focus:bg-white focus:ring-1 focus:ring-[#A794D6] focus:outline-none ${s.input}`}
+        className={`h-full bg-transparent text-center text-base font-semibold tabular-nums focus:rounded-md focus:bg-white focus:ring-1 focus:ring-[#A794D6] focus:outline-none ${inputWidth}`}
       />
       {unit && (
         <span aria-hidden className="-ml-1 text-sm font-medium text-gray-500">
@@ -106,7 +112,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({
       )}
       <button
         type="button"
-        onClick={() => step(1)}
+        onClick={() => step(stepSize)}
         aria-label={`${label} 늘리기`}
         disabled={value >= max}
         className={`flex items-center justify-center rounded-r-xl transition-colors active:bg-gray-200 disabled:opacity-30 ${s.button}`}

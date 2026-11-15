@@ -38,6 +38,8 @@ export interface ItemRow {
   expiry_date: string | null;
   watched: boolean;
   shelf: number | null;
+  // 고른 단위 (0018). 예전 테스트 행에는 없다
+  unit?: string | null;
   // 마지막으로 바뀐 때. 다 먹음/버림 품목을 최근 순으로 보여 줄 때 쓴다 (예전 테스트 행에는 없다)
   updated_at?: Date;
   added_by: PersonJson;
@@ -58,7 +60,7 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
 // viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
 const selectItems = (viewerParam: string) => `
-  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.updated_at, i.finished, i.shelf,
+  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.updated_at, i.finished, i.shelf, i.unit,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
     EXISTS (
       SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
@@ -103,6 +105,7 @@ export function toItemJson(row: ItemRow) {
     finished: row.finished,
     expiryDate: row.expiry_date,
     watched: row.watched,
+    unit: row.unit ?? null,
     shelf: row.shelf ?? null,
     updatedAt: row.updated_at ? row.updated_at.toISOString() : null,
   };
@@ -142,8 +145,8 @@ export async function createItem(
   input: CreateItemInput,
 ): Promise<ItemJson> {
   const { rows } = await getPool().query<{ id: string }>(
-    `INSERT INTO items (fridge_id, user_id, created_by, name, category, quantity, expiry_date, shelf)
-     VALUES ($1, $2, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO items (fridge_id, user_id, created_by, name, category, quantity, expiry_date, shelf, unit)
+     VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
     [
       fridgeId,
@@ -153,6 +156,7 @@ export async function createItem(
       input.quantity,
       input.expiryDate ?? null,
       input.shelf ?? null,
+      input.unit ?? null,
     ],
   );
   await getPool().query(
@@ -165,13 +169,15 @@ export async function createItem(
 }
 
 // 보내지 않은 항목은 그대로 둔다. 내가 구성원인 냉장고의 품목이 아니면 null
+// 저장된 단위와 맞지 않는 수량(개수 단위에 99 초과 등)은 DB 제약(0018)에 걸려 'invalid'
 export async function updateItem(
   userId: string,
   itemId: string,
   input: UpdateItemInput,
-): Promise<ItemJson | null> {
-  const { rowCount } = await getPool().query(
-    `UPDATE items i SET
+): Promise<ItemJson | null | 'invalid'> {
+  const result = await getPool()
+    .query(
+      `UPDATE items i SET
        name = COALESCE($3, name),
        category = COALESCE($4, category),
        quantity = COALESCE($5::integer, quantity),
@@ -184,21 +190,31 @@ export async function updateItem(
        finished = COALESCE($7::boolean, finished),
        -- 선반은 보냈을 때만 바꾼다 (null을 보내면 선반 미정으로)
        shelf = CASE WHEN $9::boolean THEN $10::smallint ELSE shelf END,
+       -- 단위도 보냈을 때만 바꾼다 (null을 보내면 이름으로 추정)
+       unit = CASE WHEN $11::boolean THEN $12::text ELSE unit END,
        updated_at = now()
      WHERE i.id = $2 AND ${MEMBER_OF_ITEM_FRIDGE}`,
-    [
-      Number(userId),
-      itemId,
-      input.name ?? null,
-      input.category ?? null,
-      input.quantity ?? null,
-      input.expiryDate ?? null,
-      input.finished ?? null,
-      input.eatenQuantity ?? null,
-      input.shelf !== undefined,
-      input.shelf ?? null,
-    ],
-  );
+      [
+        Number(userId),
+        itemId,
+        input.name ?? null,
+        input.category ?? null,
+        input.quantity ?? null,
+        input.expiryDate ?? null,
+        input.finished ?? null,
+        input.eatenQuantity ?? null,
+        input.shelf !== undefined,
+        input.shelf ?? null,
+        input.unit !== undefined,
+        input.unit ?? null,
+      ],
+    )
+    .catch((error: { code?: string }) => {
+      if (error.code === '23514') return 'invalid' as const;
+      throw error;
+    });
+  if (result === 'invalid') return 'invalid';
+  const { rowCount } = result;
   return rowCount ? findItem(itemId, userId) : null;
 }
 

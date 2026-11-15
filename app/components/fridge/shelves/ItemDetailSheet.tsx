@@ -11,9 +11,10 @@ import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import { ApiError } from '@/app/lib/api/apiFetch';
 import { track } from '@/app/lib/analytics/gtag';
 import { isSavableExpiryDate } from '@/app/lib/items/expiry';
-import { unitFor, withUnit } from '@/app/lib/items/units';
+import UnitChooser from '@/app/components/fridge/UnitChooser';
+import { quantityLimits, unitFor, withUnit } from '@/app/lib/items/units';
 import { useUpdateItem } from '@/app/lib/items/useItems';
-import { QUANTITY_MAX, type Item } from '@/app/lib/schemas/item';
+import type { Item } from '@/app/lib/schemas/item';
 import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
 
 interface ItemDetailSheetProps {
@@ -103,27 +104,43 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-800">총수량</h3>
               <p className="mt-0.5 text-xs text-gray-500">
-                {withUnit(item.quantity - item.eatenQuantity, item.name)} 남음
+                {withUnit(
+                  item.quantity - item.eatenQuantity,
+                  item.name,
+                  item.unit,
+                )}{' '}
+                남음
                 {item.eatenQuantity > 0 &&
-                  `, ${withUnit(item.eatenQuantity, item.name)} 먹음`}
+                  `, ${withUnit(item.eatenQuantity, item.name, item.unit)} 먹음`}
               </p>
             </div>
-            <QuantityStepper
-              value={item.quantity}
-              onChange={quantity =>
-                updateItem.mutate(
-                  { id: item.id, updates: { quantity } },
-                  {
-                    onSuccess: () =>
-                      track('item_edited', { field: 'quantity' }),
-                  },
-                )
-              }
-              label={`${item.name} 총수량`}
-              unit={unitFor(item.name)}
-              min={Math.max(1, item.eatenQuantity)}
-              max={QUANTITY_MAX}
-            />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <QuantityStepper
+                value={item.quantity}
+                onChange={quantity =>
+                  updateItem.mutate(
+                    { id: item.id, updates: { quantity } },
+                    {
+                      onSuccess: () =>
+                        track('item_edited', { field: 'quantity' }),
+                    },
+                  )
+                }
+                label={`${item.name} 총수량`}
+                min={Math.max(1, item.eatenQuantity)}
+                max={quantityLimits(unitFor(item.name, item.unit)).max}
+                step={quantityLimits(unitFor(item.name, item.unit)).step}
+              />
+              <UnitChooser
+                name={item.name}
+                unit={item.unit}
+                quantity={item.quantity}
+                eatenQuantity={item.eatenQuantity}
+                onChange={updates =>
+                  updateItem.mutate({ id: item.id, updates })
+                }
+              />
+            </div>
           </section>
 
           <section className={`p-4 ${SURFACE}`}>

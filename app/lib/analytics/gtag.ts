@@ -93,6 +93,8 @@ type EventParams = {
     by: 'owner' | 'member';
     join_rank: number;
   };
+  // 단위 고르기. suggested: 이름으로 추천한 단위를 그대로 골랐는지
+  item_unit_set: { unit: string; suggested: boolean };
   // 가족 게시판. 메모 글은 보내지 않고 글자 수와 개수만 보낸다
   board_opened: { count: number; unchecked: number };
   board_note_created: { length: number };
