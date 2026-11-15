@@ -2,38 +2,96 @@
 
 <div align="center">
 
-<img width="222" height="448" alt="Page-3" src="https://github.com/user-attachments/assets/2c8151ef-bf67-41a5-993f-b17c679ae82b" />
-<img width="222" height="448" alt="Page-4" src="https://github.com/user-attachments/assets/19683eb4-67b3-4342-9a1a-3cc645903277" />
+<!-- 최신 운영 화면 (테스트 계정, 2026-11-15 v1.12.13, 선반 보기 베타를 켠 냉장고). 파일은 docs/images/screens/ -->
+<img width="240" alt="문을 연 냉장고: 냉동실과 냉장실 선반마다 식재료 그림과 이름" src="docs/images/screens/01-fridge-open.png" />
+<img width="240" alt="문을 닫은 냉장고: 냉장실 문의 알림장과 칸 이름 표지판" src="docs/images/screens/02-fridge-closed.png" />
 
-**집에 있는 식재료를 한눈에 관리해 식품 낭비를 줄이는 PWA**
+**가족이 함께 쓰는 냉장고에 무엇이 어디에 얼마나 남았는지 보여 주는 PWA**
 
-[데모 보기](https://greenbox-seven.vercel.app)
+[서비스 열기](https://greenbox-seven.vercel.app) | [결정 기록](docs/decisions) | [최근 PR](https://github.com/hyunji1117/greenbox/pulls?q=is%3Apr+is%3Amerged)
 
 </div>
 
-## 1. 소개
+## 1. 한눈에 보기
 
-**우리집 냉장고(Greenbox)** 는 냉장고 속 식재료와 유통기한을 관리해 식품 낭비를 줄이는 것을 목표로 하는 PWA 기반 웹 서비스입니다. 모바일 환경을 우선으로 설계했고, 홈 화면 설치 등 네이티브 앱에 가까운 경험을 제공합니다.
+**누구의 어떤 문제:** 장 보는 사람과 꺼내 먹는 사람이 다른 가족은 냉장고에 무엇이 남았는지 몰라 같은 것을 또 사거나, 넣어 둔 것을 잊어 유통기한을 넘깁니다. Greenbox는 가족이 각자 계정으로 같은 냉장고를 보고, 곧 먹어야 할 것을 알림과 레시피로 알려 줍니다.
 
-> ⚠️ 개인 학습용 사이드 프로젝트입니다. 냉장고 품목과 댓글은 Postgres에 저장하고, 장바구니와 구매 통계는 브라우저 로컬 저장소(localStorage, IndexedDB)에, 활동 피드와 상품 목록은 목업으로 동작합니다. 아래 [구현한 기능](#-구현한-기능)과 [앞으로의 과제](#-앞으로의-과제)에서 현재 구현 범위를 정확히 구분해 적었습니다.
+**운영 상태:** 2025.09 기기 저장 첫 버전에서 시작해 2026.10부터 서버 저장(Postgres), 가족 공유, 웹뷰 앱 셸로 리뉴얼했습니다. 기획, 개발, 운영은 혼자 맡고, 사용자는 우리 가족 3명과 지인 가족 2명입니다. 현재 운영 버전은 v1.12.13(2026-11-15)입니다.
 
-## 2. 성능 최적화: 약한 네트워크를 위한 설계
+**구현, 검증, 사용자 효과를 나눠 적습니다.** 아래 "지금 쓸 수 있는 것"은 운영에 배포된 기능이고, 사용자 효과를 확인한 것은 따로 표시합니다. 대부분은 아직 사용자 효과를 확인하지 않았습니다.
 
-> 이 앱은 **마트에서 장을 보며** 사용합니다. 즉 약하고 불안정한 네트워크가 기본 사용 환경입니다. 그런데 정작 가장 느린 환경에서 가장 느렸습니다.
+### 지금 쓸 수 있는 것 (서버 저장)
 
-### 문제 - "가장 느린 네트워크에서 쓸 앱인데, 가장 무거운 초기 로딩"
+| 기능             | 지금 동작하는 범위                                                                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 로그인과 동의    | 구글 로그인, 필수 항목 동의 기록, 개인정보처리방침 버전별 재동의와 변경 안내                                                                                                           |
+| 냉장고 품목      | 직접, 사진(식재료 인식), 음성으로 등록. 수량(마트 단위와 g), 권장 보관 기간으로 채우는 유통기한, 먹음/버림과 되돌리기, 댓글                                                            |
+| 가족 공유        | 초대 링크, 참여 요청과 승인, 각자 계정으로 같은 냉장고 보기 ([#52](https://github.com/hyunji1117/greenbox/pull/52))                                                                    |
+| 첫 화면          | 서버에서 품목을 조회해 HTML을 스트리밍하고, TanStack Query 캐시를 넘겨 첫 로드 중복 요청을 없앰 ([#45](https://github.com/hyunji1117/greenbox/pull/45))                                |
+| 알림             | Web Push. 사람마다 받을 시각과 주간 요약, 냉장고별 알림 수준, 관심 품목 ([#56](https://github.com/hyunji1117/greenbox/pull/56), [#65](https://github.com/hyunji1117/greenbox/pull/65)) |
+| 레시피           | 곧 먹어야 할 재료가 있을 때 15분 레시피와 그림을 AI로 만들고(처음 쓸 때 동의), 빠진 재료는 장보기에 담음 ([ADR 0007](docs/decisions/0007-quick-recipes.md))                            |
+| 선반 보기 (베타) | 기본 꺼짐. 설정에서 가족 누구나 켬. 양문형 냉장고, 선반마다 식재료 그림, 문 위 알림장 ([ADR 0012](docs/decisions/0012-shelf-view-beta.md))                                             |
+| 웹뷰 앱 셸       | Expo 앱이 운영 웹을 열고, 구글 로그인은 시스템 브라우저에서 처리해 세션을 넘김. 스토어 제출과 앱 푸시는 미완료 ([ADR 0011](docs/decisions/0011-mobile-webview-shell.md))               |
+| PWA              | 홈 화면 설치, Service Worker가 앱 셸과 정적 이미지를 미리 저장(오프라인에서 화면 틀이 열림)                                                                                            |
 
-Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 로딩**이었습니다. TBT, CLS는 양호했고, 느린 건 첫 화면이 뜨는 속도(LCP 6.2s)였습니다.
+### 아직 기기에만 저장되는 것과 한계
 
-### 진단 - 코드 레벨 원인
+- 장보기 리스트와 즐겨찾기는 `localStorage`, 구매 기록은 `IndexedDB`에 저장합니다. 다른 기기나 가족과 공유되지 않습니다.
+- 오프라인에서는 화면 틀만 열립니다. 오프라인 중 서버 데이터 변경과 다시 연결됐을 때의 병합은 다루지 않았습니다.
+- 선반 보기의 사용자 비교(목록보다 빨리 찾는지)는 아직 하지 않았습니다. 테스트 계정 점검까지 마쳤습니다.
 
-번들을 분석하니, 차트 라이브러리 **recharts(약 343KB)가 분석 탭 한 곳에서만 쓰이는데도 모든 사용자의 첫 로드에 포함**되고 있었습니다. 정작 대부분의 사용자는 냉장고 탭만 봅니다.
+### 현재 구조
 
-### 개선 - `next/dynamic` 코드 스플리팅
+```
+[모바일 웹 / Expo WebView 앱 셸]
+        │  첫 요청: HTML 스트리밍
+        ▼
+[Next.js 15 App Router / Node.js 런타임 / Vercel]
+  ├─ 서버 컴포넌트: 세션과 품목 조회 → TanStack Query prefetch → HydrationBoundary로 캐시 전달
+  ├─ Route Handler: API (zod 스키마를 서버/화면이 공유)
+  └─ Web Push 발송
+        ▼
+[Postgres] 트랜잭션, 조건부 upsert, CHECK 제약, 추가형 마이그레이션 (db/migrations)
+```
 
-해당 탭을 **실제로 열 때만** recharts가 로드되도록 분리했습니다. 분리된 청크도 Service Worker가 precache하므로 **오프라인 동작은 그대로 유지**됩니다.
+### 결정 기록과 PR
 
-### 결과 (Lighthouse, 모바일 / Slow 4G 동일 조건)
+- 결정 기록(ADR): [`docs/decisions`](docs/decisions). 웹뷰 앱 셸([0011](docs/decisions/0011-mobile-webview-shell.md)), 선반 보기 베타와 단계 공개([0012](docs/decisions/0012-shelf-view-beta.md)), 초간단 레시피([0007](docs/decisions/0007-quick-recipes.md)), 실사용 성능과 오류 수집([0009](docs/decisions/0009-telemetry.md)), 알림 문구 A/B([0010](docs/decisions/0010-push-copy-ab.md))
+- 첫 화면 Streaming SSR: 서버 스트리밍([#45](https://github.com/hyunji1117/greenbox/pull/45)), 글꼴 자체 제공([#46](https://github.com/hyunji1117/greenbox/pull/46)), 방침 배너 LCP 회귀 해소([#67](https://github.com/hyunji1117/greenbox/pull/67))
+- 사용자 의견 반영: 등록, 찾기, 수량, 먹음 흐름([#71](https://github.com/hyunji1117/greenbox/pull/71)), 넣은 냉장고와 칸 안내([#81](https://github.com/hyunji1117/greenbox/pull/81))
+- 웹뷰 앱 셸과 로그인 넘겨주기([#76](https://github.com/hyunji1117/greenbox/pull/76)), 운영에서 찾은 원인 수정([#77](https://github.com/hyunji1117/greenbox/pull/77), [#79](https://github.com/hyunji1117/greenbox/pull/79), [#80](https://github.com/hyunji1117/greenbox/pull/80))
+- 선반 보기 베타([#83](https://github.com/hyunji1117/greenbox/pull/83)), 사용자 테스트 전 점검에서 찾은 문제 수정([#85](https://github.com/hyunji1117/greenbox/pull/85), [#88](https://github.com/hyunji1117/greenbox/pull/88), [#89](https://github.com/hyunji1117/greenbox/pull/89))
+- 문 밀어 여닫기([#92](https://github.com/hyunji1117/greenbox/pull/92)), 의견 음성 자동 전송과 베타 스위치 변경 기록([#93](https://github.com/hyunji1117/greenbox/pull/93)), 가족 게시판([#94](https://github.com/hyunji1117/greenbox/pull/94)), 품목 단위와 g, 베타 모든 계정 공개([#95](https://github.com/hyunji1117/greenbox/pull/95)), 냉장실 문 알림장([#96](https://github.com/hyunji1117/greenbox/pull/96))
+
+## 2. 판단 사례
+
+### 저장 실패처럼 보인 반응을 위치 안내 문제로 좁히기 (2026.11.10, v1.10.0, [#81](https://github.com/hyunji1117/greenbox/pull/81))
+
+- **관찰:** 가족 2명에게 식재료를 넣고 들어갔는지 확인하는 과제를 부탁했습니다. 1명은 넣은 새우가 보이지 않자 등록에 실패했다고 보고 다시 넣었습니다.
+- **대조:** 운영 DB에는 새우가 냉동실에 저장돼 있었고, 같은 시간 화면 오류는 없었습니다. 품목 추가와 냉장고 칸 전환 기록도 함께 봤습니다.
+- **판단:** 저장 실패가 아니라 다른 칸에 들어간 품목을 알아보지 못한 문제로 좁혔습니다.
+- **선택:** 입력할 때 칸을 고르는 단계나 새 기능을 늘리지 않고, 완료 안내에 넣은 냉장고와 칸을 보여 주는 것부터 바꿨습니다. 사진으로 넣은 품목이 모두 다른 칸이면 그 칸으로 옮겨 보여 줍니다. 칸 고르기와 마지막 칸 기억은 미뤘습니다.
+- **검증 범위:** 당시 전체 테스트 330개 통과, 운영 v1.10.0 배포. 같은 사용자가 바뀐 화면으로 다시 찾는지는 아직 확인하지 않았습니다.
+
+### 선반 보기: 검증 기준을 먼저 정하고 아직 하지 않은 비교는 남기기 (2026.11.11~, [ADR 0012](docs/decisions/0012-shelf-view-beta.md))
+
+- 가족 테스트에서 "냉장고 모양이면 어디 있는지 바로 알겠다"는 의견이 나와, 목록보다 도움 없이 같거나 짧은 시간에 찾는지를 가설로 두고 유지, 수정, 버리기 기준을 테스트 전에 적었습니다.
+- 데이터 변경은 추가만 하고(0015), 냉장고별 스위치로 공개했습니다. 개발자 냉장고에서 켠 베타가 가족 5명에게 보인 것을 찾아 바로 끄고 1인 테스트 냉장고로 줄였습니다.
+- 지금은 모든 계정 설정에 스위치를 보이게 했지만 기본은 꺼짐입니다(v1.12.12). **같은 사람이 두 화면을 쓰는 가족 비교는 아직 하지 않았고, 사용자 가설의 결과는 없습니다.**
+
+### AI 점검 뒤 실패 경로를 직접 추적하고 회귀 테스트로 고정 (2026.11.14~15, [#85](https://github.com/hyunji1117/greenbox/pull/85), [#88](https://github.com/hyunji1117/greenbox/pull/88), [#89](https://github.com/hyunji1117/greenbox/pull/89))
+
+- 가족 비교 전에 AI 에이전트에게 테스트 계정으로 21개 항목(기능 17, 계측 4)을 점검하게 하고, 실패마다 화면과 이벤트 기록을 남기게 했습니다. 원인 판단과 수정은 직접 했습니다.
+- 가설을 재는 `item_shelf_set` 이벤트가 상세 시트에서는 기록되지만 목록 줄의 "선반 정하기"에서는 빠졌습니다. 선반을 고르는 순간 품목이 그 목록에서 빠지며 줄 컴포넌트가 사라져, 저장 성공 콜백이 불리지 않는 경로였습니다. `mutateAsync`가 끝난 뒤 기록하도록 바꾸고, 화면이 사라진 뒤에도 한 번 기록되는지와 저장 실패 시 보내지 않는지를 테스트로 고정했습니다.
+- 다시 점검하며 두 줄 선반에서 그림이 선반 번호를 덮는 것(이름 칸이 기본 줄 높이를 물려받은 것이 원인)과 작은 화면에서 안내가 하단 메뉴에 가리는 것을 찾아 고쳤고, 3건 모두 운영에서 다시 확인했습니다(v1.12.2~v1.12.6).
+
+## 3. 성능: 두 단계의 서로 다른 측정
+
+두 단계는 측정 시점, 조건, 지표가 달라 숫자를 이어 붙이지 않습니다. 모두 측정 환경의 값이고, 실사용자 효과로 바꿔 쓰지 않습니다.
+
+### 3-1. (2026.06) 첫 로드에서 차트 라이브러리 분리
+
+마트에서 장을 보며 쓰는 앱이라 약한 네트워크를 기본으로 봤습니다. Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 첫 화면이 뜨는 속도(LCP 6.2s)였고, 번들을 분석하니 분석 탭 한 곳에서만 쓰는 recharts(약 343KB)가 모든 사용자의 첫 로드에 들어 있었습니다. `next/dynamic`으로 그 탭을 열 때만 불러오도록 나눴습니다.
 
 | 지표                     | Before | After      | 변화     |
 | ------------------------ | ------ | ---------- | -------- |
@@ -44,10 +102,6 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 | Total Blocking Time      | 50ms   | **10ms**   | −80%     |
 
 <div align="center">
-
-<!-- 📸 여기에 Lighthouse before/after 캡처를 넣으세요 (나란히 2장) -->
-<!-- 업로드 후 아래 두 줄의 src를 GitHub이 생성한 이미지 URL로 교체 -->
-
 <table>
 <tr>
 <td align="center"><b>Before</b><br/>Performance 62</td>
@@ -58,14 +112,24 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 <td><img width="380" alt="Lighthouse after (mobile, Slow 4G)" src="docs/images/lh-after-mobile-score.png" /></td>
 </tr>
 </table>
-
 </div>
 
-> **다음 단계:** 번들을 걷어내자 가려져 있던 다음 병목(render-blocking ~1.8s)이 드러났습니다. _첫 방문은 초기 로딩 최적화로, 재방문은 Service Worker 캐싱으로_ - 약한 네트워크를 두 겹으로 방어하는 방향으로 이어가고 있습니다.
+이후 2026.11.05 탭 개편으로 분석 탭을 통계 탭으로 바꾸면서 recharts는 걷어냈습니다([#53](https://github.com/hyunji1117/greenbox/pull/53)).
 
-## 3. 서버 상태 설계: React Query + zod
+### 3-2. (2026.11) 첫 데이터 표시를 주 지표로 한 Streaming SSR
 
-> 냉장고 품목이 화면 메모리 목업에만 있어 새로고침하면 사라졌고, 서버 응답도 `as` 단언으로만 믿고 있었습니다. 품목을 Postgres API로 옮기면서 서버 상태 레이어를 설계했습니다.
+리뉴얼 뒤 첫 화면은 빈 로딩 화면 뒤에 JS 실행과 API 조회가 이어졌습니다. LCP 요소가 곧 사라지는 로딩 화면이어서, 실제 품목이 보이는 순간(첫 데이터 표시)을 주 지표로 정했습니다. 서버에서 품목을 조회해 HTML을 스트리밍하고 TanStack Query 캐시를 넘겼으며([#45](https://github.com/hyunji1117/greenbox/pull/45)), 이후 드러난 글꼴 병목은 `next/font` 자체 제공으로 풀었습니다([#46](https://github.com/hyunji1117/greenbox/pull/46)).
+
+| 지표           | Before  | After       | 측정 조건                                |
+| -------------- | ------- | ----------- | ---------------------------------------- |
+| 첫 데이터 표시 | 5,066ms | **2,075ms** | CPU 4x, Slow 4G, 5회 중앙값              |
+| LCP            | 3,619ms | **2,120ms** | Lighthouse 모바일 시뮬레이션, 5회 중앙값 |
+
+같은 조건으로 다시 재다가 방침 변경 배너가 늦게 그려지며 생긴 LCP 회귀를 찾아, 배너를 첫 HTML에 함께 그리도록 고쳤습니다([#67](https://github.com/hyunji1117/greenbox/pull/67)).
+
+## 4. 서버 상태 설계: React Query + zod (2026.10 전환 당시)
+
+> 냉장고 품목이 화면 메모리 목업에만 있어 새로고침하면 사라졌고, 서버 응답도 `as` 단언으로만 믿고 있었습니다. 품목을 Postgres API로 옮기면서 서버 상태 레이어를 설계했습니다([#37](https://github.com/hyunji1117/greenbox/pull/37)).
 
 ### 설계 결정
 
@@ -76,7 +140,7 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 | 계층형 쿼리 키 `itemKeys`                                                     | 무효화 범위를 키 하나로 표현하고, 키 오타를 막기 위해                                               |
 | 수량 변경과 소진에 낙관적 업데이트                                            | 약한 네트워크(마트)에서도 바로 반응해야 하고, 결과를 미리 알 수 있는 변경이라서                     |
 | 등록은 성공 후 무효화, 댓글은 응답을 캐시에 반영                              | 서버가 id를 만드는 변경이라 결과를 미리 알 수 없어서                                                |
-| 첫 화면은 정적으로 유지하고 클라이언트에서 조회                               | 로그인 뒤 사용자별 데이터이고 검색 노출이 필요 없어서                                               |
+| (당시) 첫 화면은 정적으로 유지하고 클라이언트에서 조회                        | 로그인 뒤 사용자별 데이터라서. 이후 첫 데이터 표시가 늦어 Streaming SSR로 전환 (3-2, #45)           |
 
 ### 낙관적 업데이트에서 막은 경쟁 상태
 
@@ -85,7 +149,7 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 3. **먼저 끝난 요청의 재조회가 진행 중인 변경을 덮어씀** → 마지막 변경이 끝날 때만 무효화 (`isMutating`)
 4. **같은 품목 연속 변경의 응답 순서 역전** → mutation `scope`로 품목별 직렬화
 
-### 결과
+### 전환 당시 결과
 
 | 지표                  | Before           | After               |
 | --------------------- | ---------------- | ------------------- |
@@ -96,30 +160,7 @@ Lighthouse(모바일 / Slow 4G) 베이스라인에서 병목은 전부 **초기 
 
 같은 개발 환경(StrictMode)의 첫 화면에서 직접 `fetch`하는 `/api/me`는 2회, React Query를 쓰는 `/api/items`는 1회 요청합니다. 운영 빌드에서는 StrictMode의 이중 실행이 없어 직접 `fetch`도 1회이므로, 이 수치는 운영 성능 개선이 아니라 중복 제거 동작의 확인입니다.
 
-### 현재 범위와 확장
-
-- 가족 기능 전이라 품목은 사용자(`user_id`) 기준으로 저장합니다. 가족 연결은 `family_id` 컬럼 추가와 조회 조건 변경으로 확장합니다.
-- 장보기 완료 품목은 냉장실로 들어가고, 유통기한은 냉장고 카드에서 입력합니다. 활동 피드는 아직 목업이라 새 활동이 쌓이지 않습니다.
-
-## 4. 구현한 기능
-
-현재 **실제로 동작하는** 기능입니다.
-
-- 📱 **PWA / 오프라인 셸** - Service Worker가 앱 셸(JS, CSS, HTML)과 정적 이미지를 precache, 홈 화면 설치 지원
-- 🧊 **냉장고 보드** - 품목 빠른 추가, 수량과 유통기한 변경, 소진과 되돌리기, 댓글을 Postgres에 저장 (새로고침 후에도 유지). 장보기 완료 품목이 냉장실로 추가
-- 🔔 **유통기한 서버 푸시** - 앱을 닫아도 3일 안에 끝나는 품목을 하루 한 번 Web Push로 알림 (Vercel Cron, PC Chrome과 iPhone 홈 화면 앱에서 수신 확인)
-- 🔐 **구글 로그인과 동의** - 필수 항목에 동의해야 가입되고, 동의 기록을 저장
-- 🛒 **장바구니 & 즐겨찾기** - `localStorage` 기반 로컬 영속화 (새로고침 후에도 유지)
-- 📊 **구매/소비 분석** - `IndexedDB` 기반으로 실제 구매 행동(장바구니 "구매완료")을 누적 저장하고 통계 시각화 (Recharts, 코드 스플리팅으로 지연 로딩)
-- ⚡ **초기 로딩 최적화** - 코드 스플리팅으로 메인 First Load JS −51% (위 [성능 최적화](#2-성능-최적화-약한-네트워크를-위한-설계) 참조)
-
-### 🟡 부분 구현
-
-UI, 인터랙션은 동작하지만, 일부는 목업 데이터 또는 클라이언트 한정으로 동작합니다.
-
-- 📰 **활동 피드** - 표시 데이터는 목업이며 새 활동이 쌓이지 않음
-- 🗓 **상품별 알림 설정** - 홈과 건강 화면의 목업 상품에서 여는 설정은 앱이 열려 있을 때만 동작하는 클라이언트 로컬 알림
-- 📊 **분석 품목 풀** - 구매 카운트는 실제 누적되지만, 분석 화면에 나열되는 품목 리스트 자체는 목업
+전환 당시에는 가족 기능 전이라 품목을 사용자(`user_id`) 기준으로 저장했고, 이후 냉장고 단위 공유로 확장했습니다(`db/migrations/0007_fridges.sql`, [#52](https://github.com/hyunji1117/greenbox/pull/52)). 2026-11-15 기준 전체 테스트는 Vitest 90개 파일, 392개가 통과합니다.
 
 ## 5. 기술 스택
 
@@ -128,21 +169,21 @@ UI, 인터랙션은 동작하지만, 일부는 목업 데이터 또는 클라이
 - **Framework**: Next.js 15 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS
 - **Server State**: TanStack Query (React Query), zod
-- **UI State**: React `useState` + Context API
 - **Test**: Vitest, Testing Library
-- **Data Viz**: Recharts (지연 로딩)
 
 ### Backend
 
-- **API**: Next.js Route Handlers
-- **DB**: PostgreSQL (`pg`)
+- **API**: Next.js Route Handlers (Node.js 런타임)
+- **DB**: PostgreSQL (`pg`), `db/migrations`의 추가형 SQL 마이그레이션
 - **Auth**: Auth.js (Google)
+- **AI**: Anthropic(사진 속 식재료 찾기, 레시피 글), OpenAI(레시피 그림)
 
-### PWA & Local Data
+### App, PWA & Local Data
 
-- **PWA**: `@ducanh2912/next-pwa` (Next 15 호환, Workbox 기반 Service Worker)
-- **로컬 저장소**: localStorage (장바구니, 즐겨찾기, 알림 설정), IndexedDB (구매 데이터)
-- **푸시**: Web Push API, web-push, VAPID, Vercel Cron
+- **앱 셸**: Expo, React Native WebView (`mobile/`)
+- **PWA**: `@ducanh2912/next-pwa` (Workbox 기반 Service Worker)
+- **로컬 저장소**: localStorage (장보기 리스트, 즐겨찾기), IndexedDB (구매 기록)
+- **푸시**: Web Push API, web-push, VAPID, 매시간 예약 호출
 
 ## 6. 시작하기
 
@@ -160,9 +201,6 @@ cd greenbox
 
 # 의존성 설치
 npm install
-
-# 환경 변수 설정 (푸시 알림 사용 시)
-# .env.local 파일에 VAPID 키 입력
 
 # 개발 서버 실행
 npm run dev
@@ -189,7 +227,7 @@ DB 스키마는 `db/migrations`의 SQL을 번호 순서대로 적용합니다.
 
 ```env
 # Web Push (VAPID)
-CRON_SECRET=your_random_secret_for_vercel_cron
+CRON_SECRET=your_random_secret_for_cron
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
@@ -198,12 +236,12 @@ VAPID_SUBJECT=mailto:your_email@example.com
 
 ## 앞으로의 과제
 
-이 프로젝트를 진행하며 만난, 아직 풀지 못한 문제들입니다. (계획 단계이며 미구현)
+아직 하지 않은 일입니다.
 
-- **나머지 데이터의 서버 연동** - 냉장고 품목은 Postgres로 옮겼지만, 장바구니와 구매 통계는 로컬 저장소에, 활동 피드와 상품 목록은 목업에 남아 있습니다. 가족 공유도 이 작업과 함께 다룰 예정입니다.
-- **알림 개인화** - 서버 푸시는 하루 한 번 고정 시각에 보냅니다. 품목별 알림 시간과 받을 기준일 설정은 더 정밀한 스케줄러가 필요합니다.
-- **오프라인에서 변경한 데이터의 동기화** - 오프라인 셸까지는 동작하지만, 오프라인 중 발생한 변경을 재연결 시 안전하게 병합하는 부분은 아직 다루지 못했습니다. 실시간 협업, CRDT 같은 접근을 학습하며(오픈소스 yorkie에 기여한 경험이 있습니다) 이어서 고민하고 있습니다.
-- **성능 2단계** - 번들 최적화 후 드러난 render-blocking(~1.8s) 개선(critical CSS, 폰트 로딩 전략)이 다음 단계입니다.
+- **선반 보기 가족 비교** - 같은 사람이 목록과 선반 보기를 모두 써 보는 비교로 가설을 판단하고, 결과를 유지/수정/버리기 기준대로 기록합니다.
+- **나머지 데이터의 서버 연동** - 장보기 리스트와 구매 기록은 아직 기기에만 저장됩니다.
+- **오프라인에서 변경한 데이터의 동기화** - 오프라인에서는 화면 틀만 열립니다. 오프라인 중 변경을 다시 연결됐을 때 안전하게 병합하는 부분은 다루지 못했습니다. 실시간 협업과 CRDT 같은 접근을 학습하며(오픈소스 yorkie에 기여한 경험이 있습니다) 이어서 고민하고 있습니다.
+- **앱 스토어 제출과 앱 푸시** - 웹뷰 앱 셸은 구현했지만 스토어 제출과 앱 자체 푸시는 하지 않았습니다.
 
 ## 라이선스
 
