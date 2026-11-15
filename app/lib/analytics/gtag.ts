@@ -34,7 +34,8 @@ type EventParams = {
   // 장보기 리스트에 담기 (찾기 결과나 사진 카드를 눌러서). 이름은 보내지 않는다
   grocery_item_added: undefined;
   // 개발 피드백 보내기. 글로 썼는지 말로 했는지만 보낸다
-  feedback_sent: { input: 'text' | 'voice' };
+  // auto: 말을 마친 뒤 저절로(또는 지금 보내기로) 보냈는지
+  feedback_sent: { input: 'text' | 'voice'; auto: boolean };
   // 품목 카드에서 바로 고치기. 무엇을 고쳤는지만 보낸다
   item_edited: { field: 'quantity' | 'expiry' };
   item_comments_opened: undefined;
