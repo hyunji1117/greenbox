@@ -39,7 +39,14 @@ describe('개인정보처리방침 버전', () => {
     expect(recentAmendment(at('2026-11-13T00:00:00+09:00'))?.version).toBe(
       '2026-11-09',
     );
-    expect(recentAmendment(at('2026-11-16T00:00:00+09:00'))).toBeNull();
+    // 11월 15일 개정(게시판, 단위)도 다시 동의받지 않는 변경이라 그 뒤 7일 동안 알린다
+    expect(recentAmendment(at('2026-11-16T00:00:00+09:00'))?.version).toBe(
+      '2026-11-15',
+    );
+    expect(currentPolicyVersion(at('2026-11-16T00:00:00+09:00'))).toBe(
+      '2026-11-05',
+    );
+    expect(recentAmendment(at('2026-11-23T00:00:00+09:00'))).toBeNull();
     expect(recentAmendment(at('2026-11-05T23:59:59+09:00'))).toBeNull();
   });
 

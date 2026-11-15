@@ -1,7 +1,7 @@
 // app/lib/notes/store.ts
 // 가족 게시판 저장 (서버 전용). 구성원 확인은 호출하는 쪽(requireFridgeMember)이 먼저 한다
 // - 가족 누구나 쓰고, 누구나 확인(줄 긋기)하고, 확인된 메모만 지운다 (확인 전 메모는 실수로 지우지 않게)
-// - 선반 보기 베타가 켜진 냉장고에서만 쓴다 (개인정보처리방침에 게시판을 넣기 전까지)
+// - 선반 보기 베타가 켜진 냉장고에서만 쓴다 (닫힌 문 위에 붙는 기능이라서. 방침은 2026-11-15 버전에 반영)
 
 import { getPool } from '@/app/lib/db';
 import { displayNameSql } from '@/app/lib/fridges/store';
