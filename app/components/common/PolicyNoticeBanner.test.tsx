@@ -21,17 +21,21 @@ describe('policyNoticeVersion', () => {
     expect(
       policyNoticeVersion(undefined, at('2026-11-08T09:00:00+09:00')),
     ).toBe('2026-11-09');
+    // 11월 15일 개정을 미리 알리는 기간이 오면 그 버전을 알리고, 시행 뒤 7일까지 알린다
     expect(
       policyNoticeVersion(undefined, at('2026-11-12T09:00:00+09:00')),
-    ).toBe('2026-11-09');
+    ).toBe('2026-11-15');
     expect(
       policyNoticeVersion(undefined, at('2026-11-16T09:00:00+09:00')),
+    ).toBe('2026-11-15');
+    expect(
+      policyNoticeVersion(undefined, at('2026-11-23T09:00:00+09:00')),
     ).toBeNull();
   });
 
   it('닫은 버전은 쿠키 기록을 보고 처음부터 빼고 그린다', () => {
     expect(
-      policyNoticeVersion('2026-11-09', at('2026-11-12T09:00:00+09:00')),
+      policyNoticeVersion('2026-11-15', at('2026-11-16T09:00:00+09:00')),
     ).toBeNull();
   });
 });

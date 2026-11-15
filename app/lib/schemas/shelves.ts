@@ -9,7 +9,7 @@ const CountSchema = z.number().int().min(1).max(7);
 export const ShelfSettingsSchema = z.object({
   // 이 냉장고에서 선반 보기가 켜져 있는지 (냉장고 가족 모두 같음)
   enabled: z.boolean(),
-  // 내가 켜고 끌 수 있는지 (이 냉장고 가족이고, 냉장고 주인이 실험 허용 목록에 있을 때)
+  // 내가 켜고 끌 수 있는지 (이 냉장고 가족이면 누구나)
   canToggle: z.boolean(),
   // 이 냉장고에서 내 역할과 들어온 순서 (주인이 1). 누가 바꾸는지 나눠 보기 위해 이벤트에 함께 보낸다
   myRole: z.enum(['owner', 'member']),

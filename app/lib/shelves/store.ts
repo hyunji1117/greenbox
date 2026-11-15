@@ -27,7 +27,7 @@ async function readCounts(fridgeId: string): Promise<ShelfCounts> {
   return counts;
 }
 
-// 냉장고 가족이면 누구나 켜고 끈다. 단 전체 공개 전까지는 주인이 실험 허용 목록에 있는 냉장고만
+// 냉장고 가족이면 누구나 켜고 끈다 (2026-11-15 모든 계정에 공개. 그 전에는 주인이 실험 허용 목록에 있는 냉장고만)
 // 마지막으로 바꾼 사람은 바꾼 기록(0016)에서 읽고, 기록 전에 바꾼 냉장고는 스위치에 남은 사람으로 대신한다
 export async function getShelfSettings(
   fridgeId: string,
@@ -58,12 +58,7 @@ export async function getShelfSettings(
      )
      SELECT
        COALESCE((SELECT enabled FROM feature), false) AS enabled,
-       EXISTS (SELECT 1 FROM ranked WHERE user_id = $2)
-         AND EXISTS (
-           SELECT 1 FROM ranked r
-           JOIN experiment_members e ON e.user_id = r.user_id AND e.experiment = $3
-           WHERE r.role = 'owner'
-         ) AS can_toggle,
+       EXISTS (SELECT 1 FROM ranked WHERE user_id = $2) AS can_toggle,
        (SELECT role FROM ranked WHERE user_id = $2) AS my_role,
        (SELECT join_rank FROM ranked WHERE user_id = $2) AS my_join_rank,
        COALESCE(
