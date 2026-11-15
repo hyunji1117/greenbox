@@ -3,6 +3,7 @@
 // 품목이 사라지지 않게: 선반은 비어 있을 때만 줄이고, 한 선반에 MAX_ITEMS_PER_SHELF개를 넘겨 넣지 않는다
 
 import { getPool } from '@/app/lib/db';
+import { displayNameSql } from '@/app/lib/fridges/store';
 import type { Category } from '@/app/lib/schemas/item';
 import type { ShelfSettings } from '@/app/lib/schemas/shelves';
 import {
@@ -26,6 +27,8 @@ async function readCounts(fridgeId: string): Promise<ShelfCounts> {
   return counts;
 }
 
+// 냉장고 가족이면 누구나 켜고 끈다. 단 전체 공개 전까지는 주인이 실험 허용 목록에 있는 냉장고만
+// 마지막으로 바꾼 사람은 바꾼 기록(0016)에서 읽고, 기록 전에 바꾼 냉장고는 스위치에 남은 사람으로 대신한다
 export async function getShelfSettings(
   fridgeId: string,
   userId: string,
@@ -33,25 +36,59 @@ export async function getShelfSettings(
   const { rows } = await getPool().query<{
     enabled: boolean;
     can_toggle: boolean;
+    my_role: 'owner' | 'member' | null;
+    my_join_rank: number | null;
+    last_name: string | null;
+    last_enabled: boolean | null;
+    last_at: Date | null;
   }>(
-    `SELECT
-       COALESCE((SELECT f.enabled FROM fridge_features f
-                 WHERE f.fridge_id = $1 AND f.feature = $3), false) AS enabled,
-       EXISTS (
-         SELECT 1 FROM fridge_members m
-         JOIN experiment_members e ON e.user_id = m.user_id AND e.experiment = $3
-         WHERE m.fridge_id = $1 AND m.user_id = $2 AND m.role = 'owner'
-       ) AS can_toggle`,
+    `WITH ranked AS (
+       SELECT m.user_id, m.role,
+              row_number() OVER (ORDER BY (m.role = 'owner') DESC, m.joined_at, m.user_id)::int AS join_rank
+       FROM fridge_members m WHERE m.fridge_id = $1
+     ),
+     feature AS (
+       SELECT f.enabled, f.updated_by, f.updated_at FROM fridge_features f
+       WHERE f.fridge_id = $1 AND f.feature = $3
+     ),
+     last_change AS (
+       SELECT c.changed_by, c.enabled, c.created_at FROM fridge_feature_changes c
+       WHERE c.fridge_id = $1 AND c.feature = $3
+       ORDER BY c.created_at DESC, c.id DESC LIMIT 1
+     )
+     SELECT
+       COALESCE((SELECT enabled FROM feature), false) AS enabled,
+       EXISTS (SELECT 1 FROM ranked WHERE user_id = $2)
+         AND EXISTS (
+           SELECT 1 FROM ranked r
+           JOIN experiment_members e ON e.user_id = r.user_id AND e.experiment = $3
+           WHERE r.role = 'owner'
+         ) AS can_toggle,
+       (SELECT role FROM ranked WHERE user_id = $2) AS my_role,
+       (SELECT join_rank FROM ranked WHERE user_id = $2) AS my_join_rank,
+       COALESCE(
+         (SELECT ${displayNameSql('u')} FROM last_change l JOIN users u ON u.id = l.changed_by),
+         (SELECT ${displayNameSql('u')} FROM feature f JOIN users u ON u.id = f.updated_by)
+       ) AS last_name,
+       COALESCE((SELECT enabled FROM last_change), (SELECT enabled FROM feature)) AS last_enabled,
+       COALESCE((SELECT created_at FROM last_change), (SELECT updated_at FROM feature)) AS last_at`,
     [fridgeId, Number(userId), SHELF_VIEW_EXPERIMENT],
   );
+  const row = rows[0];
   return {
-    enabled: rows[0]?.enabled ?? false,
-    canToggle: rows[0]?.can_toggle ?? false,
+    enabled: row?.enabled ?? false,
+    canToggle: row?.can_toggle ?? false,
+    myRole: row?.my_role ?? 'member',
+    myJoinRank: row?.my_join_rank ?? 1,
+    lastChange:
+      row?.last_at && row.last_enabled !== null
+        ? { name: row.last_name, enabled: row.last_enabled, at: row.last_at }
+        : null,
     counts: await readCounts(fridgeId),
   };
 }
 
-// 냉장고 주인이면서 허용 목록에 있을 때만 켜고 끈다. 아니면 false
+// 바꿀 수 있는 사람이면 스위치를 바꾸고, 바꾼 사람의 역할과 들어온 순서, 가족 수를 한 줄 남긴다. 아니면 false
 export async function setShelfView(
   fridgeId: string,
   userId: string,
@@ -59,14 +96,37 @@ export async function setShelfView(
 ): Promise<boolean> {
   const { canToggle } = await getShelfSettings(fridgeId, userId);
   if (!canToggle) return false;
-  await getPool().query(
-    `INSERT INTO fridge_features (fridge_id, feature, enabled, updated_by)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (fridge_id, feature)
-     DO UPDATE SET enabled = EXCLUDED.enabled, updated_by = EXCLUDED.updated_by, updated_at = now()`,
-    [fridgeId, SHELF_VIEW_EXPERIMENT, enabled, Number(userId)],
-  );
-  return true;
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO fridge_features (fridge_id, feature, enabled, updated_by)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (fridge_id, feature)
+       DO UPDATE SET enabled = EXCLUDED.enabled, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+      [fridgeId, SHELF_VIEW_EXPERIMENT, enabled, Number(userId)],
+    );
+    await client.query(
+      `WITH ranked AS (
+         SELECT m.user_id, m.role,
+                row_number() OVER (ORDER BY (m.role = 'owner') DESC, m.joined_at, m.user_id) AS join_rank,
+                count(*) OVER () AS member_count
+         FROM fridge_members m WHERE m.fridge_id = $1
+       )
+       INSERT INTO fridge_feature_changes
+         (fridge_id, feature, enabled, changed_by, member_role, join_rank, member_count)
+       SELECT $1, $2, $3, r.user_id, r.role, r.join_rank, r.member_count
+       FROM ranked r WHERE r.user_id = $4`,
+      [fridgeId, SHELF_VIEW_EXPERIMENT, enabled, Number(userId)],
+    );
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export type ShelfCountResult =

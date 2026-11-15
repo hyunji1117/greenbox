@@ -90,7 +90,8 @@ type EventParams = {
   experiment_exposed: { experiment: string; variant: string };
   shelf_view_toggled: {
     view: 'list' | 'shelf';
-    by: 'owner_switch';
+    by: 'owner' | 'member';
+    join_rank: number;
   };
   // method: 버튼으로 열고 닫았는지, 손가락으로 밀었는지
   fridge_doors_opened: { method: 'button' | 'swipe' };
