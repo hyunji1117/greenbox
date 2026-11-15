@@ -6,7 +6,6 @@ import { getPool } from '@/app/lib/db';
 import type { Category } from '@/app/lib/schemas/item';
 import type { ShelfSettings } from '@/app/lib/schemas/shelves';
 import {
-  DEFAULT_SHELF_COUNT,
   DEFAULT_SHELF_COUNTS,
   MAX_ITEMS_PER_SHELF,
   MAX_SHELF_COUNT,
@@ -86,7 +85,7 @@ export async function changeShelfCount(
     await client.query(
       `INSERT INTO fridge_shelves (fridge_id, category, shelf_count)
        VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-      [fridgeId, category, DEFAULT_SHELF_COUNT],
+      [fridgeId, category, DEFAULT_SHELF_COUNTS[category]],
     );
     const { rows } = await client.query<{ shelf_count: number }>(
       `SELECT shelf_count FROM fridge_shelves

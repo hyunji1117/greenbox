@@ -14,10 +14,14 @@ export const STICKERS_PER_SHELF = 10;
 
 export type ShelfCounts = Record<Category, number>;
 
+// 상온은 냉장고처럼 층이 많지 않고 처음 쓸 때 빈 선반이 길게 늘어져 보여 2층으로 시작한다
+// 이미 선반 수를 바꾼 냉장고는 저장된 수를 그대로 쓴다 (행이 없을 때만 이 값)
+export const DEFAULT_PANTRY_SHELF_COUNT = 2;
+
 export const DEFAULT_SHELF_COUNTS: ShelfCounts = {
   fridge: DEFAULT_SHELF_COUNT,
   freezer: DEFAULT_SHELF_COUNT,
-  pantry: DEFAULT_SHELF_COUNT,
+  pantry: DEFAULT_PANTRY_SHELF_COUNT,
 };
 
 // 줄일 선반: 아래쪽부터 찾은 첫 빈 선반. 빈 선반이 없거나 이미 최소면 null
