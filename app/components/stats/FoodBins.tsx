@@ -62,85 +62,27 @@ const FoodIcon: React.FC<{ name: string; size: number }> = ({ name, size }) => {
   );
 };
 
-// 위: 분홍빛 위 모양 (식도에서 내려와 오른쪽으로 불룩하고 왼쪽 아래로 나간다)
-const STOMACH_PATH =
-  'M78 8 C78 2 96 2 96 8 L98 44 C130 30 186 50 190 104 C194 160 140 196 92 186 C62 180 42 168 30 176 C22 182 10 176 12 166 C14 154 30 150 40 146 C52 140 40 120 48 100 C56 82 78 78 80 60 Z';
-
-const StomachArt: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 200 200" aria-hidden className={className}>
-    <defs>
-      <radialGradient id="stomach-fill" cx="60%" cy="55%" r="60%">
-        <stop offset="0%" stopColor="#FFE1E8" />
-        <stop offset="100%" stopColor="#F4A9BC" />
-      </radialGradient>
-    </defs>
-    <path
-      d={STOMACH_PATH}
-      fill="url(#stomach-fill)"
-      stroke="#E0849C"
-      strokeWidth="4"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M110 70 C140 66 168 86 168 112"
-      fill="none"
-      stroke="#fff"
-      strokeOpacity="0.6"
-      strokeWidth="6"
-      strokeLinecap="round"
-    />
-  </svg>
+// 위와 쓰레기통 그림 (직접 그린 그림을 투명 배경 PNG로 다듬어 둔 것)
+const BinArt: React.FC<{ src: string; className?: string }> = ({
+  src,
+  className,
+}) => (
+  <Image
+    src={src}
+    alt=""
+    aria-hidden
+    width={256}
+    height={256}
+    className={`object-contain ${className ?? ''}`}
+  />
 );
 
-// 회색 양철 쓰레기통 (옆에서 본 모양: 뚜껑, 손잡이, 세로 골)
+const StomachArt: React.FC<{ className?: string }> = ({ className }) => (
+  <BinArt src="/stats/stomach.png" className={className} />
+);
+
 const TrashCanArt: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 200 200" aria-hidden className={className}>
-    <defs>
-      <linearGradient id="tin-body" x1="0" x2="1">
-        <stop offset="0%" stopColor="#8E949E" />
-        <stop offset="35%" stopColor="#D5D9DF" />
-        <stop offset="60%" stopColor="#B4BAC3" />
-        <stop offset="100%" stopColor="#7F858F" />
-      </linearGradient>
-      <linearGradient id="tin-lid" x1="0" x2="1">
-        <stop offset="0%" stopColor="#9AA0AA" />
-        <stop offset="45%" stopColor="#E3E6EA" />
-        <stop offset="100%" stopColor="#8A909A" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M44 62 L156 62 L146 186 C146 192 54 192 54 186 Z"
-      fill="url(#tin-body)"
-      stroke="#6E747E"
-      strokeWidth="3"
-    />
-    {[66, 84, 100, 116, 134].map(x => (
-      <path
-        key={x}
-        d={`M${x} 72 L${x + (x - 100) * -0.06} 180`}
-        stroke="#7D838D"
-        strokeOpacity="0.55"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    ))}
-    <ellipse
-      cx="100"
-      cy="60"
-      rx="62"
-      ry="12"
-      fill="url(#tin-lid)"
-      stroke="#6E747E"
-      strokeWidth="3"
-    />
-    <path
-      d="M84 48 C84 34 116 34 116 48"
-      fill="none"
-      stroke="#6E747E"
-      strokeWidth="6"
-      strokeLinecap="round"
-    />
-  </svg>
+  <BinArt src="/stats/trash.png" className={className} />
 );
 
 // 들여다볼 때의 안쪽 모양. 위는 같은 모양을 크게, 쓰레기통은 위에서 내려다본 둥근 통 속
