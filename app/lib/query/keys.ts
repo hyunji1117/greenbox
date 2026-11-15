@@ -22,6 +22,11 @@ export const shelfKeys = {
   settings: (fridgeId: string) => ['shelves', fridgeId] as const,
 };
 
+// 가족 게시판 메모. 냉장고마다 다르다
+export const noteKeys = {
+  list: (fridgeId: string) => ['notes', fridgeId] as const,
+};
+
 export const notificationKeys = {
   settings: () => ['notifications', 'settings'] as const,
 };
