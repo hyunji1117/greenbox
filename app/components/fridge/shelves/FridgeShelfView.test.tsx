@@ -52,8 +52,14 @@ describe('FridgeShelfView 선반 줄이기', () => {
     const fridgeButton = buttons[1];
     expect(fridgeButton.getAttribute('aria-disabled')).toBe('true');
 
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
     fireEvent.click(fridgeButton);
     expect(onRemoveShelf).not.toHaveBeenCalled();
+    // 작은 화면에서 하단 메뉴에 가리지 않도록 안내가 보이는 곳까지 스크롤한다
+    expect(scrollIntoView).toHaveBeenCalledWith(
+      expect.objectContaining({ block: 'nearest' }),
+    );
     expect(screen.getByRole('status').textContent).toContain(
       '식재료가 있는 선반은 줄일 수 없어요',
     );

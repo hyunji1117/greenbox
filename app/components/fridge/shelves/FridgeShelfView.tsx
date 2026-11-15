@@ -6,7 +6,7 @@
 // - 선반을 누르면 그 선반의 목록(등록, 수량, 알림)으로 들어간다
 // - 선반 추가는 언제나, 줄이기는 비어 있는 선반이 있을 때만 (서버도 같은 규칙으로 거부)
 
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { track } from '@/app/lib/analytics/gtag';
 import type { Category, Item } from '@/app/lib/schemas/item';
@@ -266,9 +266,26 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
           : '식재료가 있는 선반은 줄일 수 없어요. 옮기거나 다 먹음으로 비운 뒤 줄여 주세요',
     });
   };
+  // 화면이 작으면(360px 높이 800) 버튼 바로 아래도 하단 메뉴에 가려, 안내가 뜨면 메뉴 위까지 보이게 스크롤한다
+  // scroll-margin으로 하단 메뉴 높이(최대 80px)와 홈 바 자리만큼 여유를 둔다
+  const blockedRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (!blocked) return;
+    const reduceMotion = window.matchMedia?.(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    blockedRef.current?.scrollIntoView?.({
+      block: 'nearest',
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    });
+  }, [blocked]);
   const blockedNoticeFor = (categories: Category[]) =>
     blocked && categories.includes(blocked.category) ? (
-      <p role="status" className="text-center text-xs text-[#553C9A]">
+      <p
+        ref={blockedRef}
+        role="status"
+        className="scroll-mb-[calc(96px+env(safe-area-inset-bottom,0px))] text-center text-xs text-[#553C9A]"
+      >
         {blocked.text}
       </p>
     ) : null;
