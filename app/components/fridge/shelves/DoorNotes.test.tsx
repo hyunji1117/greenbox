@@ -20,7 +20,7 @@ vi.mock('@/app/lib/notes/useNotes', () => ({
   useCreateNote: () => ({ mutate: create, isPending: false, isError: false }),
 }));
 
-import DoorNotes, { NOTES_ON_DOOR, noteTime } from './DoorNotes';
+import DoorNotes, { noteTime } from './DoorNotes';
 
 const note = (id: string, checked = false): Note => ({
   id,
@@ -36,17 +36,38 @@ afterEach(() => {
 });
 
 describe('DoorNotes', () => {
-  it('문에는 6개까지 붙이고, 넘치면 전체 보기로 개수를 알려 준다', () => {
-    notes.list = Array.from({ length: 8 }, (_, i) => note(String(i + 1)));
+  it('문 위 보드는 작게 몇 줄만 적고, 누르면 큰 보드가 떠서 모든 기록을 스크롤로 보여 준다', () => {
+    notes.list = [
+      ...Array.from({ length: 6 }, (_, i) => note(String(i + 1))),
+      note('9', true),
+    ];
     render(<DoorNotes />);
-    expect(screen.getAllByText(/^메모 \d$/)).toHaveLength(NOTES_ON_DOOR);
-    expect(screen.getByRole('button', { name: '전체 보기 (8)' })).toBeTruthy();
+    const board = screen.getByRole('button', {
+      name: '알림장 열기, 확인 전 메모 6개',
+    });
+    // 문 위 보드에도 실제로 쓴 글이 작게 그대로 적힌다 (확인된 메모 포함 7개)
+    expect(board.textContent).toContain('알림장');
+    expect(board.textContent).toContain('메모 1');
+    expect(board.textContent).toContain('메모 9');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(board);
+    const dialog = screen.getByRole('dialog', { name: '알림장' });
+    const list = screen.getByRole('list', { name: '게시판 기록' });
+    expect(dialog.contains(list)).toBe(true);
+    expect(list.querySelectorAll(':scope > li')).toHaveLength(7);
+    // 열리면 닫기 버튼에 초점이 가고, Esc로 닫힌다
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '알림장 닫기' }),
+    );
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('메모를 누르면 확인하고, 지우기는 확인된 메모의 더 보기에만 있다', () => {
     notes.list = [note('1'), note('2', true)];
     render(<DoorNotes />);
-    fireEvent.click(screen.getByRole('button', { name: '메모 1' }));
+    fireEvent.click(screen.getByRole('button', { name: /알림장 열기/ }));
 
     fireEvent.click(screen.getByRole('button', { name: /메모 1.*엄마/ }));
     expect(check).toHaveBeenCalledWith({ id: '1', checked: true });
@@ -63,7 +84,7 @@ describe('DoorNotes', () => {
   it('붙이기는 앞뒤 공백을 빼고 보낸다', () => {
     notes.list = [];
     render(<DoorNotes />);
-    fireEvent.click(screen.getByRole('button', { name: /메모/ }));
+    fireEvent.click(screen.getByRole('button', { name: /알림장 열기/ }));
     fireEvent.change(screen.getByLabelText('메모 내용'), {
       target: { value: '  우유 사 왔어요 ' },
     });

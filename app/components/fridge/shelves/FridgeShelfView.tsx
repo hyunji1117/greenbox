@@ -102,6 +102,19 @@ const ShelfFoodImage: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
+// 문 위쪽의 칸 이름 표지판: 작은 금속판에 나사 두 개를 박은 모양
+const DoorSign: React.FC<{ label: string }> = ({ label }) => (
+  <span className="absolute inset-x-0 top-4 flex justify-center">
+    <span className="flex items-center gap-1.5 rounded-[4px] border border-[#B4BAC6] bg-[linear-gradient(180deg,#FFFFFF_0%,#E9ECF1_100%)] px-1.5 py-0.5 shadow-[0_1px_2px_rgba(31,26,46,0.18)]">
+      <span className="h-1 w-1 rounded-full bg-[#AEB4C0]" />
+      <span className="text-[11px] font-bold tracking-[0.08em] text-[#56607A]">
+        {label}
+      </span>
+      <span className="h-1 w-1 rounded-full bg-[#AEB4C0]" />
+    </span>
+  </span>
+);
+
 const STICKERS_PER_ROW = 5;
 
 // 선반 한 칸에 이름을 "…" 없이 5글자까지 보인다 (전체 이름은 선반 목록에서)
@@ -426,9 +439,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             isOpen ? '[transform:rotateY(-112deg)]' : ''
           }`}
         >
-          <span className="absolute inset-x-0 top-5 text-center text-xs font-bold text-[#7D8496]">
-            냉동실
-          </span>
+          <DoorSign label="냉동실" />
           <span className="absolute top-1/2 right-3 h-36 w-1.5 -translate-y-1/2 rounded-full bg-[linear-gradient(#C9CED8,#AEB4C0)]" />
         </div>
         <div
@@ -437,9 +448,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             isOpen ? '[transform:rotateY(112deg)]' : ''
           }`}
         >
-          <span className="absolute inset-x-0 top-5 text-center text-xs font-bold text-[#7D8496]">
-            냉장실
-          </span>
+          <DoorSign label="냉장실" />
           <span className="absolute top-1/2 left-3 h-36 w-1.5 -translate-y-1/2 rounded-full bg-[linear-gradient(#C9CED8,#AEB4C0)]" />
         </div>
         {!isOpen && (

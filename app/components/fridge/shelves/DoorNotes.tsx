@@ -1,13 +1,14 @@
 'use client';
 // app/components/fridge/shelves/DoorNotes.tsx
-// 가족 게시판: 닫힌 냉장고 문에 붙은 메모 (선반 보기 베타)
-// - 문에는 확인하지 않은 메모부터 6개까지 포스트잇처럼 붙인다. 누르면 게시판 시트가 열린다
-// - 시트에서 가족 누구나 쓰고, 눌러서 확인(줄 긋기)하고, 확인된 메모만 "⋯"에서 지운다
+// 가족 게시판: 닫힌 냉장실 문에 붙은 작은 화이트보드 (선반 보기 베타)
+// - 문 위의 보드(높이 150px)에는 실제로 쓴 메모를 아주 작은 체크박스 목록으로 두 칸에 적어 둔다 (읽기는 크게 펼쳐서)
+// - 보드를 누르면 화면 가운데에 큰 화이트보드가 뜨고 뒤는 어둡게 가린다. 보드 안에서 스크롤로 모든 기록을 본다
+// - 큰 보드에서 가족 누구나 쓰고, 눌러서 확인(줄 긋기)하고, 확인된 메모만 "⋯"에서 지운다
 // - 새 메모는 다른 가족에게 알림이 간다 (서버가 알림 설정과 5분 간격을 지킨다)
 
-import React, { useState } from 'react';
-import { CheckIcon, MoreHorizontalIcon, PlusIcon } from 'lucide-react';
-import BottomSheet from '@/app/components/common/BottomSheet';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { BellIcon, CheckIcon, MoreHorizontalIcon, XIcon } from 'lucide-react';
 import { track } from '@/app/lib/analytics/gtag';
 import {
   useCheckNote,
@@ -17,12 +18,18 @@ import {
 } from '@/app/lib/notes/useNotes';
 import { NOTE_TEXT_MAX, type Note } from '@/app/lib/schemas/notes';
 
-export const NOTES_ON_DOOR = 6;
-
-// 포스트잇 색. 메모마다 번호로 돌려 가며 고른다 (같은 메모는 늘 같은 색)
-const STICKY = ['bg-[#FFF3B0]', 'bg-[#FFD9E2]', 'bg-[#D9F2E6]', 'bg-[#DDE8FF]'];
-const TILT = ['-rotate-2', 'rotate-1', 'rotate-2', '-rotate-1'];
-const pick = <T,>(list: T[], id: string) => list[Number(id) % list.length];
+// 문 위 보드에 작은 글씨로 적어 두는 메모 수 (높이 150px, 두 칸에 들어가는 만큼)
+export const PREVIEW_ON_BOARD = 26;
+export const BOARD_TITLE = '알림장';
+// 쓰기 칸 예시. 냉장고 앞에서 가족끼리 실제로 주고받는 말(찜하기, 부탁, 알림)을 번갈아 보여 준다
+// 좁은 화면에서도 잘리지 않게 10자 안팎으로
+export const NOTE_EXAMPLES = [
+  '내 케익 건들지 마라',
+  '아빠 우유 하나만 사다줘',
+  '찌개 데워 먹어요',
+  '만두는 아빠 거',
+] as const;
+const EXAMPLE_INTERVAL_MS = 3000;
 
 export function noteTime(date: Date, now = new Date()): string {
   const minutes = Math.floor((now.getTime() - date.getTime()) / 60000);
@@ -38,7 +45,7 @@ const NoteRow: React.FC<{ note: Note }> = ({ note }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const checked = note.checked !== null;
   return (
-    <li className={`rounded-xl p-3 ${pick(STICKY, note.id)}`}>
+    <li className="border-b border-dashed border-gray-200 py-2 last:border-b-0">
       <div className="flex items-start gap-2">
         {/* 메모를 누르면 확인(줄 긋기), 다시 누르면 확인 풀기 */}
         <button
@@ -102,107 +109,228 @@ const NoteRow: React.FC<{ note: Note }> = ({ note }) => {
   );
 };
 
-const NotesSheet: React.FC<{
+// 크게 펼친 화이트보드. 뒤는 어둡게 가리고, 바깥을 누르거나 Esc, 닫기 버튼으로 닫는다
+const NotesBoard: React.FC<{
   isOpen: boolean;
   notes: Note[];
   onClose: () => void;
 }> = ({ isOpen, notes, onClose }) => {
+  const titleId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState('');
   const create = useCreateNote();
+  // 비어 있는 동안 예시 문구를 번갈아 보여 준다. 움직임 줄이기 설정이면 첫 예시만
+  const [exampleIndex, setExampleIndex] = useState(0);
+  useEffect(() => {
+    if (!isOpen || text) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(
+      () => setExampleIndex(index => (index + 1) % NOTE_EXAMPLES.length),
+      EXAMPLE_INTERVAL_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [isOpen, text]);
   const submit = () => {
     const trimmed = text.trim();
     if (!trimmed || create.isPending) return;
     create.mutate(trimmed, { onSuccess: () => setText('') });
   };
-  return (
-    <BottomSheet isOpen={isOpen} title="가족 게시판" onClose={onClose}>
-      <form
-        onSubmit={event => {
-          event.preventDefault();
-          submit();
-        }}
-        className="flex gap-2"
+
+  // 닫기 함수는 화면이 다시 그려질 때마다 새로 오므로 ref로 들고, 열릴 때 한 번만 닫기 버튼에 초점을 둔다
+  // (글을 쓰는 동안 다시 그려져도 초점이 입력창에서 닫기 버튼으로 옮겨 가지 않게)
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+  useEffect(() => {
+    if (!isOpen) return;
+    closeRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
+
+  if (!isOpen || typeof document === 'undefined') return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        aria-hidden
+        className="animate-backdrop-in absolute inset-0 bg-black/60"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={event => event.stopPropagation()}
+        className="animate-dialog-in relative flex h-[min(80vh,640px)] w-full max-w-md flex-col rounded-md border-[6px] border-[#C3C9D4] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
       >
-        {/* iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 17px로 쓴다 */}
-        <input
-          value={text}
-          onChange={event => setText(event.target.value)}
-          maxLength={NOTE_TEXT_MAX}
-          aria-label="메모 내용"
-          placeholder="예: 우유 사 왔어요, 김치 꺼내 먹어요"
-          className="h-12 min-w-0 flex-1 rounded-xl bg-white px-3 text-[17px] text-gray-800 ring-1 ring-black/10 placeholder:text-gray-400 focus:ring-2 focus:ring-[#A794D6] focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={!text.trim() || create.isPending}
-          className="h-12 shrink-0 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold text-white disabled:opacity-50"
-        >
-          붙이기
-        </button>
-      </form>
-      <p className="mt-1 px-1 text-xs text-gray-400">
-        붙이면 가족에게 알림이 가요. 눌러서 확인하면 줄이 그어져요.
-      </p>
-      {create.isError && (
-        <p role="alert" className="mt-1 px-1 text-xs text-red-500">
-          붙이지 못했어요. 확인된 메모를 지우거나 잠시 뒤 다시 해 주세요.
-        </p>
-      )}
-      {notes.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-400">
-          아직 메모가 없어요
-        </p>
-      ) : (
-        <ul className="mt-3 space-y-2">
-          {notes.map(note => (
-            <NoteRow key={note.id} note={note} />
-          ))}
-        </ul>
-      )}
-    </BottomSheet>
+        {/* 제목은 가운데, 닫기는 오른쪽. 왼쪽에 같은 폭의 빈 칸을 두어 제목이 정확히 가운데에 온다 */}
+        <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-gray-100 px-1 py-2">
+          <span aria-hidden />
+          <h2
+            id={titleId}
+            className="text-center text-lg font-bold text-[#2F3A56]"
+          >
+            {BOARD_TITLE}
+          </h2>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label={`${BOARD_TITLE} 닫기`}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 active:bg-gray-100"
+          >
+            <XIcon size={20} />
+          </button>
+        </div>
+        <div className="px-4 pt-3">
+          <form
+            onSubmit={event => {
+              event.preventDefault();
+              submit();
+            }}
+            className="flex gap-2"
+          >
+            {/* iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 17px로 쓴다 */}
+            <input
+              value={text}
+              onChange={event => setText(event.target.value)}
+              maxLength={NOTE_TEXT_MAX}
+              aria-label="메모 내용"
+              placeholder={`예: ${NOTE_EXAMPLES[exampleIndex]}`}
+              className="h-12 min-w-0 flex-1 rounded-xl bg-[#F4F4F8] px-3 text-[17px] text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#A794D6] focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!text.trim() || create.isPending}
+              className="h-12 shrink-0 rounded-xl bg-[#6B46C1] px-4 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              붙이기
+            </button>
+          </form>
+          {create.isError && (
+            <p role="alert" className="mt-1 px-1 text-xs text-red-500">
+              붙이지 못했어요. 확인된 메모를 지우거나 잠시 뒤 다시 해 주세요.
+            </p>
+          )}
+        </div>
+        {notes.length === 0 ? (
+          <p className="flex flex-1 items-center justify-center text-sm text-gray-400">
+            아직 메모가 없어요
+          </p>
+        ) : (
+          <ul
+            aria-label="게시판 기록"
+            className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3"
+          >
+            {notes.map(note => (
+              <NoteRow key={note.id} note={note} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 };
 
-// 닫힌 문 위에 놓는 메모 묶음. 냉장고를 여는 버튼보다 위에 놓아 메모를 눌러도 문이 열리지 않는다
+// 닫힌 냉장실 문에 붙은 화이트보드. 폭은 냉장실 문에 맞추고 높이는 150px
+// 실제 메모를 아주 작게(7px) 적어 무엇이 붙어 있는지만 보이게 하고, 누르면 큰 보드가 열린다
+// 냉장고를 여는 버튼보다 위에 놓아 보드를 눌러도 문이 열리지 않는다
 const DoorNotes: React.FC = () => {
   const notes = useNotes(true).data ?? [];
   const [isOpen, setIsOpen] = useState(false);
-  const shown = notes.slice(0, NOTES_ON_DOOR);
-  const unchecked = notes.filter(note => note.checked === null).length;
+  const unchecked = notes.filter(note => note.checked === null);
+  // 확인 전 메모가 먼저 오도록 정렬된 목록을 그대로, 실제로 쓴 글을 아주 작게 적는다
+  const lines = notes.slice(0, PREVIEW_ON_BOARD);
   const open = () => {
     setIsOpen(true);
-    track('board_opened', { count: notes.length, unchecked });
+    track('board_opened', {
+      count: notes.length,
+      unchecked: unchecked.length,
+    });
   };
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-3 top-12 z-10 grid grid-cols-2 gap-x-8 gap-y-2">
-        {shown.map(note => (
-          <button
-            key={note.id}
-            type="button"
-            onClick={open}
-            className={`pointer-events-auto min-h-11 rounded-sm px-2 py-1.5 text-left text-xs leading-snug shadow-[0_2px_4px_rgba(31,26,46,0.18)] ${pick(STICKY, note.id)} ${pick(TILT, note.id)} ${
-              note.checked ? 'text-gray-400 line-through' : 'text-gray-800'
-            }`}
-          >
-            <span className="line-clamp-2 break-words">{note.text}</span>
-          </button>
-        ))}
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[calc(50%-2px)] px-3 pt-16">
         <button
           type="button"
           onClick={open}
-          className="pointer-events-auto flex min-h-11 items-center justify-center gap-1 rounded-sm border border-dashed border-[#A9B0BE] bg-white/60 px-2 text-xs font-semibold text-[#6B7385]"
+          aria-label={
+            unchecked.length > 0
+              ? `${BOARD_TITLE} 열기, 확인 전 메모 ${unchecked.length}개`
+              : `${BOARD_TITLE} 열기`
+          }
+          className="pointer-events-auto relative flex h-[150px] w-full flex-col rounded-sm border-2 border-[#C9CED8] bg-white px-1.5 pt-0.5 pb-1 text-left shadow-[0_1px_3px_rgba(31,26,46,0.12)] active:bg-gray-50"
         >
-          {notes.length > NOTES_ON_DOOR ? (
-            `전체 보기 (${notes.length})`
-          ) : (
-            <>
-              <PlusIcon size={14} /> 메모
-            </>
-          )}
+          {/* 제목은 맨 위 가운데에 붙인다 */}
+          <span
+            aria-hidden
+            className="relative block border-b border-gray-200 pb-0.5 text-center text-[9px] leading-[12px] font-bold text-[#56607A]"
+          >
+            {BOARD_TITLE}
+            {/* 확인 전 메모가 있으면 제목 줄 오른쪽에 작은 알림 종과 수를 둔다 (제목 줄 높이에 맞춰 세로 가운데) */}
+            {unchecked.length > 0 && (
+              <span className="absolute top-0 right-0.5 flex h-3 items-center">
+                <BellIcon
+                  size={10}
+                  className="text-[#6B46C1]"
+                  fill="currentColor"
+                  fillOpacity={0.15}
+                />
+                <span className="absolute -top-px -right-0.5 flex h-[7px] min-w-[7px] origin-center scale-90 items-center justify-center rounded-full bg-[#E5484D] px-[1.5px] text-[5px] leading-none font-bold text-white">
+                  {unchecked.length}
+                </span>
+              </span>
+            )}
+          </span>
+          {/* 체크박스 목록을 왼쪽 위부터 채우고, 왼쪽 칸이 차면 가운데 구분선 너머 오른쪽 칸으로 넘어간다 */}
+          <span
+            aria-hidden
+            className="relative mt-1 block min-h-0 flex-1 columns-2 gap-x-2 overflow-hidden [column-fill:auto]"
+          >
+            {/* 가운데 구분선은 메모가 한 칸만 차도 늘 보이게 따로 그린다 */}
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-200" />
+            {lines.length === 0
+              ? [70, 50, 60].map(width => (
+                  <span
+                    key={width}
+                    className="mb-1 block h-[3px] rounded-full bg-gray-200"
+                    style={{ width: `${width}%` }}
+                  />
+                ))
+              : lines.map(note => (
+                  <span
+                    key={note.id}
+                    className="flex break-inside-avoid items-center gap-[3px]"
+                  >
+                    <span
+                      className={`h-[6px] w-[6px] shrink-0 rounded-[1px] border ${
+                        note.checked
+                          ? 'border-gray-400 bg-gray-400'
+                          : 'border-gray-500 bg-white'
+                      }`}
+                    />
+                    <span
+                      className={`min-w-0 truncate text-[7px] leading-[10px] ${
+                        note.checked
+                          ? 'text-gray-400 line-through'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {note.text}
+                    </span>
+                  </span>
+                ))}
+          </span>
         </button>
       </div>
-      <NotesSheet
+      <NotesBoard
         isOpen={isOpen}
         notes={notes}
         onClose={() => setIsOpen(false)}
