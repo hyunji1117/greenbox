@@ -34,6 +34,7 @@ const itemJson = (id: string, overrides = {}) => ({
   watched: false,
   shelf: null,
   updatedAt: null,
+  unit: null,
   ...overrides,
 });
 

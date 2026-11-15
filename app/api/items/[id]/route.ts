@@ -5,12 +5,7 @@ import { NextResponse } from 'next/server';
 import { updateItem } from '@/app/lib/items/store';
 import { ItemIdSchema, UpdateItemSchema } from '@/app/lib/schemas/item';
 import { findItemPlacement, shelfSlotState } from '@/app/lib/shelves/store';
-import {
-  invalidRequest,
-  notFound,
-  requireUser,
-  shelfConflict,
-} from '../guard';
+import { invalidRequest, notFound, requireUser, shelfConflict } from '../guard';
 
 export async function PATCH(
   request: Request,
@@ -42,6 +37,12 @@ export async function PATCH(
 
   // 다른 냉장고의 품목도 없는 품목과 똑같이 404로 답해 존재 여부를 알리지 않는다
   const item = await updateItem(userId, id.data, parsed.data);
+  if (item === 'invalid') {
+    return NextResponse.json(
+      { error: 'quantity_out_of_range' },
+      { status: 400 },
+    );
+  }
   if (!item) return notFound();
   return NextResponse.json(item, {
     headers: { 'Cache-Control': 'private, no-store' },

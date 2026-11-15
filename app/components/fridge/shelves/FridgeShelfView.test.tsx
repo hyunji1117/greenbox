@@ -22,6 +22,7 @@ const item = (id: string, shelf: number) => ({
   watched: false,
   shelf,
   updatedAt: null,
+  unit: null,
 });
 
 const renderView = (onRemoveShelf = vi.fn()) => {

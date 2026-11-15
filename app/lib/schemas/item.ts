@@ -3,12 +3,14 @@
 // 응답 스키마는 JSON 문자열 날짜를 Date로 바꿔서 화면 타입과 맞춘다.
 
 import { z } from 'zod';
+import { GRAM, GRAM_MAX, UNIT_CHOICES } from '@/app/lib/items/units';
 
 export const CategorySchema = z.enum(['fridge', 'freezer', 'pantry']);
 
-// DB 제약(0004_items.sql)과 같은 범위
+// DB 제약(0004_items.sql, 0018_item_unit.sql)과 같은 범위. g 품목만 수량이 그램 수라 GRAM_MAX까지
 export const ITEM_NAME_MAX = 50;
 export const QUANTITY_MAX = 99;
+export const UnitSchema = z.enum(UNIT_CHOICES);
 export const COMMENT_TEXT_MAX = 200;
 
 const isoDateTime = z.iso.datetime().transform(value => new Date(value));
@@ -51,6 +53,8 @@ export const ItemSchema = z.object({
     .transform(value => value ?? undefined),
   // 보는 사람의 관심 품목인지 (종 버튼). 이 필드를 보내기 전의 서버 응답은 false로 읽는다
   watched: z.boolean().default(false),
+  // 고른 단위. 고르지 않았거나 이 필드를 보내기 전의 응답은 null (화면은 이름으로 추정)
+  unit: UnitSchema.nullish().transform(value => value ?? null),
   // 선반 보기 베타의 선반 번호(1이 맨 위). 정하지 않았거나 이 필드를 보내기 전의 응답은 null
   shelf: ShelfSchema.nullish().transform(value => value ?? null),
   // 마지막으로 바뀐 때. 통계의 다 먹은 음식과 버린 음식을 최근 순으로 놓는다. 이 필드를 보내기 전의 응답은 null
@@ -65,30 +69,54 @@ export const ItemIdSchema = z.string().regex(/^\d{1,18}$/);
 export const FridgeIdSchema = ItemIdSchema;
 
 // 넣은 사람과 작성자는 받지 않는다. 서버가 로그인 사용자로 기록한다 (보내도 무시)
-export const CreateItemSchema = z.object({
+const CreateItemFields = z.object({
   name: z.string().trim().min(1).max(ITEM_NAME_MAX),
   category: CategorySchema,
-  quantity: z.number().int().min(1).max(QUANTITY_MAX),
+  // g 품목은 그램 수(GRAM_MAX까지), 그 밖에는 QUANTITY_MAX까지 (아래 단위 검사)
+  quantity: z.number().int().min(1).max(GRAM_MAX),
   expiryDate: z.iso.date().optional(),
   // 선반 보기에서 그 선반을 열고 넣으면 그 선반에 바로 놓는다
   shelf: ShelfSchema.optional(),
+  unit: UnitSchema.optional(),
 });
+
+// 개수 단위인데 99를 넘으면 거부한다 (g만 9999까지)
+const countWithinUnit = (value: { quantity?: number; unit?: string | null }) =>
+  value.quantity === undefined ||
+  value.unit === GRAM ||
+  value.quantity <= QUANTITY_MAX;
+const COUNT_TOO_LARGE = {
+  message: `개수는 ${QUANTITY_MAX}까지예요`,
+  path: ['quantity'],
+};
+
+export const CreateItemSchema = CreateItemFields.refine(
+  countWithinUnit,
+  COUNT_TOO_LARGE,
+);
 
 // 어느 냉장고에 넣을지는 요청마다 밝힌다. 다른 탭에서 냉장고를 바꿔도 보던 냉장고에 들어가게 한다
-export const CreateItemRequestSchema = CreateItemSchema.extend({
+export const CreateItemRequestSchema = CreateItemFields.extend({
   fridgeId: FridgeIdSchema,
-});
+}).refine(countWithinUnit, COUNT_TOO_LARGE);
 
-export const UpdateItemSchema = CreateItemSchema.partial()
+// 수량만 보내면 저장된 단위를 여기서 알 수 없어, 범위는 DB 제약(0018)이 마지막으로 지킨다
+export const UpdateItemSchema = CreateItemFields.partial()
   .extend({
     finished: z.boolean().optional(),
-    eatenQuantity: z.number().int().min(0).max(QUANTITY_MAX).optional(),
+    eatenQuantity: z.number().int().min(0).max(GRAM_MAX).optional(),
     // null이면 선반에서 빼서 "선반 미정"으로 둔다
     shelf: ShelfSchema.nullable().optional(),
+    // null이면 고른 단위를 지우고 이름으로 추정한다
+    unit: UnitSchema.nullable().optional(),
   })
   .refine(value => Object.keys(value).length > 0, {
     message: '바꿀 항목이 없습니다',
-  });
+  })
+  .refine(
+    value => value.unit === undefined || countWithinUnit(value),
+    COUNT_TOO_LARGE,
+  );
 
 export const CreateCommentSchema = z.object({
   text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),

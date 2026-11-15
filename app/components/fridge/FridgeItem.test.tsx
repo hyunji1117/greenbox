@@ -32,6 +32,7 @@ const eggs = (overrides = {}) => ({
   finished: false,
   expiryDate: '2026-11-20',
   watched: false,
+  unit: null as string | null,
   ...overrides,
 });
 

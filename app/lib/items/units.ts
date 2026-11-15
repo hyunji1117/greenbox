@@ -1,7 +1,8 @@
 // app/lib/items/units.ts
 // 마트에서 쓰는 수량 단위 (계란 30구, 두부 1모, 대파 1단). 품목 이름 안에 든 가장 긴 재료 이름으로 고른다
-// DB에는 단위를 저장하지 않고 화면 글자만 바꾼다. 표에 없는 품목은 "개"
-// 무게 단위(g, kg, ml)는 "먹음"으로 1씩 줄이는 방식과 맞지 않아 쓰지 않고, 고기도 팩처럼 묶음으로 센다
+// 사용자가 고른 단위(items.unit, 0018)가 있으면 그것을, 없으면 이름으로 추정한다. 표에 없는 품목은 "개"
+// g은 그램으로만 파는 식재료(정육, 버섯 등)용. 수량이 그램 수라서 9999까지 받고 100g씩 움직이며,
+// 먹은 양도 그램으로 센다 (남은 양 = 처음 양 - 먹은 양 계산을 그대로 쓴다)
 
 export const DEFAULT_UNIT = '개';
 
@@ -75,12 +76,69 @@ const UNIT: Record<string, string> = {
 
 const KEYS = Object.keys(UNIT).sort((a, b) => b.length - a.length);
 
-export function unitFor(name: string): string {
+// 고를 수 있는 단위. DB 제약(0018)과 같은 목록
+export const UNIT_CHOICES = [
+  '개',
+  '구',
+  '모',
+  '단',
+  '봉',
+  '팩',
+  '통',
+  '포기',
+  '묶음',
+  '마리',
+  '캔',
+  '병',
+  '송이',
+  '장',
+  'g',
+] as const;
+export type Unit = (typeof UNIT_CHOICES)[number];
+
+export const GRAM = 'g';
+export const COUNT_MAX = 99;
+export const GRAM_MAX = 9999;
+export const GRAM_STEP = 100;
+// g으로 바꿀 때 처음 채우는 양 (정육 한 팩쯤)
+export const GRAM_DEFAULT = 500;
+
+export function suggestedUnit(name: string): string {
   const key = KEYS.find(k => name.includes(k));
   return key ? UNIT[key] : DEFAULT_UNIT;
 }
 
-// "30구", "1모", "3개"
-export function withUnit(count: number, name: string): string {
-  return `${count}${unitFor(name)}`;
+// 고른 단위가 있으면 그것, 없으면 이름으로 추정
+export function unitFor(name: string, unit?: string | null): string {
+  return unit ?? suggestedUnit(name);
+}
+
+// "30구", "1모", "600g"
+export function withUnit(
+  count: number,
+  name: string,
+  unit?: string | null,
+): string {
+  return `${count}${unitFor(name, unit)}`;
+}
+
+export function isGram(unit: string): boolean {
+  return unit === GRAM;
+}
+
+// 수량 칸의 최대값과 버튼 한 번에 움직이는 양
+export function quantityLimits(unit: string): { max: number; step: number } {
+  return isGram(unit)
+    ? { max: GRAM_MAX, step: GRAM_STEP }
+    : { max: COUNT_MAX, step: 1 };
+}
+
+// 단위를 바꿀 때 수량: 개수와 그램은 뜻이 달라 g으로 들어가거나 나올 때만 새로 채운다
+export function quantityAfterUnitChange(
+  from: string,
+  to: string,
+  quantity: number,
+): number {
+  if (isGram(from) === isGram(to)) return quantity;
+  return isGram(to) ? GRAM_DEFAULT : 1;
 }

@@ -13,11 +13,7 @@ import {
   expiryLabel,
   isSavableExpiryDate,
 } from '@/app/lib/items/expiry';
-import {
-  QUANTITY_MAX,
-  type Comment,
-  type Person,
-} from '@/app/lib/schemas/item';
+import { type Comment, type Person } from '@/app/lib/schemas/item';
 import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
 import {
   BellIcon,
@@ -29,7 +25,11 @@ import {
 } from 'lucide-react';
 import { track } from '@/app/lib/analytics/gtag';
 import QuantityStepper from '@/app/components/common/QuantityStepper';
-import { unitFor, withUnit } from '@/app/lib/items/units';
+import EatAmountPanel, {
+  initialEatAmount,
+} from '@/app/components/fridge/EatAmountPanel';
+import UnitChooser from '@/app/components/fridge/UnitChooser';
+import { quantityLimits, unitFor, withUnit } from '@/app/lib/items/units';
 interface FridgeItemProps {
   item: {
     id: string;
@@ -44,6 +44,8 @@ interface FridgeItemProps {
     finished: boolean;
     expiryDate?: string;
     watched: boolean;
+    // 고른 단위. null이면 이름으로 추정
+    unit: string | null;
   };
   isNew?: boolean;
   onFinish: (kind: FinishKind) => void;
@@ -63,6 +65,7 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
   const showsBell = notifyLevel === 'watched';
   const [showComments, setShowComments] = useState(false);
   const remaining = item.quantity - item.eatenQuantity;
+  const unit = unitFor(item.name, item.unit);
   // 남은 게 2개 이상이면 다 먹음을 누를 때 몇 개 먹었는지 고른다
   const [eatCount, setEatCount] = useState<number | null>(null);
   const confirmEat = () => {
@@ -185,14 +188,21 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
           onChange={quantity => setQuantity(quantity)}
           label={`${item.name} 수량`}
           min={Math.max(1, item.eatenQuantity)}
-          max={QUANTITY_MAX}
-          unit={unitFor(item.name)}
+          max={quantityLimits(unit).max}
+          step={quantityLimits(unit).step}
+        />
+        <UnitChooser
+          name={item.name}
+          unit={item.unit}
+          quantity={item.quantity}
+          eatenQuantity={item.eatenQuantity}
+          onChange={updates => updateItem.mutate({ id: item.id, updates })}
         />
       </div>
       {item.eatenQuantity > 0 && (
         <p className="mt-1.5 text-right text-xs font-medium text-[#553C9A]">
-          {withUnit(item.eatenQuantity, item.name)} 먹고{' '}
-          {withUnit(remaining, item.name)} 남았어요
+          {withUnit(item.eatenQuantity, item.name, item.unit)} 먹고{' '}
+          {withUnit(remaining, item.name, item.unit)} 남았어요
         </p>
       )}
       <div className="mt-3 -mb-3 grid grid-cols-3 gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-gray-600">
@@ -212,7 +222,9 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
           type="button"
           onClick={() =>
             remaining > 1
-              ? setEatCount(count => (count === null ? 1 : null))
+              ? setEatCount(count =>
+                  count === null ? initialEatAmount(unit, remaining) : null,
+                )
               : onFinish('eaten')
           }
           aria-expanded={remaining > 1 ? eatCount !== null : undefined}
@@ -232,28 +244,15 @@ const FridgeItem: React.FC<FridgeItemProps> = ({
         </button>
       </div>
       {eatCount !== null && (
-        <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#F8F6FD] p-2 pl-3">
-          <span className="min-w-0 flex-1 text-sm font-medium text-gray-700">
-            몇 {unitFor(item.name)} 먹었어요?
-          </span>
-          <QuantityStepper
-            value={eatCount}
-            onChange={setEatCount}
-            label={`${item.name} 먹은 개수`}
-            max={remaining}
-            tone="white"
-            unit={unitFor(item.name)}
-          />
-          <button
-            type="button"
-            onClick={confirmEat}
-            className="h-10 shrink-0 rounded-xl bg-[#6B46C1] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#603fad]"
-          >
-            {eatCount >= remaining
-              ? '모두 먹음'
-              : `${withUnit(eatCount, item.name)} 먹음`}
-          </button>
-        </div>
+        <EatAmountPanel
+          itemName={item.name}
+          unit={unit}
+          remaining={remaining}
+          value={eatCount}
+          onChange={setEatCount}
+          onConfirm={confirmEat}
+          className="mt-4 rounded-xl p-2 pl-3"
+        />
       )}
       {updateItem.isError && (
         <p className="mt-2 text-xs text-red-500">

@@ -35,4 +35,17 @@ describe('pickUrgent', () => {
       ['계란', '1구 남음'],
     ]);
   });
+
+  it('g 품목은 처음 양의 20% 이하로 남았을 때 다 먹어 가는 것으로 본다', () => {
+    const result = pickUrgent(
+      [
+        item('삼겹살', { unit: 'g', quantity: 600, eatenQuantity: 500 }),
+        item('목살', { unit: 'g', quantity: 600, eatenQuantity: 300 }),
+      ],
+      now,
+    );
+    expect(result.map(u => [u.item.name, u.label])).toEqual([
+      ['삼겹살', '100g 남음'],
+    ]);
+  });
 });

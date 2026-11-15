@@ -7,7 +7,6 @@
 
 import React, { useState } from 'react';
 import { BellIcon, BellRingIcon, UtensilsIcon } from 'lucide-react';
-import QuantityStepper from '@/app/components/common/QuantityStepper';
 import { track } from '@/app/lib/analytics/gtag';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
 import {
@@ -19,6 +18,9 @@ import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import { useUpdateItem } from '@/app/lib/items/useItems';
 import { useToggleWatch } from '@/app/lib/notifications/useNotifications';
 import type { Item } from '@/app/lib/schemas/item';
+import EatAmountPanel, {
+  initialEatAmount,
+} from '@/app/components/fridge/EatAmountPanel';
 import { unitFor, withUnit } from '@/app/lib/items/units';
 
 interface ShelfItemCardProps {
@@ -43,6 +45,7 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
   const showsBell =
     (useCurrentFridge().data?.myNotifyLevel ?? 'watched') === 'watched';
   const remaining = item.quantity - item.eatenQuantity;
+  const unit = unitFor(item.name, item.unit);
   const [eatCount, setEatCount] = useState<number | null>(null);
   const days =
     item.expiryDate === undefined ? null : daysUntilExpiry(item.expiryDate);
@@ -86,8 +89,8 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           </span>
           <span className="mt-0.5 text-xs text-gray-500">
             {item.eatenQuantity > 0
-              ? `총 ${withUnit(item.quantity, item.name)} 중 ${withUnit(remaining, item.name)} 남음`
-              : `총 ${withUnit(item.quantity, item.name)}`}
+              ? `총 ${withUnit(item.quantity, item.name, item.unit)} 중 ${withUnit(remaining, item.name, item.unit)} 남음`
+              : `총 ${withUnit(item.quantity, item.name, item.unit)}`}
           </span>
         </button>
         {days !== null && (
@@ -127,7 +130,9 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           type="button"
           onClick={() =>
             remaining > 1
-              ? setEatCount(count => (count === null ? 1 : null))
+              ? setEatCount(count =>
+                  count === null ? initialEatAmount(unit, remaining) : null,
+                )
               : onFinish('eaten')
           }
           aria-expanded={remaining > 1 ? eatCount !== null : undefined}
@@ -144,28 +149,15 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
       </div>
 
       {eatCount !== null && (
-        <div className="mb-1.5 flex items-center gap-2 rounded-lg bg-[#F8F6FD] p-1.5 pl-3">
-          <span className="min-w-0 flex-1 text-sm font-medium text-gray-700">
-            몇 {unitFor(item.name)} 먹었어요?
-          </span>
-          <QuantityStepper
-            value={eatCount}
-            onChange={setEatCount}
-            label={`${item.name} 먹은 개수`}
-            max={remaining}
-            tone="white"
-            unit={unitFor(item.name)}
-          />
-          <button
-            type="button"
-            onClick={confirmEat}
-            className="h-10 shrink-0 rounded-lg bg-[#6B46C1] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#603fad]"
-          >
-            {eatCount >= remaining
-              ? '모두 먹음'
-              : `${withUnit(eatCount, item.name)} 먹음`}
-          </button>
-        </div>
+        <EatAmountPanel
+          itemName={item.name}
+          unit={unit}
+          remaining={remaining}
+          value={eatCount}
+          onChange={setEatCount}
+          onConfirm={confirmEat}
+          className="mb-1.5 rounded-lg p-1.5 pl-3"
+        />
       )}
 
       {item.shelf === null && (
