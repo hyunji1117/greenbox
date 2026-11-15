@@ -93,6 +93,11 @@ type EventParams = {
     by: 'owner' | 'member';
     join_rank: number;
   };
+  // 가족 게시판. 메모 글은 보내지 않고 글자 수와 개수만 보낸다
+  board_opened: { count: number; unchecked: number };
+  board_note_created: { length: number };
+  board_note_checked: { checked: boolean };
+  board_note_deleted: undefined;
   // method: 버튼으로 열고 닫았는지, 손가락으로 밀었는지
   fridge_doors_opened: { method: 'button' | 'swipe' };
   fridge_doors_closed: { method: 'button' | 'swipe' };

@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import FridgeShelfView, {
   type ShelfTarget,
 } from '@/app/components/fridge/shelves/FridgeShelfView';
+import DoorNotes from '@/app/components/fridge/shelves/DoorNotes';
 import ItemDetailSheet from '@/app/components/fridge/shelves/ItemDetailSheet';
 import ShelfBelow from '@/app/components/fridge/shelves/ShelfBelow';
 import ShelfItemCard from '@/app/components/fridge/shelves/ShelfItemCard';
@@ -151,7 +152,7 @@ const FridgeBoard: React.FC = () => {
     <div className="relative flex h-full flex-col p-4 sm:p-6">
       <FridgeHeader
         trailing={
-          // 문 앞(다음 단계의 가족 게시판 자리)을 다시 보려면 문을 닫는다
+          // 문 앞(가족 게시판)을 다시 보려면 문을 닫는다
           isShelfMode && doorsOpen && !openShelf ? (
             <button
               type="button"
@@ -231,6 +232,7 @@ const FridgeBoard: React.FC = () => {
                 notice={shelfNotice}
                 isOpen={doorsOpen}
                 onOpenChange={setDoorsOpen}
+                doorContent={<DoorNotes />}
               />
               {currentFridge && (
                 <div className="mt-4">

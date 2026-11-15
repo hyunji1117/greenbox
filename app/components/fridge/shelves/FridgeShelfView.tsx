@@ -43,6 +43,8 @@ interface FridgeShelfViewProps {
   // 문 닫기 버튼은 맨 위 줄(FridgeHeader 오른쪽 끝)에 있다
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  // 문이 닫혀 있을 때 문 위에 붙이는 것 (가족 게시판 메모). 여는 버튼보다 위에 놓인다
+  doorContent?: React.ReactNode;
 }
 
 const SECTION = {
@@ -236,6 +238,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
   notice,
   isOpen,
   onOpenChange,
+  doorContent,
 }) => {
   const live = items.filter(item => !item.finished);
   const byCategory = (category: Category) =>
@@ -453,6 +456,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
             </span>
           </button>
         )}
+        {!isOpen && doorContent}
       </div>
 
       {isOpen && (
