@@ -157,7 +157,7 @@ const FridgeBoard: React.FC = () => {
               type="button"
               onClick={() => {
                 setDoorsOpen(false);
-                track('fridge_doors_closed');
+                track('fridge_doors_closed', { method: 'button' });
               }}
               className="flex h-10 shrink-0 items-center gap-1 rounded-full bg-[#6B46C1] pr-3.5 pl-3 text-sm font-semibold whitespace-nowrap text-white shadow-[0_4px_14px_rgba(107,70,193,0.35)] transition-colors hover:bg-[#603fad]"
             >
