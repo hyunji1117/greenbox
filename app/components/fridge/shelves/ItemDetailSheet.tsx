@@ -15,11 +15,18 @@ import UnitChooser from '@/app/components/fridge/UnitChooser';
 import { quantityLimits, unitFor, withUnit } from '@/app/lib/items/units';
 import { useUpdateItem } from '@/app/lib/items/useItems';
 import type { Item } from '@/app/lib/schemas/item';
+import type { ShelfCounts } from '@/app/lib/shelves/rules';
+import ShelfMapPicker, {
+  CATEGORY_LABEL,
+  currentPlaceLabel,
+} from '@/app/components/fridge/shelves/ShelfMapPicker';
 import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
 
 interface ItemDetailSheetProps {
   item: Item | null;
-  shelfCount: number;
+  // 선반 옮기기 지도에 쓰는 이 냉장고의 칸별 선반 수와 전체 품목 (선반마다 몇 개 있는지 센다)
+  counts: ShelfCounts;
+  items: Item[];
   onClose: () => void;
   onDiscard: (item: Item) => void;
 }
@@ -29,19 +36,28 @@ const placeLabel = (shelf: number | null) =>
 
 const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
   item,
-  shelfCount,
+  counts,
+  items,
   onClose,
   onDiscard,
 }) => {
   const updateItem = useUpdateItem(item?.id);
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // 옮길 자리로 고른 선반. 누르는 즉시 옮기지 않고 "지금 → 옮길 자리"를 보여 준 뒤 버튼으로 옮긴다 (2026-11-20)
+  const [pendingShelf, setPendingShelf] = useState<number | null>(null);
   const expiryValue = expiryDraft ?? item?.expiryDate ?? '';
 
   const close = () => {
     setExpiryDraft(null);
     setError('');
+    setPendingShelf(null);
     onClose();
+  };
+  // 선반을 누르면 옮길 자리로만 고른다. 지금 자리를 다시 누르면 고른 것을 지운다
+  const pickShelf = (shelf: number) => {
+    setError('');
+    setPendingShelf(item && shelf === item.shelf ? null : shelf);
   };
 
   const changeExpiry = (expiryDate: string) => {
@@ -58,31 +74,33 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
     }
   };
 
-  const moveTo = (shelf: number | null) => {
+  const moveTo = (shelf: number) => {
     if (!item || shelf === item.shelf) return;
     setError('');
     const from = item.shelf;
     // 시트가 닫혀도 이벤트가 빠지지 않도록 저장이 끝나기를 기다렸다가 보낸다 (선반 정하기와 같은 방식)
     updateItem
       .mutateAsync({ id: item.id, updates: { shelf } })
-      .then(() =>
+      .then(() => {
+        setPendingShelf(null);
+        // 앱이 추천 자리에 넣어 둔 예전 식재료를 옮겼으면 그 확인으로도 센다
+        if (item.autoPlaced) track('shelf_auto_checked', { result: 'moved' });
         track('item_shelf_set', {
           category: item.category,
           from: placeLabel(from),
           to: placeLabel(shelf),
-        }),
-      )
+        });
+      })
       .catch(cause =>
         setError(
           cause instanceof ApiError &&
             (cause.body as { error?: string } | null)?.error === 'shelf_full'
-            ? '이 선반이 가득 찼어요 (20개). 다른 선반에 놓아 주세요'
+            ? '이 선반은 더 넣을 자리가 없어요. 다른 선반에 놓아 주세요'
             : '옮기지 못했어요. 다시 시도해 주세요',
         ),
       );
   };
 
-  const shelves = Array.from({ length: shelfCount }, (_, i) => i + 1);
   const addedOn = item
     ? new Date(item.addedAt).toLocaleDateString('ko-KR', {
         month: 'long',
@@ -174,42 +192,37 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
           </section>
 
           <section className={`p-4 ${SURFACE}`}>
-            <h3 className="text-sm font-semibold text-gray-800">선반 옮기기</h3>
-            <div
-              role="radiogroup"
-              aria-label={`${item.name} 선반 고르기`}
-              className="mt-2 grid grid-cols-4 gap-2"
-            >
-              {shelves.map(shelf => (
-                <button
-                  key={shelf}
-                  type="button"
-                  role="radio"
-                  aria-checked={item.shelf === shelf}
-                  onClick={() => moveTo(shelf)}
-                  className={`h-11 rounded-xl text-sm font-medium transition-colors ${
-                    item.shelf === shelf
-                      ? 'bg-[#6B46C1] text-white'
-                      : 'bg-[#F4F4F8] text-gray-700 hover:bg-[#ECEAF3]'
-                  }`}
-                >
-                  {shelf}번
-                </button>
-              ))}
+            <h3 className="mb-1 text-sm font-semibold text-gray-800">
+              선반 옮기기
+            </h3>
+            <p className="mb-2 text-xs text-gray-500">
+              지금:{' '}
+              <span className="font-semibold text-gray-800">
+                {currentPlaceLabel(item)}
+              </span>
+            </p>
+            <ShelfMapPicker
+              category={item.category}
+              name={item.name}
+              current={item.shelf}
+              pending={pendingShelf}
+              items={items}
+              counts={counts}
+              disabled={updateItem.isPending}
+              onPick={pickShelf}
+            />
+            {pendingShelf !== null && (
               <button
                 type="button"
-                role="radio"
-                aria-checked={item.shelf === null}
-                onClick={() => moveTo(null)}
-                className={`col-span-2 h-11 rounded-xl text-sm font-medium transition-colors ${
-                  item.shelf === null
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
-                }`}
+                disabled={updateItem.isPending}
+                onClick={() => moveTo(pendingShelf)}
+                className="mt-2 h-12 w-full rounded-xl bg-[#6B46C1] text-sm font-semibold text-white disabled:opacity-50"
               >
-                선반 미정
+                {CATEGORY_LABEL[item.category]}{' '}
+                {item.shelf === null ? '선반 미정' : `${item.shelf}번`} →{' '}
+                {pendingShelf}번으로 옮기기
               </button>
-            </div>
+            )}
             {error && (
               <p role="alert" className="mt-2 text-xs text-red-500">
                 {error}

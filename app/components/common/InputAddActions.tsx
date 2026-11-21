@@ -42,7 +42,8 @@ const InputAddActions: React.FC<InputAddActionsProps> = ({
   const showsTools = speech.isListening || !canSubmit;
 
   return (
-    <div className="flex shrink-0 items-center gap-1">
+    // 선반 둘러보기가 사진과 음성 버튼을 한 상자로 함께 비출 때 찾는 표시 (ShelfTour)
+    <div data-tour="add-tools" className="flex shrink-0 items-center gap-1">
       {showsTools && (
         <>
           <button

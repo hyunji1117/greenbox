@@ -7,7 +7,13 @@
 // - 선반을 누르면 그 선반의 목록(등록, 수량, 알림)으로 들어간다
 // - 선반 추가는 언제나, 줄이기는 비어 있는 선반이 있을 때만 (서버도 같은 규칙으로 거부)
 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Image from 'next/image';
 import { track } from '@/app/lib/analytics/gtag';
 import type { Category, Item } from '@/app/lib/schemas/item';
@@ -25,6 +31,11 @@ import {
   screenEdgeStart,
   type DoorSwipeStart,
 } from '@/app/lib/shelves/doorSwipe';
+import ShelfUpdateGuide from '@/app/components/fridge/shelves/ShelfUpdateGuide';
+import AutoPlaceCheck from '@/app/components/fridge/shelves/AutoPlaceCheck';
+import { ShelfTourStart } from '@/app/components/fridge/shelves/ShelfTour';
+import { isIntroDone } from '@/app/lib/shelves/autoPlacePrompt';
+import { useShelfTourStep, wantsShelfTour } from '@/app/lib/shelves/shelfTour';
 
 export interface ShelfTarget {
   category: Category;
@@ -46,6 +57,10 @@ interface FridgeShelfViewProps {
   onOpenChange: (isOpen: boolean) => void;
   // 문이 닫혀 있을 때 문 위에 붙이는 것 (가족 게시판 메모). 여는 버튼보다 위에 놓인다
   doorContent?: React.ReactNode;
+  // 선반 보기 소개, 둘러보기, 업데이트 안내(알림장, 밀어서 닫기)를 사람마다 한 번 보여 주기 위한 내 사용자 id
+  guideUserId?: string;
+  // 알림 첫 질문처럼 먼저 끝나야 하는 것이 떠 있으면 안내를 미룬다
+  guidesBlocked?: boolean;
 }
 
 const SECTION = {
@@ -173,10 +188,17 @@ const FitLabel: React.FC<{ text: string; className: string }> = ({
   );
 };
 
+// 앱이 추천 자리에 넣고 아직 자리를 확정하지 않은 식재료는 점선 테두리로 구분한다 (AutoPlaceCheck와 같은 모양)
 const Sticker: React.FC<{ item: Item }> = ({ item }) => {
   const label = stickerName(item.name);
   return (
-    <span className="motion-safe:animate-magnet flex min-w-0 flex-col items-center gap-0.5">
+    <span
+      className={`motion-safe:animate-magnet flex min-w-0 flex-col items-center gap-0.5 rounded-md ${
+        item.autoPlaced
+          ? 'border-[1.5px] border-dashed border-[#6B46C1] px-0.5'
+          : ''
+      }`}
+    >
       <ShelfFoodImage name={item.name} />
       <FitLabel text={label.text} className={label.className} />
     </span>
@@ -253,7 +275,17 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
   isOpen,
   onOpenChange,
   doorContent,
+  guideUserId,
+  guidesBlocked = false,
 }) => {
+  // 예전 식재료 배치 안내가 떠 있는 동안은 알림장, 밀어서 닫기 안내를 미룬다 (안내가 문을 열어 겹치지 않게)
+  const [autoPromptActive, setAutoPromptActive] = useState(false);
+  const tourStep = useShelfTourStep();
+  const tourDone =
+    guideUserId !== undefined &&
+    tourStep === null &&
+    isIntroDone(guideUserId) &&
+    !wantsShelfTour(guideUserId);
   const live = items.filter(item => !item.finished);
   const byCategory = (category: Category) =>
     live.filter(item => item.category === category);
@@ -322,6 +354,20 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
     start: DoorSwipeStart | null;
   } | null>(null);
   const swipedRef = useRef(false);
+  const doorsRef = useRef<HTMLDivElement>(null);
+  // 알림장은 문 위에 붙는 것(doorContent)이라 그때그때 문 안에서 찾는다
+  const boardTarget = useMemo(
+    () => ({
+      get current() {
+        return (
+          doorsRef.current?.querySelector<HTMLElement>(
+            '[data-guide-target="door-notes"]',
+          ) ?? null
+        );
+      },
+    }),
+    [],
+  );
   // 판정되면 true. 같은 손길로 두 번 판정하지 않게 부른 쪽에서 기록을 지운다
   const settleSwipe = (x: number, y: number): boolean => {
     const swipe = swipeRef.current;
@@ -466,8 +512,18 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
 
   return (
     <div className="space-y-3">
+      {/* 앱이 예전 식재료를 배치해 두었거나 베타를 다시 켰으면 가운데 안내를 띄우고 뒤에서 문을 연다 */}
+      {guideUserId && (
+        <AutoPlaceCheck
+          userId={guideUserId}
+          items={items}
+          onOpenDoors={() => onOpenChange(true)}
+          onActiveChange={setAutoPromptActive}
+        />
+      )}
       {/* 세로 스크롤은 브라우저에 맡기고 가로 밀기만 받는다 */}
       <div
+        ref={doorsRef}
         className="relative touch-pan-y [perspective:1400px]"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -534,6 +590,28 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
         )}
         {!isOpen && doorContent}
       </div>
+      <ShelfUpdateGuide
+        userId={guideUserId}
+        isOpen={isOpen}
+        // 밀어서 닫기, 알림장 안내는 소개와 선반 둘러보기가 끝난 뒤에 이어진다
+        isBlocked={guidesBlocked || autoPromptActive || !tourDone}
+        boardTarget={boardTarget}
+        doorsTarget={doorsRef}
+        onOpenBoard={() => boardTarget.current?.click()}
+        onCloseDoors={() => {
+          onOpenChange(false);
+          track('fridge_doors_closed', { method: 'button' });
+        }}
+      />
+      {/* 선반 둘러보기 1장: 냉장실 1번 선반을 비추고 열어 보게 한다 (2~7장은 선반 목록에서) */}
+      <ShelfTourStart
+        userId={guideUserId}
+        isOpen={isOpen}
+        isBlocked={guidesBlocked || autoPromptActive}
+        doorsRef={doorsRef}
+        onOpenDoors={() => onOpenChange(true)}
+        onOpenFirstShelf={() => open('fridge', 1)}
+      />
 
       {isOpen && (
         <>

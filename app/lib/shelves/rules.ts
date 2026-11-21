@@ -7,8 +7,20 @@ export const SHELF_VIEW_EXPERIMENT = 'shelf_view';
 export const DEFAULT_SHELF_COUNT = 5;
 export const MIN_SHELF_COUNT = 1;
 export const MAX_SHELF_COUNT = 7;
-// 한 선반에 넣을 수 있는 품목 수 (다 먹은 품목은 세지 않는다)
-export const MAX_ITEMS_PER_SHELF = 20;
+// 한 선반의 품목 수 (다 먹은 품목은 세지 않는다). 칸마다 두 단계로 둔다 (2026-11-20)
+// - 가득: 이만큼 차면 "가득"으로 알리고 유통기한 임박한 것부터 먹도록 이끈다. 그래도 넣을 수는 있다
+// - 최대: 장 본 날, 명절처럼 잠깐 많을 때를 위한 긴급 자리. 넘으면 다른 선반에 넣는다 (목록이 너무 길면 찾기 어렵다)
+// 냉동실은 만두, 냉동 고기처럼 납작하게 겹쳐 쌓아 훨씬 많이 들어간다
+export const SHELF_FULL_AT: Record<Category, number> = {
+  fridge: 20,
+  freezer: 30,
+  pantry: 20,
+};
+export const SHELF_MAX: Record<Category, number> = {
+  fridge: 30,
+  freezer: 50,
+  pantry: 30,
+};
 // 선반 화면에 스티커처럼 붙여 보여 주는 수. 나머지는 "+N"
 export const STICKERS_PER_SHELF = 10;
 

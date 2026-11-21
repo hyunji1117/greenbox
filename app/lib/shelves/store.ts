@@ -1,6 +1,6 @@
 // app/lib/shelves/store.ts
 // 선반 보기 베타의 저장 (서버 전용). 구성원 확인은 호출하는 쪽(requireFridgeMember)이 먼저 한다
-// 품목이 사라지지 않게: 선반은 비어 있을 때만 줄이고, 한 선반에 MAX_ITEMS_PER_SHELF개를 넘겨 넣지 않는다
+// 품목이 사라지지 않게: 선반은 비어 있을 때만 줄이고, 한 선반에 칸별 최대(SHELF_MAX)를 넘겨 넣지 않는다
 
 import { getPool } from '@/app/lib/db';
 import { displayNameSql } from '@/app/lib/fridges/store';
@@ -8,7 +8,7 @@ import type { Category } from '@/app/lib/schemas/item';
 import type { ShelfSettings } from '@/app/lib/schemas/shelves';
 import {
   DEFAULT_SHELF_COUNTS,
-  MAX_ITEMS_PER_SHELF,
+  SHELF_MAX,
   MAX_SHELF_COUNT,
   SHELF_VIEW_EXPERIMENT,
   shelfToRemove,
@@ -195,6 +195,31 @@ export async function changeShelfCount(
   }
 }
 
+// 자동 배치 계획(autoPlace.ts)을 저장한다. 그사이 사람이 선반을 정했거나 다 먹은 품목은 건드리지 않는다
+// (가족 두 사람이 동시에 열어도 한 번만 놓인다). 놓은 수를 돌려준다
+export async function applyAutoPlacement(
+  fridgeId: string,
+  plan: { id: string; shelf: number }[],
+): Promise<number> {
+  if (plan.length === 0) return 0;
+  const { rowCount } = await getPool().query(
+    `UPDATE items i SET shelf = p.shelf, auto_placed_at = now()
+     FROM unnest($2::bigint[], $3::smallint[]) AS p(id, shelf)
+     WHERE i.id = p.id AND i.fridge_id = $1 AND i.shelf IS NULL AND NOT i.finished`,
+    [fridgeId, plan.map(entry => entry.id), plan.map(entry => entry.shelf)],
+  );
+  return rowCount ?? 0;
+}
+
+// 이 냉장고에서 선반 보기가 켜져 있는지 (켜져 있으면 품목은 선반을 정해야 넣을 수 있다)
+export async function isShelfViewOn(fridgeId: string): Promise<boolean> {
+  const { rows } = await getPool().query<{ enabled: boolean }>(
+    `SELECT enabled FROM fridge_features WHERE fridge_id = $1 AND feature = $2`,
+    [fridgeId, SHELF_VIEW_EXPERIMENT],
+  );
+  return rows[0]?.enabled ?? false;
+}
+
 // 품목을 그 선반에 놓을 수 있는지. excludeItemId: 옮기는 품목 자신은 세지 않는다
 export async function shelfSlotState(
   fridgeId: string,
@@ -210,7 +235,7 @@ export async function shelfSlotState(
        AND ($4::bigint IS NULL OR id <> $4::bigint)`,
     [fridgeId, category, shelf, excludeItemId ?? null],
   );
-  return rows[0].n >= MAX_ITEMS_PER_SHELF ? 'full' : 'ok';
+  return rows[0].n >= SHELF_MAX[category] ? 'full' : 'ok';
 }
 
 // 옮기려는 품목의 냉장고와 칸. 내가 구성원인 냉장고의 품목이 아니면 null

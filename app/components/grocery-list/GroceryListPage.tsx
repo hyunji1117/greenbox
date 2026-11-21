@@ -11,7 +11,9 @@ import FrequentItemsPicker from '@/app/components/grocery-list/FrequentItemsPick
 import SegmentedTabs, { SURFACE } from '@/app/components/common/SegmentedTabs';
 import QuantityStepper from '@/app/components/common/QuantityStepper';
 import { track } from '@/app/lib/analytics/gtag';
-import { useAddPurchasedItems } from '@/app/lib/items/useItems';
+import { useAddPurchasedItems, useItems } from '@/app/lib/items/useItems';
+import { useShelfSettings } from '@/app/lib/shelves/useShelves';
+import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import { QUANTITY_MAX } from '@/app/lib/schemas/item';
 import purchaseStorage from '@/app/lib/storage/PurchaseDataStorage';
 import shoppingListStorage from '@/app/lib/storage/ShoppingListStorage';
@@ -43,6 +45,13 @@ const UNDO_TOAST_MS = 5000;
 
 const GroceryListPage: React.FC = () => {
   const addPurchasedItems = useAddPurchasedItems();
+  // 선반 보기면 산 식재료를 넣기 전에 줄마다 자리를 정한다 (추천 자리를 미리 채운 시트)
+  const shelfSettings = useShelfSettings().data;
+  const isShelfMode = shelfSettings?.enabled ?? false;
+  const { data: fridgeItems = [] } = useItems();
+  const [placing, setPlacing] = useState<
+    { id: string; name: string; quantity: number }[] | null
+  >(null);
   const [activeView, setActiveView] = useState<'list' | 'favorites'>('list');
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>(() =>
     shoppingListStorage.loadShoppingList(),
@@ -154,11 +163,44 @@ const GroceryListPage: React.FC = () => {
     setShoppingList([]);
     toast('리스트를 비웠어요', () => setShoppingList(previous));
   };
+  // 냉장고에 넣은 장보기 항목을 리스트에서 빼고 구매 기록을 남긴다
+  const finishPurchase = async (
+    purchased: ShoppingListItem[],
+    total: number,
+  ) => {
+    const purchasedIds = new Set(purchased.map(i => i.id));
+    setShoppingList(prev => prev.filter(i => !purchasedIds.has(i.id)));
+    try {
+      await purchaseStorage.recordPurchase(
+        purchased.map(i => ({ name: i.name, quantity: i.quantity })),
+      );
+    } catch (e) {
+      console.error(e);
+      return toast('냉장고에 넣었지만 구매 기록은 저장하지 못했어요');
+    }
+    void purchaseHistory.reload();
+    toast(
+      purchased.length === total
+        ? `${purchased.length}개 항목을 냉장고에 넣었어요`
+        : `${purchased.length}개만 냉장고에 넣었어요. 나머지는 다시 시도해 주세요`,
+    );
+  };
+
   const onClearCompleted = async () => {
     const completed = shoppingList.filter(i => i.completed);
     // 버튼 이름이 "구매 완료"라 체크 없이 누르면 무엇을 해야 하는지 알려 준다
     if (completed.length === 0) return toast('산 식재료를 먼저 체크해 주세요');
     if (addPurchasedItems.isPending) return;
+    if (isShelfMode) {
+      setPlacing(
+        completed.map(i => ({
+          id: String(i.id),
+          name: i.name,
+          quantity: i.quantity,
+        })),
+      );
+      return;
+    }
 
     // 구매한 품목은 냉장실로 넣는다. 다른 곳에 둘 품목은 나중에 옮기는 기능이 필요하다
     let saved: boolean[];
@@ -180,23 +222,7 @@ const GroceryListPage: React.FC = () => {
     if (purchased.length === 0) {
       return toast('냉장고에 넣지 못했어요. 다시 시도해 주세요');
     }
-    const purchasedIds = new Set(purchased.map(i => i.id));
-    setShoppingList(prev => prev.filter(i => !purchasedIds.has(i.id)));
-
-    try {
-      await purchaseStorage.recordPurchase(
-        purchased.map(i => ({ name: i.name, quantity: i.quantity })),
-      );
-    } catch (e) {
-      console.error(e);
-      return toast('냉장고에 넣었지만 구매 기록은 저장하지 못했어요');
-    }
-    void purchaseHistory.reload();
-    toast(
-      purchased.length === completed.length
-        ? `${purchased.length}개 항목을 냉장고에 넣었어요`
-        : `${purchased.length}개만 냉장고에 넣었어요. 나머지는 다시 시도해 주세요`,
-    );
+    await finishPurchase(purchased, completed.length);
   };
   const onLoadFavorite = (favoriteId: number) => {
     const fav = favorites.find(f => f.id === favoriteId);
@@ -401,6 +427,27 @@ const GroceryListPage: React.FC = () => {
       </div>
 
       <ScrollTopButton target={headerRef} />
+      {/* 선반 보기: 산 식재료마다 자리를 정해 넣는다. 넣은 것만 리스트에서 뺀다 */}
+      {shelfSettings && (
+        <PhotoAddSheet
+          file={null}
+          initial={placing}
+          placeCounts={shelfSettings.counts}
+          items={fridgeItems}
+          onClose={() => setPlacing(null)}
+          onAdded={(_count, _categories, savedIds = []) => {
+            const saved = new Set(savedIds);
+            const purchased = shoppingList.filter(i => saved.has(String(i.id)));
+            if (purchased.length > 0) {
+              void finishPurchase(purchased, purchased.length);
+            }
+            // 다 넣었으면 닫고, 남은 것이 있으면 시트에서 다시 시도하게 둔다
+            setPlacing(prev =>
+              prev && prev.some(p => !saved.has(p.id)) ? prev : null,
+            );
+          }}
+        />
+      )}
       <ActionToast
         isVisible={showToast}
         message={toastMessage}

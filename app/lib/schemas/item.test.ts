@@ -57,6 +57,11 @@ describe('CreateItemSchema (요청)', () => {
 });
 
 describe('UpdateItemSchema (요청)', () => {
+  it('선반은 고르기만 받고, 선반 미정으로 되돌리는 null은 받지 않는다', () => {
+    expect(UpdateItemSchema.safeParse({ shelf: 2 }).success).toBe(true);
+    expect(UpdateItemSchema.safeParse({ shelf: null }).success).toBe(false);
+  });
+
   it('바꿀 항목이 없는 빈 요청을 거절한다', () => {
     expect(UpdateItemSchema.safeParse({}).success).toBe(false);
     expect(UpdateItemSchema.safeParse({ finished: true }).success).toBe(true);

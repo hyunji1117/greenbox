@@ -36,6 +36,8 @@ const ActionToast: React.FC<ActionToastProps> = ({
       <button
         type="button"
         onClick={onAction}
+        // 선반 둘러보기가 되돌리기를 알려 줄 때 비추는 곳 (ShelfTour)
+        data-tour="undo"
         className="h-10 shrink-0 rounded-xl px-3 font-semibold text-[#C4B5FD] transition-colors hover:bg-white/10"
       >
         {actionLabel}

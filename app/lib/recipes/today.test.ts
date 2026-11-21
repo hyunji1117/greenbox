@@ -28,6 +28,7 @@ const item = (
     expiryDate,
     watched: false,
     shelf: null,
+    autoPlaced: false,
     updatedAt: null,
     unit: null,
   }) as ItemJson;

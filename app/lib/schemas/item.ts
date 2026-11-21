@@ -57,6 +57,8 @@ export const ItemSchema = z.object({
   unit: UnitSchema.nullish().transform(value => value ?? null),
   // 선반 보기 베타의 선반 번호(1이 맨 위). 정하지 않았거나 이 필드를 보내기 전의 응답은 null
   shelf: ShelfSchema.nullish().transform(value => value ?? null),
+  // 앱이 선반에 놓고 아직 확인하지 않았는지 (0019). 이 필드를 보내기 전의 응답은 false
+  autoPlaced: z.boolean().optional(),
   // 마지막으로 바뀐 때. 통계의 다 먹은 음식과 버린 음식을 최근 순으로 놓는다. 이 필드를 보내기 전의 응답은 null
   updatedAt: isoDateTime.nullish().transform(value => value ?? null),
 });
@@ -105,8 +107,8 @@ export const UpdateItemSchema = CreateItemFields.partial()
   .extend({
     finished: z.boolean().optional(),
     eatenQuantity: z.number().int().min(0).max(GRAM_MAX).optional(),
-    // null이면 선반에서 빼서 "선반 미정"으로 둔다
-    shelf: ShelfSchema.nullable().optional(),
+    // 선반은 고르기만 한다. "선반 미정"으로 되돌리는 값(null)은 받지 않는다 (2026-11-18)
+    shelf: ShelfSchema.optional(),
     // null이면 고른 단위를 지우고 이름으로 추정한다
     unit: UnitSchema.nullable().optional(),
   })

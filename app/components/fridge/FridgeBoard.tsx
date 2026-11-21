@@ -9,11 +9,18 @@ import FridgeShelfView, {
 } from '@/app/components/fridge/shelves/FridgeShelfView';
 import DoorNotes from '@/app/components/fridge/shelves/DoorNotes';
 import ItemDetailSheet from '@/app/components/fridge/shelves/ItemDetailSheet';
+import { ShelfTourList } from '@/app/components/fridge/shelves/ShelfTour';
+import {
+  finishShelfTour,
+  TOUR_UNDO,
+  useShelfTourStep,
+} from '@/app/lib/shelves/shelfTour';
 import ShelfBelow from '@/app/components/fridge/shelves/ShelfBelow';
 import ShelfItemCard from '@/app/components/fridge/shelves/ShelfItemCard';
 import { ApiError } from '@/app/lib/api/apiFetch';
 import { track } from '@/app/lib/analytics/gtag';
 import {
+  useAutoPlace,
   useChangeShelfCount,
   useShelfSettings,
 } from '@/app/lib/shelves/useShelves';
@@ -43,6 +50,7 @@ import {
   ShoppingBasket,
   SnowflakeIcon,
 } from 'lucide-react';
+import { onTabReselect } from '@/app/lib/navigation/tabs';
 
 const CATEGORY_TABS = [
   { id: 'fridge', label: '냉장실', Icon: RefrigeratorIcon },
@@ -57,9 +65,37 @@ const FridgeBoard: React.FC = () => {
   const { data: currentFridge } = useCurrentFridge();
   const [activeCategory, setActiveCategory] = useState<Category>('fridge');
   // 선반 보기 베타: 서버가 이 냉장고에 켜 두었을 때만 선반으로 보인다. 끄고 켜기는 설정의 베타 스위치 하나로 한다
-  const shelfSettings = useShelfSettings().data;
+  const shelfQuery = useShelfSettings();
+  const shelfSettings = shelfQuery.data;
+  // 선반 보기인지 아직 모르면 목록 화면을 그리지 않는다 (잠깐 목록이 보였다가 선반으로 바뀌지 않게).
+  // 설정을 못 읽었으면(오류) 기다리지 않고 목록으로 보여 준다
+  const isShelfUnknown = shelfQuery.isPending && !shelfQuery.isError;
   const isShelfMode = shelfSettings?.enabled ?? false;
+  // 선반 둘러보기 중에 선반 목록을 나가면 그 자리에서 끝낸다
+  const tourStep = useShelfTourStep();
+  // 선반 보기에서 선반 없이 들어가 있던 품목이 보이면 한 번 추천 자리에 놓는다 (정식 전환, 나중에 켠 냉장고도 같은 길)
+  const autoPlace = useAutoPlace();
+  const autoPlaceTried = useRef<string | null>(null);
+  const hasUnplaced = items.some(item => !item.finished && item.shelf === null);
+  // 베타를 껐다 켜면(그사이 목록 보기에서 넣은 식재료) 다시 배치한다
+  useEffect(() => {
+    if (!isShelfMode) autoPlaceTried.current = null;
+  }, [isShelfMode]);
+  useEffect(() => {
+    const fridgeId = currentFridge?.id;
+    if (!isShelfMode || !hasUnplaced || !fridgeId) return;
+    if (autoPlaceTried.current === fridgeId || autoPlace.isPending) return;
+    autoPlaceTried.current = fridgeId;
+    autoPlace.mutate();
+  }, [isShelfMode, hasUnplaced, currentFridge?.id, autoPlace]);
   const [openShelf, setOpenShelf] = useState<ShelfTarget | null>(null);
+  // 선반 목록을 보다가 아래 메뉴의 냉장고 탭을 한 번 더 누르면 냉장고 그림으로 돌아간다
+  useEffect(() => onTabReselect('fridge', () => setOpenShelf(null)), []);
+  useEffect(() => {
+    if (tourStep !== null && tourStep >= 2 && !openShelf) {
+      finishShelfTour(currentFridge?.myUserId);
+    }
+  }, [tourStep, openShelf, currentFridge?.myUserId]);
   const [doorsOpen, setDoorsOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [shelfNotice, setShelfNotice] = useState('');
@@ -168,16 +204,38 @@ const FridgeBoard: React.FC = () => {
         }
       />
       <NotifyFirstSheet />
-      {/* 선반 목록에서는 오른쪽 끝에 냉장고로 돌아가는 버튼 하나만 둔다 (어느 선반인지는 냉장고에서 눌러 들어와 알고 있다) */}
+      {/* 선반 둘러보기 2~7장 (선반 목록에서 이어진다) */}
       {isShelfMode && openShelf && (
-        <button
-          type="button"
-          onClick={() => setOpenShelf(null)}
-          className="mb-3 flex h-10 items-center gap-1 self-end rounded-full bg-[#F1EDFA] pr-4 pl-3 text-sm font-semibold text-[#553C9A] transition-colors hover:bg-[#E6DFF7]"
-        >
-          <ChevronLeftIcon size={16} className="shrink-0" />
-          냉장고로 돌아가기
-        </button>
+        <ShelfTourList
+          userId={currentFridge?.myUserId}
+          // 둘러보기가 끝나면 냉장고로 돌아가 밀어서 닫기, 알림장 안내가 이어진다
+          onFinish={() => setOpenShelf(null)}
+        />
+      )}
+      {/* 선반 목록: 왼쪽 위에 어느 선반인지와 들어 있는 식재료 수, 오른쪽 끝에 냉장고로 돌아가는 버튼 (2026-11-20) */}
+      {isShelfMode && openShelf && (
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p
+            role="status"
+            className="min-w-0 truncate text-sm font-semibold text-gray-800"
+          >
+            {CATEGORY_LABEL[openShelf.category]}{' '}
+            {openShelf.shelf === null
+              ? '선반 미정'
+              : `${openShelf.shelf}번 선반`}
+            <span className="ml-1.5 font-bold text-[#6B46C1] tabular-nums">
+              {filteredItems.length}개
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setOpenShelf(null)}
+            className="flex h-10 shrink-0 items-center gap-1 rounded-full bg-[#F1EDFA] pr-4 pl-3 text-sm font-semibold text-[#553C9A] transition-colors hover:bg-[#E6DFF7]"
+          >
+            <ChevronLeftIcon size={16} className="shrink-0" />
+            냉장고로 돌아가기
+          </button>
+        </div>
       )}
       {!isShelfMode && (
         <SegmentedTabs
@@ -191,13 +249,15 @@ const FridgeBoard: React.FC = () => {
           className="mb-4"
         />
       )}
-      <div className="-mx-2 flex-1 overflow-y-auto px-2 pt-1">
+      {/* 가로 스크롤은 막는다. overflow-y만 auto로 두면 가로도 auto가 되어, 문이 열릴 때 바깥으로 돌아간
+          문짝 때문에 생긴 폭만큼 화면 끝에서 밀면 냉장고가 옆으로 밀렸다 */}
+      <div className="-mx-2 flex-1 overflow-x-hidden overflow-y-auto px-2 pt-1">
         {/* 칸을 바꿀 때 내용이 갑자기 바뀌지 않도록 살짝 나타나게 한다 */}
         <div
           key={`${shownCategory}-${openShelf?.shelf ?? 'all'}-${isShelfMode}`}
           className="motion-safe:animate-tab-fade"
         >
-          {isPending ? (
+          {isPending || isShelfUnknown ? (
             <div className={`px-4 py-12 text-center ${SURFACE}`}>
               <p className="text-sm text-gray-500">불러오는 중...</p>
             </div>
@@ -233,6 +293,8 @@ const FridgeBoard: React.FC = () => {
                 isOpen={doorsOpen}
                 onOpenChange={setDoorsOpen}
                 doorContent={<DoorNotes />}
+                guideUserId={currentFridge?.myUserId}
+                guidesBlocked={currentFridge?.myNotifyLevel === null}
               />
               {currentFridge && (
                 <div className="mt-4">
@@ -281,6 +343,12 @@ const FridgeBoard: React.FC = () => {
                 category={shownCategory}
                 shelf={
                   isShelfMode && openShelf?.shelf ? openShelf.shelf : undefined
+                }
+                // 선반 보기에서 선반을 정하지 않은 목록에서 넣으면 자리를 묻는다
+                placeCounts={
+                  isShelfMode && shelfSettings
+                    ? shelfSettings.counts
+                    : undefined
                 }
                 items={items}
                 alwaysShowSuggestions={filteredItems.length === 0}
@@ -386,13 +454,15 @@ const FridgeBoard: React.FC = () => {
       {isShelfMode && shelfSettings && (
         <ItemDetailSheet
           item={detailItem}
-          shelfCount={shelfSettings.counts[detailItem?.category ?? 'fridge']}
+          counts={shelfSettings.counts}
+          items={items}
           onClose={() => setDetailId(null)}
           onDiscard={item => finish(item, 'discarded')}
         />
       )}
       <ActionToast
-        isVisible={isNoticeVisible}
+        // 선반 둘러보기가 되돌리기를 알려 주는 동안에는 알림을 남겨 둔다
+        isVisible={isNoticeVisible || tourStep === TOUR_UNDO}
         subject={notice?.subject}
         message={notice?.message ?? ''}
         actionLabel={

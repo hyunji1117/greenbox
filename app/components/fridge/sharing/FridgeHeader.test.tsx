@@ -50,7 +50,7 @@ describe('FridgeHeader', () => {
   it('처음 들어오면 사람 수 안내를 한 번 보이고, 마이로 가기를 누르면 마이로 간다', () => {
     const { unmount } = render(<FridgeHeader />);
     expect(screen.getByRole('dialog').textContent).toContain(
-      '가족 초대는 하단 마이에서 할 수 있어요',
+      '초대는 마이에서 할 수 있어요',
     );
     fireEvent.click(screen.getByRole('button', { name: '마이로 가기' }));
     expect(goToTab).toHaveBeenCalledWith('settings');

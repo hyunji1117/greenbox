@@ -89,12 +89,17 @@ export async function requireFridgeMember(
   return role ? { role } : { response: notFound() };
 }
 
-// 선반이 가득 찼거나(20개) 없는 선반일 때. 화면은 error 값으로 안내 문구를 고른다
+// 선반이 최대까지 찼거나(냉장과 상온 30개, 냉동 50개) 없는 선반일 때. 화면은 error 값으로 안내 문구를 고른다
 export function shelfConflict(reason: 'full' | 'no_shelf'): NextResponse {
   return NextResponse.json(
     { error: reason === 'full' ? 'shelf_full' : 'no_such_shelf' },
     { status: 409 },
   );
+}
+
+// 선반 보기가 켜진 냉장고에 선반 없이 넣으려 할 때 (화면은 넣기 전에 "어디에 넣을까요?"를 묻는다)
+export function shelfRequired(): NextResponse {
+  return NextResponse.json({ error: 'shelf_required' }, { status: 409 });
 }
 
 export function invalidRequest(error: ZodError): NextResponse {

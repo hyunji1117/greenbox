@@ -42,11 +42,12 @@ const MembersCountGuide: React.FC<MembersCountGuideProps> = ({
   <SpotlightGuide
     guide="members_count"
     target={target}
-    title="몇 명이서 이 냉장고를 보는지 여기서 알 수 있어요"
+    // 제목은 휴대폰 폭에서 한 줄로 짧게. 무엇을 비추는지는 비춘 "N명" 칸이 알려 준다
+    title="함께 보는 사람"
     body={
       <>
-        함께 볼 가족 초대는 하단{' '}
-        {/* 하단 메뉴의 마이와 같은 아이콘과 색으로 보여 주고, 하단 메뉴의 마이도 함께 비춘다 */}
+        {/* 한 줄로 짧게. 하단 메뉴의 마이와 같은 아이콘과 색으로 보여 주고, 하단 메뉴의 마이도 함께 비춘다 */}
+        초대는{' '}
         <span className="inline-flex items-center gap-0.5 rounded-md bg-[#F1EDFA] px-1.5 py-0.5 align-middle font-semibold text-[#7b6d99]">
           <UserRound size={14} aria-hidden />
           마이

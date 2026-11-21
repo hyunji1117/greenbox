@@ -8,9 +8,16 @@ import GroceryListPage from './GroceryListPage';
 
 vi.mock('@/app/lib/items/useItems', () => ({
   useAddPurchasedItems: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useItems: () => ({ data: [] }),
+}));
+// 목록 보기 냉장고 (선반 보기면 구매 완료 때 자리를 정하는 시트를 연다)
+vi.mock('@/app/lib/shelves/useShelves', () => ({
+  useShelfSettings: () => ({ data: undefined }),
 }));
 // 사진으로 담기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다
-vi.mock('@/app/components/fridge/PhotoAddSheet', () => ({ default: () => null }));
+vi.mock('@/app/components/fridge/PhotoAddSheet', () => ({
+  default: () => null,
+}));
 vi.mock('@/app/lib/storage/PurchaseDataStorage', () => ({
   default: {
     recordPurchase: vi.fn(),
@@ -83,7 +90,9 @@ describe('GroceryListPage', () => {
     render(<GroceryListPage />);
 
     fireEvent.change(input(), { target: { value: '김치' } });
-    fireEvent.click(screen.getByRole('button', { name: '‘김치’ 리스트에 추가하기' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '‘김치’ 리스트에 추가하기' }),
+    );
 
     expect(
       screen.getByRole('button', { name: '김치 수량 늘리기' }),

@@ -96,7 +96,7 @@ describe('OwnerMembersGuide', () => {
         onOpenMembers={() => {}}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: '알겠어요' }));
+    fireEvent.click(screen.getByRole('button', { name: '시작하기' }));
     expect(guide()).toBeNull();
 
     cleanup();

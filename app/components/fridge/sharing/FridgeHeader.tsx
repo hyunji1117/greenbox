@@ -84,9 +84,8 @@ const FridgeHeader: React.FC<FridgeHeaderProps> = ({ trailing }) => {
     );
   }
 
-  // 알림 첫 질문, 냉장고 바꾸기 안내, 시트가 끝난 뒤에 하나씩 보여 겹치지 않게 한다
-  const isBusy =
-    isGuideOpen || openSheet !== null || fridge.myNotifyLevel === null;
+  // 알림 첫 질문과 시트가 끝난 뒤에 안내를 띄운다. 안내끼리의 순서는 SpotlightGuide가 줄을 세워 정한다
+  const isBusy = openSheet !== null || fridge.myNotifyLevel === null;
 
   return (
     <div className="mb-4 flex items-center justify-between gap-2">
@@ -132,7 +131,7 @@ const FridgeHeader: React.FC<FridgeHeaderProps> = ({ trailing }) => {
       <OwnerMembersGuide
         fridge={fridge}
         target={membersRef}
-        isBlocked={isBusy || isCountGuideOpen}
+        isBlocked={isBusy}
         onOpenMembers={() => goToTab('settings')}
       />
       {isGuideOpen && (

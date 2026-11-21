@@ -13,6 +13,7 @@ import {
   ChartColumn,
   UserRound,
 } from 'lucide-react';
+import { announceTabReselect } from '@/app/lib/navigation/tabs';
 
 // --------------------------------------
 // 공통 Tab 타입
@@ -54,10 +55,8 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
       onClick={onClick}
       // 안내(SpotlightGuide)가 이 탭을 함께 비출 때 찾는 표시
       data-nav-tab={item.id}
-      className={`flex h-[64px] max-[500px]:h-[54px] max-[353px]:h-[48px] w-full shrink-0 grow basis-0 flex-col items-center justify-center rounded-3xl px-2 max-[500px]:px-1 max-[353px]:px-0.5 transition-all duration-150 ${
-        isActive
-          ? 'text-[#4b2f8c]'
-          : 'text-[#7b6d99] hover:bg-[#f3edff]/70'
+      className={`flex h-[64px] w-full shrink-0 grow basis-0 flex-col items-center justify-center rounded-3xl px-2 transition-all duration-150 max-[500px]:h-[54px] max-[500px]:px-1 max-[353px]:h-[48px] max-[353px]:px-0.5 ${
+        isActive ? 'text-[#4b2f8c]' : 'text-[#7b6d99] hover:bg-[#f3edff]/70'
       }`}
       title={item.title}
       aria-current={isActive ? 'page' : undefined}
@@ -67,7 +66,7 @@ const NavButton: React.FC<NavButtonProps> = ({ item, isActive, onClick }) => {
         aria-hidden
       />
       <span
-        className={`mt-2 max-[500px]:mt-1 max-[353px]:mt-0.5 text-sm max-[500px]:text-xs max-[353px]:text-[11px] leading-none max-[353px]:leading-tight ${
+        className={`mt-2 text-sm leading-none max-[500px]:mt-1 max-[500px]:text-xs max-[353px]:mt-0.5 max-[353px]:text-[11px] max-[353px]:leading-tight ${
           isActive ? 'font-semibold' : 'font-normal'
         }`}
       >
@@ -117,14 +116,14 @@ const BottomBar: React.FC<BottomBarProps> = ({
         role="navigation"
         aria-label="하단 내비게이션"
       >
-        <div className="relative mx-auto flex h-20 max-[500px]:h-[68px] max-[353px]:h-[60px] items-center justify-between px-3 max-[500px]:px-2 max-[353px]:px-1">
+        <div className="relative mx-auto flex h-20 items-center justify-between px-3 max-[500px]:h-[68px] max-[500px]:px-2 max-[353px]:h-[60px] max-[353px]:px-1">
           {/* 탭 버튼 */}
           <div className="relative flex h-full w-full items-center justify-between">
             {/* 활성 탭 배경 슬라이드 인디케이터
                 넓은 화면에서는 칸 양옆을 조금 비워, 마우스를 올린 옆 칸 배경과 맞닿아 보이지 않게 한다 */}
             <div
               aria-hidden
-              className="absolute left-0 top-[10px] bottom-[12px] max-[500px]:top-2 max-[500px]:bottom-2 max-[353px]:top-1.5 max-[353px]:bottom-1.5 md:px-1.5 transition-transform duration-300 ease-out"
+              className="absolute top-[10px] bottom-[12px] left-0 transition-transform duration-300 ease-out max-[500px]:top-2 max-[500px]:bottom-2 max-[353px]:top-1.5 max-[353px]:bottom-1.5 md:px-1.5"
               style={{
                 width: `${100 / navItems.length}%`,
                 transform: `translateX(${activeIndex * 100}%)`,
@@ -141,7 +140,12 @@ const BottomBar: React.FC<BottomBarProps> = ({
                 <NavButton
                   item={item}
                   isActive={activeTab === item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() =>
+                    // 보고 있는 탭을 한 번 더 누르면 그 탭이 처음 화면으로 돌아가게 알린다 (주소 기록은 쌓지 않는다)
+                    item.id === activeTab
+                      ? announceTabReselect(item.id)
+                      : setActiveTab(item.id)
+                  }
                 />
               </div>
             ))}

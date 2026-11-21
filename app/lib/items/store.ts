@@ -38,6 +38,8 @@ export interface ItemRow {
   expiry_date: string | null;
   watched: boolean;
   shelf: number | null;
+  // 앱이 선반에 놓고 아직 확인하지 않았으면 그 시각 (0019). 예전 테스트 행에는 없다
+  auto_placed_at?: Date | null;
   // 고른 단위 (0018). 예전 테스트 행에는 없다
   unit?: string | null;
   // 마지막으로 바뀐 때. 다 먹음/버림 품목을 최근 순으로 보여 줄 때 쓴다 (예전 테스트 행에는 없다)
@@ -60,7 +62,7 @@ const personSql = (userIdColumn: string, fridgeIdColumn: string) => `
 // 유통기한은 시간대 변환이 끼지 않도록 문자열로 읽는다
 // viewerParam: 보는 사람(로그인 사용자) 번호가 들어 있는 쿼리 자리. 그 사람의 관심 품목인지 함께 읽는다
 const selectItems = (viewerParam: string) => `
-  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.updated_at, i.finished, i.shelf, i.unit,
+  SELECT i.id, i.name, i.category, i.quantity, i.eaten_quantity, i.created_at, i.updated_at, i.finished, i.shelf, i.unit, i.auto_placed_at,
     to_char(i.expiry_date, 'YYYY-MM-DD') AS expiry_date,
     EXISTS (
       SELECT 1 FROM item_watchers w WHERE w.item_id = i.id AND w.user_id = ${viewerParam}
@@ -107,6 +109,8 @@ export function toItemJson(row: ItemRow) {
     watched: row.watched,
     unit: row.unit ?? null,
     shelf: row.shelf ?? null,
+    // 앱이 놓은 자리를 아직 확인하지 않았는지 (선반 보기에서 점선으로 보인다)
+    autoPlaced: Boolean(row.auto_placed_at),
     updatedAt: row.updated_at ? row.updated_at.toISOString() : null,
   };
 }
@@ -188,8 +192,10 @@ export async function updateItem(
        ),
        expiry_date = COALESCE($6::date, expiry_date),
        finished = COALESCE($7::boolean, finished),
-       -- 선반은 보냈을 때만 바꾼다 (null을 보내면 선반 미정으로)
+       -- 선반은 보냈을 때만 바꾼다 (화면 요청은 번호만 받는다. 선반 미정으로 되돌리기는 2026-11-18부터 없음)
        shelf = CASE WHEN $9::boolean THEN $10::smallint ELSE shelf END,
+       -- 사람이 선반을 정하면(앱이 놓은 자리 그대로여도) 확인한 것으로 본다
+       auto_placed_at = CASE WHEN $9::boolean THEN NULL ELSE auto_placed_at END,
        -- 단위도 보냈을 때만 바꾼다 (null을 보내면 이름으로 추정)
        unit = CASE WHEN $11::boolean THEN $12::text ELSE unit END,
        updated_at = now()

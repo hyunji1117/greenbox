@@ -12,6 +12,11 @@ import {
   type ShelfSettings,
 } from '@/app/lib/schemas/shelves';
 import { track } from '@/app/lib/analytics/gtag';
+import { requestPromptAgain } from '@/app/lib/shelves/autoPlacePrompt';
+import { requestShelfTourAgain } from '@/app/lib/shelves/shelfTour';
+import { z } from 'zod';
+
+const AutoPlaceResultSchema = z.object({ placed: z.number().int().min(0) });
 
 const shelvesUrl = (fridgeId: string) => `/api/fridges/${fridgeId}/shelves`;
 
@@ -66,12 +71,34 @@ export function useSetShelfView() {
         shelfKeys.settings(fridgeId),
         settings,
       );
+      // 정식 적용 전 베타 동안에는 켤 때마다 예전 식재료 배치 안내를 다시 띄운다
+      if (settings.enabled) {
+        requestPromptAgain();
+        requestShelfTourAgain();
+      }
       track('shelf_view_toggled', {
         view: settings.enabled ? 'shelf' : 'list',
         // 주인인지 나중에 들어온 가족인지, 몇 번째로 들어왔는지 (다음 베타 대상을 정할 때 참고)
         by: settings.myRole,
         join_rank: settings.myJoinRank,
       });
+    },
+  });
+}
+
+// 선반 보기 정식 전환: 선반 없이 들어가 있던 품목을 추천 자리에 놓는다 (서버가 이미 놓인 품목은 건드리지 않는다)
+export function useAutoPlace() {
+  const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridge().data?.id ?? '';
+  return useMutation({
+    mutationFn: () =>
+      apiFetch(`${shelvesUrl(fridgeId)}/auto-place`, AutoPlaceResultSchema, {
+        method: 'POST',
+      }),
+    onSuccess: ({ placed }) => {
+      if (placed === 0) return;
+      track('shelf_auto_placed', { count: placed });
+      return queryClient.invalidateQueries({ queryKey: ['items'] });
     },
   });
 }

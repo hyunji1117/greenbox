@@ -73,6 +73,9 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
 
   return (
     <article
+      // 선반 둘러보기가 방금 넣은 식재료를 찾을 때 쓴다 (ShelfTour)
+      data-tour-new={isNew ? 'true' : undefined}
+      data-item-id={item.id}
       className={`rounded-xl bg-white px-3 py-1.5 text-gray-800 shadow-[0_2px_10px_rgba(75,47,140,0.06)] ring-1 ring-black/5 ${
         isNew ? 'motion-safe:animate-item-added' : ''
       }`}
@@ -82,6 +85,8 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           type="button"
           onClick={onOpenDetail}
           aria-label={`${item.name} 상세: 수량, 유통기한, 선반, 기록`}
+          // 선반 둘러보기가 비추는 곳 (ShelfTour)
+          data-tour="item-name"
           className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-lg text-left active:bg-gray-50"
         >
           <span className="truncate text-[15px] leading-tight font-semibold">
@@ -137,6 +142,7 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           }
           aria-expanded={remaining > 1 ? eatCount !== null : undefined}
           aria-label={`${item.name} 먹음`}
+          data-tour="item-eat"
           className={`flex h-10 shrink-0 items-center gap-1 rounded-lg px-2.5 text-sm font-semibold transition-colors ${
             eatCount !== null
               ? 'bg-[#6B46C1] text-white'
@@ -158,6 +164,38 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           onConfirm={confirmEat}
           className="mb-1.5 rounded-lg p-1.5 pl-3"
         />
+      )}
+
+      {/* 앱이 추천 자리에 넣어 둔 예전 식재료: 여기서 자리를 확정한다 (점선 → 실선) */}
+      {item.autoPlaced && item.shelf !== null && (
+        <div className="mb-1.5 flex flex-wrap items-center gap-1.5 rounded-lg bg-[#F1EDFA] p-1.5 pl-2.5">
+          <span className="mr-auto text-xs font-semibold text-[#553C9A]">
+            추천 자리에 넣었어요
+          </span>
+          <button
+            type="button"
+            onClick={onOpenDetail}
+            aria-label={`${item.name} 옮기기`}
+            className="h-9 rounded-lg bg-white px-3 text-sm font-medium text-[#553C9A] ring-1 ring-[#DCD3F3]"
+          >
+            옮기기
+          </button>
+          <button
+            type="button"
+            disabled={updateItem.isPending}
+            onClick={() => {
+              const shelf = item.shelf as number;
+              updateItem
+                .mutateAsync({ id: item.id, updates: { shelf } })
+                .then(() => track('shelf_auto_checked', { result: 'kept' }))
+                .catch(() => {});
+            }}
+            aria-label={`${item.name} 여기 둘게요`}
+            className="h-9 rounded-lg bg-[#6B46C1] px-3 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            여기 둘게요
+          </button>
+        </div>
       )}
 
       {item.shelf === null && (

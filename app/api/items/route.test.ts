@@ -18,12 +18,19 @@ const mocks = vi.hoisted(() => ({
   updateItem: vi.fn(),
   addComment: vi.fn(),
   updateComment: vi.fn(),
+  isShelfViewOn: vi.fn(),
+  shelfSlotState: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('@/app/lib/fridges/store', async importOriginal => ({
   ...(await importOriginal<typeof import('@/app/lib/fridges/store')>()),
   getFridgeRole: mocks.getFridgeRole,
+}));
+vi.mock('@/app/lib/shelves/store', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/app/lib/shelves/store')>()),
+  isShelfViewOn: mocks.isShelfViewOn,
+  shelfSlotState: mocks.shelfSlotState,
 }));
 vi.mock('@/app/lib/items/store', async importOriginal => ({
   ...(await importOriginal<typeof import('@/app/lib/items/store')>()),
@@ -192,6 +199,45 @@ describe('POST /api/items', () => {
       // 유통기한을 비워 두면 권장 보관 기간(우유 냉장 5일)으로 채운다
       expiryDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
+  });
+
+  it('선반 보기가 켜진 냉장고에는 선반 없이 넣지 못하고, 선반을 정하면 넣는다', async () => {
+    mocks.isShelfViewOn.mockResolvedValue(true);
+    mocks.shelfSlotState.mockResolvedValue('ok');
+    mocks.createItem.mockResolvedValue(toItemJson(row));
+    const body = {
+      name: '오이',
+      category: 'fridge',
+      quantity: 1,
+      fridgeId: '5',
+    };
+
+    const refused = await POST(jsonRequest(JSON.stringify(body)));
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({ error: 'shelf_required' });
+    expect(mocks.createItem).not.toHaveBeenCalled();
+
+    const placed = await POST(
+      jsonRequest(JSON.stringify({ ...body, shelf: 5 })),
+    );
+    expect(placed.status).toBe(201);
+    expect(mocks.shelfSlotState).toHaveBeenCalledWith('5', 'fridge', 5);
+  });
+
+  it('선반 보기가 꺼진 냉장고는 선반 없이 넣는다 (목록 보기)', async () => {
+    mocks.isShelfViewOn.mockResolvedValue(false);
+    mocks.createItem.mockResolvedValue(toItemJson(row));
+    const res = await POST(
+      jsonRequest(
+        JSON.stringify({
+          name: '오이',
+          category: 'fridge',
+          quantity: 1,
+          fridgeId: '5',
+        }),
+      ),
+    );
+    expect(res.status).toBe(201);
   });
 
   it('유통기한을 비워 두면 오늘(한국 날짜)부터 권장 일수 뒤로 채우고, 직접 넣은 날짜는 그대로 둔다', async () => {

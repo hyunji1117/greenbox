@@ -103,6 +103,11 @@ type EventParams = {
   // method: 버튼으로 열고 닫았는지, 냉장고 위에서 밀었는지, 화면 끝에서 밀었는지(닫기만)
   fridge_doors_opened: { method: 'button' | 'swipe' };
   fridge_doors_closed: { method: 'button' | 'swipe' | 'edge' };
+  // 선반 보기 정식 전환: 앱이 선반 없는 품목을 놓은 수, 사람이 그 자리를 확인했는지 옮겼는지
+  shelf_auto_placed: { count: number };
+  shelf_auto_checked: { result: 'kept' | 'moved' };
+  // 정식 전환 안내를 끝까지 넘겼을 때 (그때 배치할 식재료 수)
+  shelf_auto_prompt_done: { count: number };
   shelf_opened: {
     category: string;
     shelf: number | 'unassigned';
@@ -129,7 +134,15 @@ type EventParams = {
   finished_item_restored: { from: 'eaten' | 'discarded' };
 };
 
-export type GuideName = 'fridge_switch' | 'owner_members' | 'members_count';
+export type GuideName =
+  | 'fridge_switch'
+  | 'owner_members'
+  | 'members_count'
+  // 선반 보기 업데이트 안내: 냉장실 문의 알림장, 밀어서 문 닫기
+  | 'shelf_board'
+  | 'door_swipe'
+  // 선반 둘러보기: 선반 열기 → 넣기 → 사진과 음성 → 선반 옮기기 → 먹음과 되돌리기 → 통계
+  | 'shelf_tour';
 
 export type JoinPageState =
   | 'invalid'

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import { recommendedExpiryDate } from '@/app/lib/items/storageGuide';
 import { koreaClock } from '@/app/lib/notifications/schedule';
 import { createItem, listItems } from '@/app/lib/items/store';
-import { shelfSlotState } from '@/app/lib/shelves/store';
+import { isShelfViewOn, shelfSlotState } from '@/app/lib/shelves/store';
 import {
   CreateItemRequestSchema,
   FridgeIdSchema,
@@ -15,6 +15,7 @@ import {
   notFound,
   requireFridgeMember,
   shelfConflict,
+  shelfRequired,
   requireUser,
 } from './guard';
 
@@ -56,6 +57,10 @@ export async function POST(request: Request) {
       input.category,
       koreaClock(new Date()).date,
     );
+  // 선반 보기가 켜진 냉장고에는 선반을 정해야 넣는다 ("선반 미정"이 새로 생기지 않게, 2026-11-20)
+  if (input.shelf === undefined && (await isShelfViewOn(fridgeId))) {
+    return shelfRequired();
+  }
   // 선반 보기에서 넣을 때: 그 선반이 있고 가득 차지 않았을 때만 놓는다
   if (input.shelf !== undefined) {
     const slot = await shelfSlotState(fridgeId, input.category, input.shelf);

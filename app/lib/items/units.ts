@@ -4,6 +4,8 @@
 // g은 그램으로만 파는 식재료(정육, 버섯 등)용. 수량이 그램 수라서 9999까지 받고 100g씩 움직이며,
 // 먹은 양도 그램으로 센다 (남은 양 = 처음 양 - 먹은 양 계산을 그대로 쓴다)
 
+import { foodGroupOf, type FoodGroup } from '@/app/lib/shelves/recommend';
+
 export const DEFAULT_UNIT = '개';
 
 const UNIT: Record<string, string> = {
@@ -106,6 +108,53 @@ export const GRAM_DEFAULT = 500;
 export function suggestedUnit(name: string): string {
   const key = KEYS.find(k => name.includes(k));
   return key ? UNIT[key] : DEFAULT_UNIT;
+}
+
+// 식재료마다 쓸 수 있는 단위 (2026-11-20). 15개를 다 보여 주면 계란에 "포기", 당근에 "마리"가 보여 고르기 번거로웠다
+// - 추천 단위 표에 있는 식재료: 그 단위와 함께 쓰이는 단위만
+// - 표에 없는 식재료: 추천 규칙의 식재료 무리(채소, 고기, 유제품, 반찬, 음료)로 정한다 (당근은 채소라 개, 봉, 팩, g)
+// - 어느 무리에도 안 맞으면 기본 단위만 보여 주고 "다른 단위"로 전체를 펼칠 수 있게 한다
+const WITH_SUGGESTED: Record<string, Unit[]> = {
+  구: ['구', '개'],
+  모: ['모', '개', 'g'],
+  단: ['단', '봉', 'g'],
+  묶음: ['묶음', '봉', '장'],
+  포기: ['포기', '통', '개'],
+  통: ['통', '개'],
+  봉: ['봉', '개', '팩', 'g'],
+  팩: ['팩', 'g', '개'],
+  마리: ['마리', '팩', 'g'],
+  캔: ['캔', '개'],
+  병: ['병', '팩', '개'],
+  송이: ['송이', '개', '팩'],
+  장: ['장', '팩', '봉'],
+};
+const BY_GROUP: Record<FoodGroup, Unit[]> = {
+  produce: ['개', '봉', '팩', 'g'],
+  meat: ['팩', 'g', '개'],
+  dairy: ['개', '팩'],
+  ready: ['통', '팩', '개'],
+  drink: ['병', '캔', '팩', '개'],
+};
+const FALLBACK_UNITS: Unit[] = ['개', '봉', '팩', 'g'];
+
+export function unitOptions(
+  name: string,
+  current?: string | null,
+): { units: Unit[]; canShowAll: boolean } {
+  const key = KEYS.find(k => name.includes(k));
+  const group = key ? null : foodGroupOf(name);
+  const units = key
+    ? (WITH_SUGGESTED[UNIT[key]] ?? [UNIT[key] as Unit, DEFAULT_UNIT as Unit])
+    : group
+      ? BY_GROUP[group]
+      : FALLBACK_UNITS;
+  // 전에 직접 고른 단위가 목록에 없으면 그것도 함께 보여 준다 (예전에 고른 값이 사라져 보이지 않게)
+  const withCurrent =
+    current && !units.includes(current as Unit)
+      ? [current as Unit, ...units]
+      : units;
+  return { units: withCurrent, canShowAll: !key && !group };
 }
 
 // 고른 단위가 있으면 그것, 없으면 이름으로 추정

@@ -7,6 +7,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -96,5 +97,51 @@ describe('ShelfItemCard 선반 정하기', () => {
       );
     });
     expect(mocks.track).not.toHaveBeenCalled();
+  });
+});
+
+describe('ShelfItemCard 앱이 추천 자리에 넣어 둔 식재료', () => {
+  const placed = { ...tofu, shelf: 2, autoPlaced: true };
+
+  it('여기 둘게요면 그 자리로 확정하고, 옮기기면 상세(냉장고 지도)를 연다', async () => {
+    mocks.mutateAsync.mockResolvedValue({});
+    const onOpenDetail = vi.fn();
+    render(
+      <ShelfItemCard
+        item={placed}
+        shelfCount={3}
+        onFinish={() => {}}
+        onEatSome={() => {}}
+        onOpenDetail={onOpenDetail}
+      />,
+    );
+    expect(screen.getByText('추천 자리에 넣었어요')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '두부 여기 둘게요' }));
+    await waitFor(() =>
+      expect(mocks.mutateAsync).toHaveBeenCalledWith({
+        id: '5',
+        updates: { shelf: 2 },
+      }),
+    );
+    await waitFor(() =>
+      expect(mocks.track).toHaveBeenCalledWith('shelf_auto_checked', {
+        result: 'kept',
+      }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: '두부 옮기기' }));
+    expect(onOpenDetail).toHaveBeenCalled();
+  });
+
+  it('직접 놓은 식재료에는 나오지 않는다', () => {
+    render(
+      <ShelfItemCard
+        item={{ ...tofu, shelf: 2, autoPlaced: false }}
+        shelfCount={3}
+        onFinish={() => {}}
+        onEatSome={() => {}}
+        onOpenDetail={() => {}}
+      />,
+    );
+    expect(screen.queryByText('추천 자리에 넣었어요')).toBeNull();
   });
 });

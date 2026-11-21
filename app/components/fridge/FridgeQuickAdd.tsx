@@ -4,6 +4,7 @@
 // 카메라로 찍으면 사진 속 식재료를 찾아 골라서 한 번에 등록한다
 // 입력창 오른쪽 + 를 누르면 카메라와 음성이 펼쳐진다 (장보기에서 말로 찾는 습관이 들어 등록에서도 찾게 됨)
 // 말한 이름은 입력창에 넣고, 확인한 뒤 + 로 등록한다 (잘못 알아들은 이름이 바로 들어가지 않게)
+// 선반 보기에서 자리가 정해지지 않은 곳(선반 없는 목록 등)에서 넣으면, 저장하기 전에 "오이! 어디에 넣을까요?"를 묻는다
 
 import React, { useRef, useState } from 'react';
 import { PlusIcon, ShoppingBasket } from 'lucide-react';
@@ -11,7 +12,12 @@ import InputAddActions from '@/app/components/common/InputAddActions';
 import PhotoAddSheet from '@/app/components/fridge/PhotoAddSheet';
 import { useVoiceFoodName } from '@/app/lib/speech/useVoiceFoodName';
 import VoiceCheckNotice from '@/app/components/common/VoiceCheckNotice';
-import { useCreateItem } from '@/app/lib/items/useItems';
+import PlaceSheet from '@/app/components/fridge/shelves/PlaceSheet';
+import type { ShelfCounts } from '@/app/lib/shelves/rules';
+import { shelfPlaceName } from '@/app/lib/shelves/recommend';
+import { useCreateItem, useUpdateItem } from '@/app/lib/items/useItems';
+import { withObjectParticle } from '@/app/lib/user/displayName';
+import { shelfTourItemAdded } from '@/app/lib/shelves/shelfTour';
 import { ApiError } from '@/app/lib/api/apiFetch';
 import {
   addedPlaceMessage,
@@ -42,6 +48,8 @@ interface FridgeQuickAddProps {
   onShowCategory?: (category: Category, message: string) => void;
   // 선반 보기 베타에서 선반을 열고 넣으면 그 선반에 바로 놓는다
   shelf?: number;
+  // 선반 보기에서 선반을 정하지 않고 넣을 때 자리를 묻기 위한 칸별 선반 수. 없으면 묻지 않는다 (목록 보기)
+  placeCounts?: ShelfCounts;
 }
 
 // 눌러도 입력창의 포커스를 유지해서 모바일 키보드가 닫히지 않게 한다
@@ -60,17 +68,35 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
   fridgeName,
   onShowCategory,
   shelf,
+  placeCounts,
 }) => {
   const createItem = useCreateItem('fridge_quick_add');
+  // 같은 이름이 이미 있어 "그 ○○이에요"를 골랐을 때 (앱이 넣어 둔 것이면 그 자리로 확정)
+  const confirmExisting = useUpdateItem();
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [notice, setNotice] = useState('');
   // 말한 이름은 다 들은 뒤 식재료 이름인지 확인하고 넣는다 (말하는 도중 글자나 잘못 들은 말이 등록되지 않게)
+  // 자리를 묻는 중인 식재료. 시트를 닫으면 아무것도 저장하지 않는다
+  const [placing, setPlacing] = useState<{
+    name: string;
+    onSuccess?: () => void;
+    // 말로 넣는 중이면 시트도 말로 묻는다
+    voice?: boolean;
+  } | null>(null);
+  // 선반 보기에서 자리가 정해지지 않았으면, 말한 이름은 입력창을 거치지 않고 바로 자리를 말로 묻는다
   const voice = useVoiceFoodName({
     knownNames: items.map(item => item.name),
-    onAccept: setName,
+    onAccept: spoken => {
+      if (placeCounts && shelf === undefined) {
+        createItem.reset();
+        setPlacing({ name: spoken, voice: true });
+        return;
+      }
+      setName(spoken);
+    },
   });
   const speech = voice.speech;
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -85,22 +111,51 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
     (alwaysShowSuggestions || isFocused) &&
     homeSuggestions.length + rebuySuggestions.length > 0;
 
-  const add = (itemName: string, onSuccess?: () => void) => {
+  const create = (
+    itemName: string,
+    targetShelf: number | undefined,
+    onSuccess?: () => void,
+  ) => {
     if (createItem.isPending) return;
     createItem.mutate(
-      { name: itemName, category, quantity: 1, shelf },
+      { name: itemName, category, quantity: 1, shelf: targetShelf },
       {
         onSuccess: item => {
           onSuccess?.();
           onAdded?.(item.id);
+          setPlacing(null);
+          // 선반 둘러보기 2장("식재료 추가해요")에서 기다리던 중이면 다음 장으로
+          shelfTourItemAdded();
+          const where =
+            targetShelf && placeCounts
+              ? shelfPlaceName(category, targetShelf, placeCounts[category])
+              : `${placeLabel(fridgeName, category)}${targetShelf ? ` ${targetShelf}번 선반` : ''}`;
           // 넣은 곳과, 서버가 권장 보관 기간으로 유통기한을 채웠다는 것을 함께 알린다 (참고값이라 고칠 수 있다고 안내)
-          setNotice(
-            `${placeLabel(fridgeName, category)}${shelf ? ` ${shelf}번 선반` : ''}에 넣었어요. ${EXPIRY_FILLED_NOTICE}`,
-          );
+          setNotice(`${where}에 넣었어요. ${EXPIRY_FILLED_NOTICE}`);
         },
       },
     );
   };
+
+  const add = (itemName: string, onSuccess?: () => void) => {
+    if (createItem.isPending) return;
+    if (placeCounts && shelf === undefined) {
+      createItem.reset();
+      setPlacing({ name: itemName, onSuccess });
+      return;
+    }
+    create(itemName, shelf, onSuccess);
+  };
+  const createErrorText =
+    createItem.error instanceof ApiError &&
+    (createItem.error.body as { error?: string } | null)?.error === 'shelf_full'
+      ? '이 선반은 더 넣을 자리가 없어요. 다른 선반에 넣어 주세요.'
+      : createItem.error instanceof ApiError &&
+          (createItem.error.body as { error?: string } | null)?.error ===
+            'shelf_required'
+        ? // 가족이 방금 선반 보기를 켜서 서버가 자리를 요구할 때
+          '선반 보기로 바뀌었어요. 새로고침한 뒤 자리를 골라 넣어 주세요.'
+        : '추가하지 못했어요. 다시 시도해 주세요.';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +284,9 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
         file={photo}
         onClose={() => setPhoto(null)}
         onRetake={openCamera}
+        // 선반 보기면 줄마다 추천 자리를 채우고 바꿀 수 있게 한다
+        placeCounts={placeCounts}
+        items={items}
         onAdded={(count, categories = []) => {
           setPhoto(null);
           // 사진은 AI가 품목마다 칸을 정하므로 지금 보는 칸과 다를 수 있다. 넣은 곳을 알리고, 모두 다른 칸이면 그 칸을 보여 준다
@@ -250,14 +308,50 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           {notice}
         </p>
       )}
-      {createItem.isError && (
+      {createItem.isError && placing === null && (
         <p role="alert" className="mt-2 text-center text-xs text-red-500">
-          {createItem.error instanceof ApiError &&
-          (createItem.error.body as { error?: string } | null)?.error ===
-            'shelf_full'
-            ? '이 선반이 가득 찼어요 (20개). 다른 선반에 넣어 주세요.'
-            : '추가하지 못했어요. 다시 시도해 주세요.'}
+          {createErrorText}
         </p>
+      )}
+      {placeCounts && (
+        <PlaceSheet
+          name={placing?.name ?? null}
+          category={category}
+          counts={placeCounts}
+          items={items}
+          isPending={createItem.isPending}
+          error={createItem.isError ? createErrorText : undefined}
+          onPlace={target =>
+            create(placing?.name ?? '', target, placing?.onSuccess)
+          }
+          onClose={() => setPlacing(null)}
+          voice={placing?.voice}
+          onUseExisting={existing => {
+            const finishUse = () => {
+              placing?.onSuccess?.();
+              setPlacing(null);
+              const where =
+                existing.shelf !== null && placeCounts
+                  ? ` (${shelfPlaceName(existing.category, existing.shelf, placeCounts[existing.category])})`
+                  : '';
+              setNotice(
+                `냉장고에 있던 ${withObjectParticle(existing.name)} 확인했어요${where}`,
+              );
+            };
+            if (existing.autoPlaced && existing.shelf !== null) {
+              const shelfOfExisting = existing.shelf;
+              confirmExisting
+                .mutateAsync({
+                  id: existing.id,
+                  updates: { shelf: shelfOfExisting },
+                })
+                .then(finishUse)
+                .catch(() => {});
+              return;
+            }
+            finishUse();
+          }}
+        />
       )}
     </div>
   );

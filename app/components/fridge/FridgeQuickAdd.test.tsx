@@ -16,7 +16,13 @@ import FridgeQuickAdd from './FridgeQuickAdd';
 const mutate = vi.hoisted(() => vi.fn());
 
 vi.mock('@/app/lib/items/useItems', () => ({
-  useCreateItem: () => ({ mutate, isPending: false, isError: false }),
+  useCreateItem: () => ({
+    mutate,
+    reset: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
+  useUpdateItem: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
 }));
 // 사진으로 찾기 화면은 PhotoAddSheet.test.tsx에서 따로 확인한다. 여기서는 넣은 뒤 알림만 보려고 onAdded만 잡아 둔다
 const photoSheet = vi.hoisted(() => ({
@@ -123,6 +129,56 @@ describe('FridgeQuickAdd', () => {
     vi.unstubAllGlobals();
   });
 
+  it('선반 보기에서 "오이"라고 말하면 입력창을 거치지 않고 자리를 묻고, "3번"이라고 답하면 3번 선반에 넣는다', async () => {
+    mutate.mockImplementation((_input, options) =>
+      options.onSuccess({ id: '9' }),
+    );
+    // 처음 듣기는 이름, 두 번째 듣기(시트가 연 마이크)는 자리
+    const turns = [['오이'], ['3번']];
+    let turn = 0;
+    const Base = fakeRecognition([]);
+    class TurnRecognition extends Base {
+      start() {
+        const said = turns[turn] ?? [];
+        turn += 1;
+        said.forEach((transcript, index) =>
+          setTimeout(
+            () =>
+              this.onresult?.({
+                results: [Object.assign([{ transcript }], { isFinal: false })],
+              }),
+            100 * (index + 1),
+          ),
+        );
+        setTimeout(() => this.onend?.(), 100 * (said.length + 1));
+      }
+    }
+    vi.stubGlobal('webkitSpeechRecognition', TurnRecognition);
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        placeCounts={{ fridge: 5, freezer: 3, pantry: 2 }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '말로 넣기' }));
+
+    const dialog = await screen.findByRole('dialog', {
+      name: '오이! 어디에 넣을까요?',
+    });
+    expect(dialog.textContent).toContain('들은 말');
+    expect(dialog.textContent).toContain('예시');
+    expect((input() as HTMLInputElement).value).toBe('');
+
+    await waitFor(() =>
+      expect(mutate.mock.calls[0]?.[0]).toMatchObject({
+        name: '오이',
+        shelf: 3,
+      }),
+    );
+    vi.unstubAllGlobals();
+  });
+
   it('이름을 다듬어 현재 칸에 수량 1로 추가하고 성공하면 입력을 비운다', () => {
     mutate.mockImplementation((_input, options) =>
       options.onSuccess({ id: '9' }),
@@ -141,6 +197,108 @@ describe('FridgeQuickAdd', () => {
     expect(input()).toHaveProperty('value', '');
     expect(onAdded).toHaveBeenCalledWith('9');
     expect(document.activeElement).toBe(input());
+  });
+
+  it('선반 보기에서 자리가 정해지지 않았으면 저장 전에 어디에 넣을지 묻고, 고른 선반에 넣는다', () => {
+    mutate.mockImplementation((_input, options) =>
+      options.onSuccess({ id: '9' }),
+    );
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        placeCounts={{ fridge: 5, freezer: 3, pantry: 2 }}
+      />,
+    );
+    fireEvent.change(input(), { target: { value: '오이' } });
+    submit();
+    // 아직 저장하지 않고 묻는다
+    expect(mutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('dialog', { name: '오이! 어디에 넣을까요?' }),
+    ).toBeTruthy();
+    expect(screen.getByText('냉장실 맨 아래 5번 선반')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '추천 자리에 넣기' }));
+    expect(mutate.mock.calls[0][0]).toEqual({
+      name: '오이',
+      category: 'fridge',
+      quantity: 1,
+      shelf: 5,
+    });
+    expect(screen.getByRole('status').textContent).toContain(
+      '냉장실 맨 아래 5번 선반에 넣었어요',
+    );
+  });
+
+  it('자리를 묻는 시트를 닫으면 저장하지 않고, 선반을 직접 눌러 넣을 수도 있다', () => {
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        placeCounts={{ fridge: 5, freezer: 3, pantry: 2 }}
+      />,
+    );
+    fireEvent.change(input(), { target: { value: '우유' } });
+    submit();
+    fireEvent.click(screen.getAllByRole('button', { name: '닫기' })[0]);
+    expect(mutate).not.toHaveBeenCalled();
+
+    submit();
+    fireEvent.click(screen.getByRole('radio', { name: '1번 선반, 0개' }));
+    expect(mutate.mock.calls[0][0]).toMatchObject({ name: '우유', shelf: 1 });
+  });
+
+  it('같은 이름이 이미 있으면 "그 버섯이에요"로 새로 넣지 않고 있던 것을 확인한다', async () => {
+    const mushroom = {
+      id: '41',
+      name: '버섯',
+      category: 'fridge' as const,
+      quantity: 1,
+      eatenQuantity: 0,
+      addedBy: { id: '7', name: '현지', isMember: true },
+      addedAt: new Date(),
+      comments: [],
+      finished: false,
+      expiryDate: '2026-11-30',
+      watched: false,
+      shelf: 5,
+      autoPlaced: true,
+      updatedAt: null,
+      unit: null,
+    };
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[mushroom]}
+        placeCounts={{ fridge: 5, freezer: 3, pantry: 2 }}
+      />,
+    );
+    fireEvent.change(input(), { target: { value: '버섯' } });
+    submit();
+    fireEvent.click(screen.getByRole('button', { name: '그 버섯이에요' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toContain(
+        '냉장고에 있던 버섯을 확인했어요 (냉장실 맨 아래 5번 선반)',
+      ),
+    );
+    expect(mutate).not.toHaveBeenCalled();
+    expect((input() as HTMLInputElement).value).toBe('');
+  });
+
+  it('선반을 열고 넣을 때는 자리를 다시 묻지 않는다', () => {
+    render(
+      <FridgeQuickAdd
+        category="fridge"
+        items={[]}
+        shelf={2}
+        placeCounts={{ fridge: 5, freezer: 3, pantry: 2 }}
+      />,
+    );
+    fireEvent.change(input(), { target: { value: '우유' } });
+    submit();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(mutate.mock.calls[0][0]).toMatchObject({ name: '우유', shelf: 2 });
   });
 
   it('실패하면 입력한 내용을 유지한다', () => {

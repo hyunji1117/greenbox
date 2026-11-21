@@ -6,6 +6,7 @@ import {
   quantityLimits,
   unitFor,
   withUnit,
+  unitOptions,
 } from './units';
 
 describe('unitFor', () => {
@@ -43,5 +44,38 @@ describe('고른 단위와 g', () => {
     expect(quantityAfterUnitChange('팩', 'g', 2)).toBe(500);
     expect(quantityAfterUnitChange('g', '팩', 600)).toBe(1);
     expect(quantityAfterUnitChange('개', '구', 30)).toBe(30);
+  });
+});
+
+describe('unitOptions (식재료마다 쓸 수 있는 단위)', () => {
+  it('추천 단위 표에 있는 식재료는 함께 쓰이는 단위만', () => {
+    expect(unitOptions('계란').units).toEqual(['구', '개']);
+    expect(unitOptions('두부').units).toEqual(['모', '개', 'g']);
+    expect(unitOptions('고등어').units).toEqual(['마리', '팩', 'g']);
+    expect(unitOptions('계란').canShowAll).toBe(false);
+  });
+
+  it('표에 없는 식재료는 식재료 무리로 정한다 (당근은 마리가 없다)', () => {
+    const carrot = unitOptions('당근');
+    expect(carrot.units).toEqual(['개', '봉', '팩', 'g']);
+    expect(carrot.units).not.toContain('마리');
+    expect(carrot.canShowAll).toBe(false);
+  });
+
+  it('어느 무리에도 안 맞는 식재료만 다른 단위로 전체를 펼칠 수 있다', () => {
+    expect(unitOptions('쿠키')).toEqual({
+      units: ['개', '봉', '팩', 'g'],
+      canShowAll: true,
+    });
+  });
+
+  it('전에 직접 고른 단위가 목록에 없으면 함께 보여 준다', () => {
+    expect(unitOptions('당근', '단').units).toEqual([
+      '단',
+      '개',
+      '봉',
+      '팩',
+      'g',
+    ]);
   });
 });

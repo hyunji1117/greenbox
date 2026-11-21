@@ -13,6 +13,8 @@ interface BottomSheetProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  // 휴대폰에서 짧은 질문형 제목("오이! 어디에 넣을까요?")은 가운데에 둔다
+  centerTitle?: boolean;
 }
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -20,6 +22,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   title,
   onClose,
   children,
+  centerTitle = false,
 }) => {
   const titleId = useId();
   // 닫는 동안에도 내려가는 모습을 보여 주기 위해, 닫힘 애니메이션이 끝날 때까지 화면에 남겨 둔다
@@ -59,7 +62,8 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
         aria-labelledby={titleId}
         // 휴대폰은 아래에서 올라오고, 넓은 화면은 가운데에서 살짝 떠오른다
         // 움직임 줄이기 설정이면 위치는 그대로 두고 투명도만 바꾼다
-        className={`relative max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-[#F2F2F6] p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] will-change-transform md:max-w-md md:rounded-3xl ${
+        // 제목 줄은 고정하고 내용만 스크롤한다. 시트 전체가 스크롤되면 내릴 때 내용이 둥근 위 끝에 바로 붙었다 (2026-11-18)
+        className={`relative flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl bg-[#F2F2F6] will-change-transform md:max-w-md md:rounded-3xl ${
           isClosing
             ? 'animate-sheet-down md:animate-dialog-out motion-reduce:animate-backdrop-out'
             : 'animate-sheet-up md:animate-dialog-in motion-reduce:animate-backdrop-in'
@@ -72,8 +76,21 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
           }
         }}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+        {/* 가운데 정렬일 때는 왼쪽에 닫기 버튼과 같은 폭의 빈 칸을 두어 제목이 정확히 가운데에 온다 */}
+        <div
+          className={`shrink-0 items-center px-4 pt-4 pb-3 ${
+            centerTitle
+              ? 'grid grid-cols-[40px_minmax(0,1fr)_40px] gap-1'
+              : 'flex justify-between'
+          }`}
+        >
+          {centerTitle && <span aria-hidden />}
+          <h2
+            id={titleId}
+            className={`text-lg font-semibold text-gray-900 ${
+              centerTitle ? 'text-center text-balance' : ''
+            }`}
+          >
             {title}
           </h2>
           <button
@@ -85,7 +102,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             <XIcon size={20} />
           </button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+          {children}
+        </div>
       </div>
     </div>,
     document.body,
