@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { doorSwipeResult, doorSwipeStart } from './doorSwipe';
+import { doorSwipeResult, doorSwipeStart, screenEdgeStart } from './doorSwipe';
 
 describe('doorSwipeStart', () => {
   it('닫혀 있으면 가운데 절반에서만 시작한다', () => {
@@ -8,11 +8,22 @@ describe('doorSwipeStart', () => {
     expect(doorSwipeStart(40, 360, false)).toBeNull();
   });
 
-  it('열려 있으면 양쪽 끝 쪽(폭의 35%, 최소 48px)에서만 시작한다', () => {
-    expect(doorSwipeStart(120, 360, true)).toBe('left-edge');
-    expect(doorSwipeStart(240, 360, true)).toBe('right-edge');
-    expect(doorSwipeStart(180, 360, true)).toBeNull();
-    expect(doorSwipeStart(40, 100, true)).toBe('left-edge');
+  it('열려 있으면 왼쪽 절반은 왼쪽 문, 오른쪽 절반은 오른쪽 문에서 시작한다', () => {
+    expect(doorSwipeStart(10, 360, true)).toBe('left-edge');
+    expect(doorSwipeStart(179, 360, true)).toBe('left-edge');
+    expect(doorSwipeStart(180, 360, true)).toBe('right-edge');
+    expect(doorSwipeStart(350, 360, true)).toBe('right-edge');
+  });
+});
+
+describe('screenEdgeStart', () => {
+  it('화면 양쪽 끝 24px 안에서 시작한 손길만 받는다', () => {
+    expect(screenEdgeStart(0, 390)).toBe('left-edge');
+    expect(screenEdgeStart(24, 390)).toBe('left-edge');
+    expect(screenEdgeStart(25, 390)).toBeNull();
+    expect(screenEdgeStart(366, 390)).toBe('right-edge');
+    expect(screenEdgeStart(389, 390)).toBe('right-edge');
+    expect(screenEdgeStart(10, 0)).toBeNull();
   });
 });
 

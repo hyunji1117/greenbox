@@ -100,9 +100,9 @@ type EventParams = {
   board_note_created: { length: number };
   board_note_checked: { checked: boolean };
   board_note_deleted: undefined;
-  // method: 버튼으로 열고 닫았는지, 손가락으로 밀었는지
+  // method: 버튼으로 열고 닫았는지, 냉장고 위에서 밀었는지, 화면 끝에서 밀었는지(닫기만)
   fridge_doors_opened: { method: 'button' | 'swipe' };
-  fridge_doors_closed: { method: 'button' | 'swipe' };
+  fridge_doors_closed: { method: 'button' | 'swipe' | 'edge' };
   shelf_opened: {
     category: string;
     shelf: number | 'unassigned';

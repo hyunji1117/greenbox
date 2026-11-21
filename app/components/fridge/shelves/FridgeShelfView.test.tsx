@@ -127,4 +127,40 @@ describe('FridgeShelfView 문 밀기', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(onOpenShelf).toHaveBeenCalled();
   });
+
+  it('열린 문은 오른쪽 절반에서 왼쪽으로 미는 중에 바로 닫히고, 이어서 손길이 끊겨도 한 번만 닫힌다', () => {
+    const { doors, onOpenChange } = renderDoors(true);
+    fireEvent.pointerDown(doors, { clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(doors, { clientX: 170, clientY: 202 });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.pointerMove(doors, { clientX: 130, clientY: 204 });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    fireEvent.pointerCancel(doors);
+    fireEvent.pointerUp(doors, { clientX: 100, clientY: 205 });
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('문이 열려 있으면 화면 끝에서 안쪽으로 미는 손길로 닫힌다 (냉장고 바깥에서 시작해도)', () => {
+    const { onOpenChange } = renderDoors(true);
+    const width = window.innerWidth;
+    fireEvent.touchStart(window, {
+      touches: [{ clientX: width - 5, clientY: 300 }],
+    });
+    fireEvent.touchMove(window, {
+      touches: [{ clientX: width - 90, clientY: 310 }],
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('화면 가운데에서 시작하거나 문이 닫혀 있으면 화면 끝 밀기로 아무것도 하지 않는다', () => {
+    const { onOpenChange } = renderDoors(true);
+    fireEvent.touchStart(window, { touches: [{ clientX: 300, clientY: 300 }] });
+    fireEvent.touchMove(window, { touches: [{ clientX: 200, clientY: 300 }] });
+    cleanup();
+    const closed = renderDoors(false);
+    fireEvent.touchStart(window, { touches: [{ clientX: 2, clientY: 300 }] });
+    fireEvent.touchMove(window, { touches: [{ clientX: 120, clientY: 300 }] });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(closed.onOpenChange).not.toHaveBeenCalled();
+  });
 });

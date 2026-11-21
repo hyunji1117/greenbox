@@ -2,7 +2,7 @@
 // app/components/fridge/shelves/FridgeShelfView.tsx
 // 선반 보기 베타 (docs/decisions/0012-shelf-view-beta.md)
 // - 양문형 냉장고가 닫힌 채로 보이고, 누르면 문이 양쪽으로 열린다 (움직임 줄이기면 바로 열림)
-// - 가운데에서 옆으로 밀어도 열리고, 열린 뒤 양쪽 끝에서 안쪽으로 밀면 닫힌다 (app/lib/shelves/doorSwipe.ts)
+// - 가운데에서 옆으로 밀어도 열리고, 열린 뒤 양쪽 절반이나 화면 끝에서 안쪽으로 밀면 닫힌다 (app/lib/shelves/doorSwipe.ts)
 // - 왼쪽 냉동실, 오른쪽 냉장실, 아래 상온 선반. 선반마다 식재료를 사진 타일로 10개까지 가운데에 가지런히 놓는다 (전체는 선반을 눌러 목록에서)
 // - 선반을 누르면 그 선반의 목록(등록, 수량, 알림)으로 들어간다
 // - 선반 추가는 언제나, 줄이기는 비어 있는 선반이 있을 때만 (서버도 같은 규칙으로 거부)
@@ -22,6 +22,7 @@ import { foodIconFor } from '@/app/lib/shelves/foodIcons';
 import {
   doorSwipeResult,
   doorSwipeStart,
+  screenEdgeStart,
   type DoorSwipeStart,
 } from '@/app/lib/shelves/doorSwipe';
 
@@ -312,41 +313,106 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       </p>
     ) : null;
 
-  // 문 밀기: 손가락을 댄 자리와 뗀 자리로 판정한다. 밀어서 열고 닫은 직후의 클릭(선반 열기)은 막는다
+  // 문 밀기: 손가락을 댄 자리에서 움직인 거리로 판정한다. 밀어서 열고 닫은 직후의 클릭(선반 열기)은 막는다
+  // 손을 뗄 때만 판정하면, 그 전에 브라우저나 앱이 손길을 가져가(pointercancel) 닫기가 사라졌다.
+  // 그래서 움직이는 중에 기준을 넘으면 바로 판정한다
   const swipeRef = useRef<{
     x: number;
     y: number;
     start: DoorSwipeStart | null;
   } | null>(null);
   const swipedRef = useRef(false);
+  // 판정되면 true. 같은 손길로 두 번 판정하지 않게 부른 쪽에서 기록을 지운다
+  const settleSwipe = (x: number, y: number): boolean => {
+    const swipe = swipeRef.current;
+    if (!swipe) return false;
+    const result = doorSwipeResult(swipe.start, x - swipe.x, y - swipe.y);
+    if (result === 'open' && !isOpen) {
+      swipedRef.current = true;
+      onOpenChange(true);
+      track('fridge_doors_opened', { method: 'swipe' });
+      return true;
+    }
+    if (result === 'close' && isOpen) {
+      swipedRef.current = true;
+      onOpenChange(false);
+      track('fridge_doors_closed', { method: 'swipe' });
+      return true;
+    }
+    return false;
+  };
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
     swipedRef.current = false;
+    swipeRef.current = null;
+    // 화면 끝에서 시작한 손길은 아래의 화면 전체 듣기가 맡는다 (두 번 닫히지 않게)
+    if (
+      isOpen &&
+      event.pointerType === 'touch' &&
+      screenEdgeStart(event.clientX, window.innerWidth) !== null
+    ) {
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
     swipeRef.current = {
       x: event.clientX,
       y: event.clientY,
       start: doorSwipeStart(event.clientX - rect.left, rect.width, isOpen),
     };
   };
-  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    const swipe = swipeRef.current;
-    swipeRef.current = null;
-    if (!swipe) return;
-    const result = doorSwipeResult(
-      swipe.start,
-      event.clientX - swipe.x,
-      event.clientY - swipe.y,
-    );
-    if (result === 'open' && !isOpen) {
-      swipedRef.current = true;
-      onOpenChange(true);
-      track('fridge_doors_opened', { method: 'swipe' });
-    } else if (result === 'close' && isOpen) {
-      swipedRef.current = true;
-      onOpenChange(false);
-      track('fridge_doors_closed', { method: 'swipe' });
-    }
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (settleSwipe(event.clientX, event.clientY)) swipeRef.current = null;
   };
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    settleSwipe(event.clientX, event.clientY);
+    swipeRef.current = null;
+  };
+
+  // 문이 열려 있으면 화면 끝(냉장고 바깥 여백 포함)에서 안쪽으로 미는 손길도 받아 문을 닫는다
+  // 냉장고 바깥에서 시작하면 브라우저가 곧 손길을 가져가 pointer 이벤트가 끊기므로, 스크롤 중에도 이어지는 touch 이벤트로 본다
+  const onOpenChangeRef = useRef(onOpenChange);
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
+  useEffect(() => {
+    if (!isOpen) return;
+    let edge: { x: number; y: number; start: DoorSwipeStart } | null = null;
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      const start =
+        event.touches.length === 1 && touch
+          ? screenEdgeStart(touch.clientX, window.innerWidth)
+          : null;
+      edge =
+        touch && start ? { x: touch.clientX, y: touch.clientY, start } : null;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!edge || !touch) return;
+      const result = doorSwipeResult(
+        edge.start,
+        touch.clientX - edge.x,
+        touch.clientY - edge.y,
+      );
+      if (result !== 'close') return;
+      edge = null;
+      swipedRef.current = true;
+      onOpenChangeRef.current(false);
+      track('fridge_doors_closed', { method: 'edge' });
+    };
+    const clear = () => {
+      edge = null;
+    };
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', clear);
+    window.addEventListener('touchcancel', clear);
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', clear);
+      window.removeEventListener('touchcancel', clear);
+    };
+  }, [isOpen]);
   const onClickCapture = (event: React.MouseEvent) => {
     if (!swipedRef.current) return;
     swipedRef.current = false;
@@ -404,6 +470,7 @@ const FridgeShelfView: React.FC<FridgeShelfViewProps> = ({
       <div
         className="relative touch-pan-y [perspective:1400px]"
         onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => {
           swipeRef.current = null;

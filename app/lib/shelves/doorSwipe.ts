@@ -1,14 +1,14 @@
 // app/lib/shelves/doorSwipe.ts
 // 냉장고 문을 손가락으로 밀어 열고 닫는 판정. 버튼(눌러서 열기, 문 닫기)은 그대로 두고 밀기는 덧붙인다
 // - 닫혀 있을 때: 가운데(문이 맞닿는 곳)에서 시작해 옆으로 밀면 연다. 실제 양문을 여는 손 모양
-// - 열려 있을 때: 양쪽 끝 쪽(폭의 35%, 최소 48px)에서 시작해 안쪽으로 밀면 닫는다
+// - 열려 있을 때: 왼쪽 절반에서 오른쪽으로, 오른쪽 절반에서 왼쪽으로 밀면 닫는다 (열린 문짝은 화면에 보이지 않아
+//   35% 끝 띠로는 어디서 밀어야 하는지 찾기 어려웠다)
+// - 화면 끝(24px)에서 안쪽으로 밀어도 닫는다. 휴대폰에서 문을 닫는 가장 흔한 손길이다
 //   밀기로 판정되면 그 손길의 클릭은 막으므로 선반 위에서 시작해도 선반이 열리지 않는다
 // - 세로로 더 많이 움직였으면 화면 스크롤로 보고 무시한다
 
 export const DOOR_SWIPE_MIN_PX = 60;
-export const DOOR_EDGE_BAND_PX = 48;
-// 끝 띠가 48px이면 어디서 시작해야 닫히는지 찾기 어려워(dev 테스트에서 확인) 폭의 35%까지 넓힌다
-const EDGE_BAND_RATIO = 0.35;
+export const SCREEN_EDGE_PX = 24;
 // 가운데 시작 범위: 폭의 가운데 절반
 const CENTER_BAND_RATIO = 0.25;
 
@@ -26,13 +26,21 @@ export function doorSwipeStart(
       ? 'center'
       : null;
   }
-  const band = Math.max(DOOR_EDGE_BAND_PX, width * EDGE_BAND_RATIO);
-  if (x <= band) return 'left-edge';
-  if (x >= width - band) return 'right-edge';
+  return x < width / 2 ? 'left-edge' : 'right-edge';
+}
+
+// 화면 끝에서 시작한 손길인지. x는 화면 왼쪽 끝에서 잰 거리
+export function screenEdgeStart(
+  x: number,
+  viewportWidth: number,
+): DoorSwipeStart | null {
+  if (viewportWidth <= 0) return null;
+  if (x <= SCREEN_EDGE_PX) return 'left-edge';
+  if (x >= viewportWidth - SCREEN_EDGE_PX) return 'right-edge';
   return null;
 }
 
-// 손을 뗐을 때 문을 열지, 닫을지, 그대로 둘지
+// 움직이는 중이나 손을 뗐을 때 문을 열지, 닫을지, 그대로 둘지
 export function doorSwipeResult(
   start: DoorSwipeStart | null,
   dx: number,

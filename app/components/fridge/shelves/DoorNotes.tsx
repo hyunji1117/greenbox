@@ -1,7 +1,7 @@
 'use client';
 // app/components/fridge/shelves/DoorNotes.tsx
 // 가족 게시판: 닫힌 냉장실 문에 붙은 작은 화이트보드 (선반 보기 베타)
-// - 문 위의 보드(높이 150px)에는 실제로 쓴 메모를 아주 작은 체크박스 목록으로 두 칸에 적어 둔다 (읽기는 크게 펼쳐서)
+// - 문 위의 보드(표지판 아래부터 손잡이 위까지)에는 실제로 쓴 메모를 아주 작은 체크박스 목록으로 두 칸에 적어 둔다 (읽기는 크게 펼쳐서)
 // - 보드를 누르면 화면 가운데에 큰 화이트보드가 뜨고 뒤는 어둡게 가린다. 보드 안에서 스크롤로 모든 기록을 본다
 // - 큰 보드에서 가족 누구나 쓰고, 눌러서 확인(줄 긋기)하고, 확인된 메모만 "⋯"에서 지운다
 // - 새 메모는 다른 가족에게 알림이 간다 (서버가 알림 설정과 5분 간격을 지킨다)
@@ -18,8 +18,9 @@ import {
 } from '@/app/lib/notes/useNotes';
 import { NOTE_TEXT_MAX, type Note } from '@/app/lib/schemas/notes';
 
-// 문 위 보드에 작은 글씨로 적어 두는 메모 수 (높이 150px, 두 칸에 들어가는 만큼)
-export const PREVIEW_ON_BOARD = 26;
+// 문 위 보드에 작은 글씨로 적어 두는 메모 수. 보드 높이는 냉장고 높이(선반 수)를 따라 바뀌어
+// 가장 큰 냉장고(선반 7칸)에서 두 칸이 차는 만큼 넉넉히 두고, 넘치는 줄은 보드가 잘라 낸다
+export const PREVIEW_ON_BOARD = 60;
 export const BOARD_TITLE = '알림장';
 // 쓰기 칸 예시. 냉장고 앞에서 가족끼리 실제로 주고받는 말(찜하기, 부탁, 알림)을 번갈아 보여 준다
 // 좁은 화면에서도 잘리지 않게 10자 안팎으로
@@ -239,7 +240,10 @@ const NotesBoard: React.FC<{
   );
 };
 
-// 닫힌 냉장실 문에 붙은 화이트보드. 폭은 냉장실 문에 맞추고 높이는 150px
+// 닫힌 냉장실 문에 붙은 화이트보드. 폭은 냉장실 문에 맞추고, 위는 표지판 아래(64px), 아래는 문 손잡이 위쪽 끝에서 8px 위
+// 손잡이는 문 세로 가운데에 놓인 144px 막대(FridgeShelfView)라 위쪽 끝이 "높이의 50% - 72px"이다.
+// 고정 높이 대신 손잡이에 맞춰 두어 냉장고 높이가 바뀌어도 늘 손잡이 위에서 멈춘다.
+// 선반이 적어 손잡이 위 자리가 거의 없으면 최소 40px은 남긴다 (그때만 손잡이와 살짝 겹친다)
 // 실제 메모를 아주 작게(7px) 적어 무엇이 붙어 있는지만 보이게 하고, 누르면 큰 보드가 열린다
 // 냉장고를 여는 버튼보다 위에 놓아 보드를 눌러도 문이 열리지 않는다
 const DoorNotes: React.FC = () => {
@@ -257,16 +261,18 @@ const DoorNotes: React.FC = () => {
   };
   return (
     <>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[calc(50%-2px)] px-3 pt-16">
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[calc(50%-2px)]">
         <button
           type="button"
           onClick={open}
+          // 업데이트 안내(ShelfUpdateGuide)가 이 보드를 비출 때 찾는 표시
+          data-guide-target="door-notes"
           aria-label={
             unchecked.length > 0
               ? `${BOARD_TITLE} 열기, 확인 전 메모 ${unchecked.length}개`
               : `${BOARD_TITLE} 열기`
           }
-          className="pointer-events-auto relative flex h-[150px] w-full flex-col rounded-sm border-2 border-[#C9CED8] bg-white px-1.5 pt-0.5 pb-1 text-left shadow-[0_1px_3px_rgba(31,26,46,0.12)] active:bg-gray-50"
+          className="pointer-events-auto absolute inset-x-3 top-16 bottom-[calc(50%+80px)] flex min-h-10 flex-col rounded-sm border-2 border-[#C9CED8] bg-white px-1.5 pt-0.5 pb-1 text-left shadow-[0_1px_3px_rgba(31,26,46,0.12)] active:bg-gray-50"
         >
           {/* 제목은 맨 위 가운데에 붙인다 */}
           <span

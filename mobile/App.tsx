@@ -149,7 +149,8 @@ function Shell() {
           onContentProcessDidTerminate={() => webViewRef.current?.reload()}
           onRenderProcessGone={() => webViewRef.current?.reload()}
           sharedCookiesEnabled
-          allowsBackForwardNavigationGestures
+          // 화면 끝에서 밀어 뒤로/앞으로 가기는 켜지 않는다. 탭을 옮길 때마다 주소 기록이 쌓여
+          // 끝에서 밀면 이전/다음 탭으로 넘어갔고, 냉장고 탭에서는 끝에서 안쪽으로 밀면 문이 닫혀야 한다
           pullToRefreshEnabled
           setSupportMultipleWindows={false}
           contentInsetAdjustmentBehavior="never"
