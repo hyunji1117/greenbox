@@ -20,6 +20,7 @@ vi.mock('@/app/lib/notifications/testPush', () => ({
 }));
 
 import { OPERATOR } from '@/app/lib/consent/operator';
+import { TEST_ACCOUNT_EMAIL } from '@/app/lib/testing/testAccount';
 import { POST } from './route';
 
 beforeEach(() => {
@@ -36,12 +37,14 @@ beforeEach(() => {
 });
 
 describe('POST /api/notifications/test', () => {
-  it('운영자 계정만 자기 기기로 보낼 수 있다', async () => {
+  it('테스트 계정만 자기 기기로 보낼 수 있고, 운영자 계정도 거절한다', async () => {
     mocks.getMyProfile.mockResolvedValue({ email: 'someone@example.com' });
+    expect((await POST()).status).toBe(403);
+    mocks.getMyProfile.mockResolvedValue({ email: OPERATOR.email });
     expect((await POST()).status).toBe(403);
     expect(mocks.sendTestSummaries).not.toHaveBeenCalled();
 
-    mocks.getMyProfile.mockResolvedValue({ email: OPERATOR.email });
+    mocks.getMyProfile.mockResolvedValue({ email: TEST_ACCOUNT_EMAIL });
     const res = await POST();
     expect(res.status).toBe(200);
     expect(mocks.sendTestSummaries).toHaveBeenCalledWith(

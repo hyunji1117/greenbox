@@ -1,6 +1,6 @@
 'use client';
-// app/components/settings/OperatorTestPush.tsx
-// 운영자만 보이는 테스트 알림 버튼. 지금 받을 매일 알림을 문구 A와 B로 한 번씩 보낸다
+// app/components/settings/TestPushCard.tsx
+// 테스트 계정(greenboxtest7)만 보이는 테스트 알림 버튼. 지금 받을 매일 알림을 문구 A와 B로 한 번씩 보낸다
 
 import React from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ const SOURCE_LABEL = {
   sample: '품목이 없어 예시 품목',
 } as const;
 
-const OperatorTestPush: React.FC = () => {
+const TestPushCard: React.FC = () => {
   const send = useMutation({
     mutationFn: () =>
       apiFetch('/api/notifications/test', ResultSchema, { method: 'POST' }),
@@ -55,4 +55,4 @@ const OperatorTestPush: React.FC = () => {
   );
 };
 
-export default OperatorTestPush;
+export default TestPushCard;

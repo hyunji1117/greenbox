@@ -6,6 +6,7 @@
 
 import type { FinishKind } from '@/app/lib/items/useFinishWithUndo';
 import type { PushStatus } from '@/app/lib/push/subscribe';
+import { isGuideTestOn, saveGuideTestOn } from '@/app/lib/testing/guideTest';
 
 export type ItemAddSource =
   | 'fridge_quick_add'
@@ -204,6 +205,7 @@ let initializedId: string | null = null;
 export function initAnalytics(gaId: string): void {
   if (initializedId === gaId) return;
   initializedId = gaId;
+  applyGuideTestOptOut();
   const traffic = resolveTrafficParams(
     window.location.search,
     safeLocalStorage(),
@@ -223,7 +225,7 @@ function liveTrafficParams(): TrafficParams {
 }
 
 export function trackPageView(url: string): void {
-  if (!initializedId) return;
+  if (!initializedId || isGuideTestOn()) return;
   gtag('event', 'page_view', {
     page_location: url,
     page_title: document.title,
@@ -235,8 +237,23 @@ export function track<N extends EventName>(
   name: N,
   ...params: EventParams[N] extends undefined ? [] : [EventParams[N]]
 ): void {
-  if (!initializedId) return;
+  if (!initializedId || isGuideTestOn()) return;
   gtag('event', name, { ...(params[0] ?? {}), ...liveTrafficParams() });
+}
+
+// 가이드 테스트(테스트 계정 전용)가 켜진 동안에는 이 기기에서 GA4로 아무것도 보내지 않는다.
+// 직접 보내는 이벤트는 track과 trackPageView에서 거르고, gtag.js가 스스로 모으는 이벤트(스크롤 등)는
+// GA가 정한 끄기 표시(window['ga-disable-측정ID'])로 막는다
+function applyGuideTestOptOut(): void {
+  if (typeof window === 'undefined' || !initializedId) return;
+  (window as unknown as Record<string, unknown>)[
+    `ga-disable-${initializedId}`
+  ] = isGuideTestOn();
+}
+
+export function setGuideTestMode(on: boolean): void {
+  saveGuideTestOn(on);
+  applyGuideTestOptOut();
 }
 
 // 설정 화면의 테스트 기기 스위치. 켜면 다음 이벤트부터 바로 개발자 트래픽으로 보낸다

@@ -6,6 +6,7 @@ import {
   initAnalytics,
   resetAnalyticsForTest,
   resolveTrafficParams,
+  setGuideTestMode,
   setInternalDevice,
   track,
   trackPageView,
@@ -97,6 +98,22 @@ describe('track', () => {
     expect(commands().at(-3)?.[2]).toEqual({});
     expect(commands().at(-2)?.[2]).toEqual({ debug_mode: true });
     expect(commands().at(-1)?.[2]).toMatchObject({ debug_mode: true });
+  });
+
+  it('가이드 테스트가 켜진 동안에는 아무 이벤트도 보내지 않고, GA 자동 수집도 끈다', () => {
+    initAnalytics('G-TEST');
+    const before = commands().length;
+    setGuideTestMode(true);
+    track('comment_added');
+    trackPageView('http://localhost/');
+    expect(commands()).toHaveLength(before);
+    const win = window as unknown as Record<string, unknown>;
+    expect(win['ga-disable-G-TEST']).toBe(true);
+
+    setGuideTestMode(false);
+    track('comment_added');
+    expect(commands()).toHaveLength(before + 1);
+    expect(win['ga-disable-G-TEST']).toBe(false);
   });
 
   it('여러 번 불러도 설정은 한 번만 보낸다', () => {

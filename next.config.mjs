@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // next-pwa(5.6.0) → @ducanh2912/next-pwa(Next 15 호환 포크) 교체.
 // 기존 설정(dest/register/skipWaiting/runtimeCaching)을 새 API로 동등 이전.
-// skipWaiting·runtimeCaching은 이제 workboxOptions 하위로 이동.
+// skipWaiting/runtimeCaching은 이제 workboxOptions 하위로 이동.
 const pwaConfig = withPWAInit({
   dest: 'public',
   register: true,
@@ -44,6 +44,9 @@ const nextConfig = {
 
   // React Strict Mode 설정 (Fast Refresh 에러 해결)
   reactStrictMode: true,
+
+  // 폰에서 Tailscale 주소로 dev 서버를 열 때 자동 새로고침(HMR)과 dev 자원 요청을 막지 않는다 (dev 서버에만 적용)
+  allowedDevOrigins: ['*.ts.net'],
 
   // 이미지 도메인 설정 - remotePatterns만 사용 (deprecated 경고 해결)
   images: {

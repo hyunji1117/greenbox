@@ -14,7 +14,7 @@ import AppVersionCard from '@/app/components/settings/AppVersionCard';
 import FaqCard from '@/app/components/settings/FaqCard';
 import MembersEntryCard from '@/app/components/settings/MembersEntryCard';
 import ShelfBetaCard from '@/app/components/settings/ShelfBetaCard';
-import { OPERATOR } from '@/app/lib/consent/operator';
+import { isTestAccount } from '@/app/lib/testing/testAccount';
 import { logout, updateFamilyNickname } from '@/app/auth/actions';
 import { FAMILY_NICKNAME_MAX, toDisplayName } from '@/app/lib/user/displayName';
 import { useQueryClient } from '@tanstack/react-query';
@@ -218,7 +218,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             <PushNotificationCard />
             <NotificationSettingsCard />
             <ShelfBetaCard />
-            <AppVersionCard isOperator={myProfile?.email === OPERATOR.email} />
+            <AppVersionCard
+              isTestAccount={
+                myProfile ? isTestAccount(myProfile.email) : undefined
+              }
+            />
           </>
         )}
         {activeSection === 'help' && (

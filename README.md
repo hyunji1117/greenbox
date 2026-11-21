@@ -223,6 +223,8 @@ AUTH_GOOGLE_SECRET=your_google_client_secret
 
 DB 스키마는 `db/migrations`의 SQL을 번호 순서대로 적용합니다.
 
+로컬에서는 운영 DB 대신 이 컴퓨터 안의 개발용 PostgreSQL을 씁니다. `scripts/dev-db.sh setup`으로 한 번 만들고(홈 폴더 `~/.greenbox-dev-db`, 마이그레이션 자동 적용), `scripts/dev-db.sh dev`로 그 DB를 보는 개발 서버를 띄웁니다. 인증서와 비밀번호는 컴퓨터마다 새로 만들어 저장소에 넣지 않습니다.
+
 ### 환경 변수 (웹 푸시 알림용)
 
 ```env

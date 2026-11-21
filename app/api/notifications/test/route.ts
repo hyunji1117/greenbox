@@ -1,13 +1,13 @@
 // app/api/notifications/test/route.ts
-// 운영자 테스트 알림. 운영자 계정(방침에 적힌 운영자 이메일로 가입한 계정)만 자기 기기로 보낼 수 있다
+// 테스트 알림. 테스트 계정(app/lib/testing/testAccount.ts)만 자기 기기로 보낼 수 있다
 
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/app/api/items/guard';
-import { OPERATOR } from '@/app/lib/consent/operator';
 import { koreaClock } from '@/app/lib/notifications/schedule';
 import { sendTestSummaries } from '@/app/lib/notifications/testPush';
 import { configurePush } from '@/app/lib/push/sendToUsers';
 import { getMyProfile } from '@/app/lib/user/profile';
+import { isTestAccount } from '@/app/lib/testing/testAccount';
 
 // 연달아 눌러 알림이 쌓이지 않게 막는다 (인스턴스마다 따로 세는 가벼운 제한)
 const WINDOW_MS = 10 * 60 * 1000;
@@ -19,7 +19,7 @@ export async function POST() {
   if (response) return response;
 
   const profile = await getMyProfile(userId);
-  if (profile?.email !== OPERATOR.email) {
+  if (!isTestAccount(profile?.email)) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
   const now = Date.now();

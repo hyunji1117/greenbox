@@ -1,13 +1,26 @@
 'use client';
 // app/components/settings/AppVersionCard.tsx
-// 앱 버전 표시. 버전을 5번 연달아 누르면 개발자용 "테스트 기기로 표시" 스위치가 나오고, 다시 5번 누르면 숨긴다
-// 일반 사용자에게는 통계용 스위치와 배포 커밋이 보이지 않게 숨긴다. 켠 기기에서는 숨기기 전까지 계속 보여 준다
+// 앱 버전 표시. 테스트 계정(greenboxtest7)에서만 버전을 5번 연달아 누르면 개발자 영역
+// (테스트 기기 표시, 테스트 알림, 가이드 테스트)이 나오고, 다시 5번 누르면 숨긴다
+// 다른 계정은 5번 눌러도 아무 일이 없다. 다른 계정으로 마이를 열면 이 기기의 테스트 기기 표시와 가이드 테스트를 끈다
+// (테스트 설정은 테스트 계정에만 적용한다). 켠 기기에서는 숨기기 전까지 계속 보여 준다
 
-import React, { useRef, useState, useSyncExternalStore } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
 import InternalDeviceToggle from '@/app/components/settings/InternalDeviceToggle';
-import OperatorTestPush from '@/app/components/settings/OperatorTestPush';
-import { isInternalDevice } from '@/app/lib/analytics/gtag';
+import TestPushCard from '@/app/components/settings/TestPushCard';
+import GuideTestCard from '@/app/components/settings/GuideTestCard';
+import {
+  isInternalDevice,
+  setGuideTestMode,
+  setInternalDevice,
+} from '@/app/lib/analytics/gtag';
+import { isGuideTestOn } from '@/app/lib/testing/guideTest';
 import { appVersionLabel } from '@/app/lib/app/version';
 
 export const REVEAL_TAPS = 5;
@@ -36,9 +49,9 @@ function saveHidden(hidden: boolean): void {
   }
 }
 
-// isOperator: 운영자 계정이면 개발자 영역에 테스트 알림 버튼도 함께 보여 준다 (서버에서 다시 확인)
-const AppVersionCard: React.FC<{ isOperator?: boolean }> = ({
-  isOperator = false,
+// isTestAccount: 테스트 계정인지. 내 정보를 불러오는 중이면 undefined (그동안은 아무것도 끄지 않는다)
+const AppVersionCard: React.FC<{ isTestAccount?: boolean }> = ({
+  isTestAccount,
 }) => {
   const isInternal = useSyncExternalStore(
     subscribe,
@@ -48,10 +61,18 @@ const AppVersionCard: React.FC<{ isOperator?: boolean }> = ({
   const isHidden = useSyncExternalStore(subscribe, readHidden, () => false);
   // 5번 눌러 직접 바꾼 값. 없으면 켠 기기인지와 숨긴 기록을 따른다
   const [override, setOverride] = useState<boolean | null>(null);
-  const isVisible = override ?? (isInternal && !isHidden);
+  const isVisible =
+    isTestAccount === true && (override ?? (isInternal && !isHidden));
   const taps = useRef<number[]>([]);
 
+  useEffect(() => {
+    if (isTestAccount !== false) return;
+    if (isInternalDevice()) setInternalDevice(false);
+    if (isGuideTestOn()) setGuideTestMode(false);
+  }, [isTestAccount]);
+
   const countTap = () => {
+    if (!isTestAccount) return;
     const now = Date.now();
     taps.current = [...taps.current.filter(t => now - t < TAP_WINDOW_MS), now];
     if (taps.current.length < REVEAL_TAPS) return;
@@ -73,7 +94,8 @@ const AppVersionCard: React.FC<{ isOperator?: boolean }> = ({
         </span>
       </div>
       {isVisible && <InternalDeviceToggle />}
-      {isVisible && isOperator && <OperatorTestPush />}
+      {isVisible && <TestPushCard />}
+      {isVisible && <GuideTestCard />}
     </>
   );
 };
