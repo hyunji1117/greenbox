@@ -14,11 +14,12 @@ import type { Item } from '@/app/lib/schemas/item';
 import FridgeQuickAdd from './FridgeQuickAdd';
 
 const mutate = vi.hoisted(() => vi.fn());
+const reset = vi.hoisted(() => vi.fn());
 
 vi.mock('@/app/lib/items/useItems', () => ({
   useCreateItem: () => ({
     mutate,
-    reset: vi.fn(),
+    reset,
     isPending: false,
     isError: false,
   }),
@@ -241,8 +242,11 @@ describe('FridgeQuickAdd', () => {
     );
     fireEvent.change(input(), { target: { value: '우유' } });
     submit();
+    const resetsBeforeClose = reset.mock.calls.length;
     fireEvent.click(screen.getAllByRole('button', { name: '닫기' })[0]);
     expect(mutate).not.toHaveBeenCalled();
+    // 시트 안에서 났던 넣기 오류는 닫으면 지운다 (입력창 아래에 다시 뜨지 않게)
+    expect(reset.mock.calls.length).toBeGreaterThan(resetsBeforeClose);
 
     submit();
     fireEvent.click(screen.getByRole('radio', { name: '1번 선반, 0개' }));

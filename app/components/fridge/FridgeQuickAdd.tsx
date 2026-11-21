@@ -324,7 +324,11 @@ const FridgeQuickAdd: React.FC<FridgeQuickAddProps> = ({
           onPlace={target =>
             create(placing?.name ?? '', target, placing?.onSuccess)
           }
-          onClose={() => setPlacing(null)}
+          onClose={() => {
+            // 시트 안에서 넣기에 실패한 뒤 닫으면 그 오류를 입력창 아래에 다시 띄우지 않는다 (사용자가 넣기를 그만둔 것)
+            createItem.reset();
+            setPlacing(null);
+          }}
           voice={placing?.voice}
           onUseExisting={existing => {
             const finishUse = () => {
