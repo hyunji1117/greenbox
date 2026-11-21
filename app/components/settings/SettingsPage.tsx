@@ -29,11 +29,14 @@ interface SettingsPageProps {
 // --------------------------------------
 // 타입 정의
 // --------------------------------------
-type SettingsSection = 'account' | 'app';
+// 계정: 나와 내가 함께 쓰는 사람 / 설정: 알림, 보기 방식, 앱 정보 / 도움: 자주 묻는 질문, 의견 보내기
+// ("알림과 앱"에 선반 보기와 의견 보내기가 함께 들어가 이름과 맞지 않아 2026-11-18 세 탭으로 나눔)
+type SettingsSection = 'account' | 'settings' | 'help';
 
 const SECTION_TABS = [
   { id: 'account', label: '계정' },
-  { id: 'app', label: '알림과 앱' },
+  { id: 'settings', label: '설정' },
+  { id: 'help', label: '도움' },
 ] as const;
 
 // iOS Safari는 16px 미만 입력창을 누르면 화면을 확대하므로 text-base를 쓴다
@@ -199,7 +202,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
             <MembersEntryCard />
-            <FaqCard />
             <button
               type="button"
               onClick={handleLogout}
@@ -211,13 +213,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             </button>
           </>
         )}
-        {activeSection === 'app' && (
+        {activeSection === 'settings' && (
           <>
             <PushNotificationCard />
             <NotificationSettingsCard />
             <ShelfBetaCard />
-            <FeedbackCard />
             <AppVersionCard isOperator={myProfile?.email === OPERATOR.email} />
+          </>
+        )}
+        {activeSection === 'help' && (
+          <>
+            <FaqCard />
+            <FeedbackCard />
           </>
         )}
       </div>
