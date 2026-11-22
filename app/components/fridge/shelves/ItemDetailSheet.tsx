@@ -211,13 +211,16 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
           type="button"
           onClick={() => setNameDraft(item.name)}
           aria-label={`${item.name}, 이름 고치기`}
-          className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-lg px-1 text-left active:bg-gray-200/60"
+          // 상세에서는 이름을 줄이지 않고 다 보여 준다. 길면 줄을 바꾼다 (냉장고 그림의 짧은 이름 규칙은 그대로, 2026-11-23)
+          className="-mx-1 inline-flex max-w-full items-start gap-1.5 rounded-lg px-1 text-left active:bg-gray-200/60"
         >
-          <span className="truncate">{item.name}</span>
+          <span className="[overflow-wrap:anywhere] break-keep">
+            {item.name}
+          </span>
           <PencilIcon
             size={14}
             aria-hidden
-            className="shrink-0 text-gray-400"
+            className="mt-1.5 shrink-0 text-gray-400"
           />
         </button>
       ) : (

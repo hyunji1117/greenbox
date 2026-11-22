@@ -90,8 +90,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
           {centerTitle && <span aria-hidden />}
           <h2
             id={titleId}
+            // 왼쪽 정렬 제목은 닫기 버튼 앞까지 남은 폭을 모두 쓴다 (긴 식재료 이름이 일찍 잘리지 않게)
             className={`text-lg font-semibold text-gray-900 ${
-              centerTitle ? 'text-center text-balance' : ''
+              centerTitle ? 'text-center text-balance' : 'min-w-0 flex-1'
             }`}
           >
             {titleContent ?? title}
