@@ -27,10 +27,11 @@ import { loginWithSystemBrowser } from './src/login';
 const BACKGROUND = '#F0F0F4';
 const BRAND = '#6B46C1';
 
-// 웹 로그인 화면과 같은 로고(영문 손글씨와 "우리집 냉장고")
-const LOGO = require('./assets/logo-wordmark.png');
-// 로고 그림 비율 (가로 600 : 세로 401)
-const LOGO_WIDTH = 132;
+// 시작 화면(app.json splash)과 같은 그림: 로고와 소개 한 줄 "냉장고 속 식재료, 가족과 한눈에" (2026-11-22)
+// 같은 그림을 같은 폭으로 그려 시작 화면에서 로딩 화면으로 넘어갈 때 로고가 움직이지 않게 한다
+const SPLASH = require('./assets/splash-icon.png');
+// app.json의 splash imageWidth와 같게 둔다 (정사각형 그림)
+const SPLASH_WIDTH = 300;
 
 // 구글 로그인 화면으로 가려는 순간을 잡아 시스템 브라우저 로그인으로 바꾼다
 const isGoogleSignIn = (url: string) => {
@@ -161,8 +162,13 @@ function Shell() {
       )}
       {isLoading && !hasError && (
         <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-          <Image source={LOGO} style={styles.logo} accessibilityLabel="우리집 냉장고" />
-          <ActivityIndicator color={BRAND} />
+          <Image
+            source={SPLASH}
+            style={styles.splash}
+            accessibilityLabel="우리집 냉장고. 냉장고 속 식재료, 가족과 한눈에"
+          />
+          {/* 그림 아래에 따로 두어 그림이 가운데에서 밀려나지 않게 한다 */}
+          <ActivityIndicator color={BRAND} style={styles.spinner} />
         </View>
       )}
       {notice ? (
@@ -193,7 +199,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: BACKGROUND,
   },
-  logo: { width: LOGO_WIDTH, height: Math.round((LOGO_WIDTH * 401) / 600), marginBottom: 16 },
+  splash: { width: SPLASH_WIDTH, height: SPLASH_WIDTH },
+  spinner: { position: 'absolute', top: '50%', marginTop: SPLASH_WIDTH / 2 },
   title: { fontSize: 17, fontWeight: '700', color: '#1F1A2E' },
   body: { fontSize: 14, color: '#625D75', textAlign: 'center' },
   button: {
