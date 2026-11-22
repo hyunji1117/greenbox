@@ -118,6 +118,8 @@ type EventParams = {
     category: string;
     from: number | 'unassigned';
     to: number | 'unassigned';
+    // 다른 칸으로 옮겼을 때 그 칸 (2026-11-22)
+    to_category?: string;
   };
   shelf_count_changed: {
     category: string;
@@ -143,7 +145,9 @@ export type GuideName =
   | 'shelf_board'
   | 'door_swipe'
   // 선반 둘러보기: 선반 열기 → 넣기 → 사진과 음성 → 선반 옮기기 → 먹음과 되돌리기 → 통계
-  | 'shelf_tour';
+  | 'shelf_tour'
+  // 선반 목록의 점선 카드(앱이 놓은 자리) 확정 안내
+  | 'shelf_auto_confirm';
 
 export type JoinPageState =
   | 'invalid'

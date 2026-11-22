@@ -31,6 +31,7 @@ export const GUIDE_PAGES: GuidePage[] = [
       '밀어서 닫기',
       '예전 식재료 배치',
       '선반 둘러보기',
+      '추천 자리 확정',
     ],
     keyPrefixes: [
       'greenbox_guide_members_count_seen_',

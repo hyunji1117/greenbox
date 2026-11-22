@@ -56,7 +56,7 @@ describe('ShelfMapPicker', () => {
         .getAttribute('aria-checked'),
     ).toBe('true');
     fireEvent.click(screen.getByRole('radio', { name: '4번 선반, 0개' }));
-    expect(onPick).toHaveBeenCalledWith(4);
+    expect(onPick).toHaveBeenCalledWith(4, 'fridge');
     // 선반 미정으로 되돌리는 선택은 없다
     expect(screen.queryByRole('button', { name: /선반 미정/ })).toBeNull();
   });
@@ -96,7 +96,7 @@ describe('ShelfMapPicker', () => {
     });
     expect((fullShelf as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(fullShelf);
-    expect(onPick).toHaveBeenCalledWith(3);
+    expect(onPick).toHaveBeenCalledWith(3, 'fridge');
 
     const maxShelf = screen.getByRole('radio', {
       name: '4번 선반, 최대까지 참',
@@ -130,7 +130,7 @@ describe('ShelfMapPicker 옮길 자리', () => {
         category="fridge"
         name="두부"
         current={4}
-        pending={2}
+        pending={{ category: 'fridge', shelf: 2 }}
         items={[]}
         counts={counts}
         onPick={vi.fn()}

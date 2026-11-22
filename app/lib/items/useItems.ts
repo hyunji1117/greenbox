@@ -134,7 +134,16 @@ export function useUpdateItem(itemId?: string) {
         .getQueryData<Item[]>(listKey)
         ?.find(item => item.id === id);
       queryClient.setQueryData<Item[]>(listKey, items =>
-        items?.map(item => (item.id === id ? { ...item, ...updates } : item)),
+        items?.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                ...updates,
+                // 선반을 정하면(같은 자리여도) 서버가 "앱이 놓음" 표시를 지운다. 화면도 바로 따라간다
+                ...(updates.shelf !== undefined ? { autoPlaced: false } : {}),
+              }
+            : item,
+        ),
       );
       return { previous };
     },

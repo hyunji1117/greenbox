@@ -14,7 +14,7 @@ import { isSavableExpiryDate } from '@/app/lib/items/expiry';
 import UnitChooser from '@/app/components/fridge/UnitChooser';
 import { quantityLimits, unitFor, withUnit } from '@/app/lib/items/units';
 import { useUpdateItem } from '@/app/lib/items/useItems';
-import type { Item } from '@/app/lib/schemas/item';
+import type { Category, Item } from '@/app/lib/schemas/item';
 import type { ShelfCounts } from '@/app/lib/shelves/rules';
 import ShelfMapPicker, {
   CATEGORY_LABEL,
@@ -44,20 +44,25 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
   const updateItem = useUpdateItem(item?.id);
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
   const [error, setError] = useState('');
-  // 옮길 자리로 고른 선반. 누르는 즉시 옮기지 않고 "지금 → 옮길 자리"를 보여 준 뒤 버튼으로 옮긴다 (2026-11-20)
-  const [pendingShelf, setPendingShelf] = useState<number | null>(null);
+  // 옮길 자리로 고른 칸과 선반. 누르는 즉시 옮기지 않고 "지금 → 옮길 자리"를 보여 준 뒤 버튼으로 옮긴다 (2026-11-20)
+  // 냉장실에서 넣었어도 냉동실이나 상온 선반으로 옮길 수 있다 (2026-11-22)
+  const [pending, setPending] = useState<{
+    category: Category;
+    shelf: number;
+  } | null>(null);
   const expiryValue = expiryDraft ?? item?.expiryDate ?? '';
 
   const close = () => {
     setExpiryDraft(null);
     setError('');
-    setPendingShelf(null);
+    setPending(null);
     onClose();
   };
   // 선반을 누르면 옮길 자리로만 고른다. 지금 자리를 다시 누르면 고른 것을 지운다
-  const pickShelf = (shelf: number) => {
+  const pickShelf = (shelf: number, category: Category) => {
     setError('');
-    setPendingShelf(item && shelf === item.shelf ? null : shelf);
+    const isHere = item && category === item.category && shelf === item.shelf;
+    setPending(isHere ? null : { category, shelf });
   };
 
   const changeExpiry = (expiryDate: string) => {
@@ -74,21 +79,33 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
     }
   };
 
-  const moveTo = (shelf: number) => {
-    if (!item || shelf === item.shelf) return;
+  const moveTo = ({
+    category,
+    shelf,
+  }: {
+    category: Category;
+    shelf: number;
+  }) => {
+    if (!item) return;
+    const changesCategory = category !== item.category;
+    if (!changesCategory && shelf === item.shelf) return;
     setError('');
     const from = item.shelf;
     // 시트가 닫혀도 이벤트가 빠지지 않도록 저장이 끝나기를 기다렸다가 보낸다 (선반 정하기와 같은 방식)
     updateItem
-      .mutateAsync({ id: item.id, updates: { shelf } })
+      .mutateAsync({
+        id: item.id,
+        updates: changesCategory ? { category, shelf } : { shelf },
+      })
       .then(() => {
-        setPendingShelf(null);
+        setPending(null);
         // 앱이 추천 자리에 넣어 둔 예전 식재료를 옮겼으면 그 확인으로도 센다
         if (item.autoPlaced) track('shelf_auto_checked', { result: 'moved' });
         track('item_shelf_set', {
           category: item.category,
           from: placeLabel(from),
           to: placeLabel(shelf),
+          ...(changesCategory ? { to_category: category } : {}),
         });
       })
       .catch(cause =>
@@ -108,13 +125,83 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
       })
     : '';
 
+  // 앱이 추천 자리에 놓고 아직 확인하지 않은 식재료는 자리 확정이 먼저다 (2026-11-22)
+  // 목록 카드에는 점선과 작은 표식만 두고, 상세를 열면 "○○! 여기 둘까요?"로 묻는다. 확정하면 평소 상세로 넘어간다
+  const needsConfirm = Boolean(item?.autoPlaced && item.shelf !== null);
+  const keepHere = () => {
+    if (!item || item.shelf === null) return;
+    setError('');
+    updateItem
+      .mutateAsync({ id: item.id, updates: { shelf: item.shelf } })
+      .then(() => track('shelf_auto_checked', { result: 'kept' }))
+      .catch(() => setError('저장하지 못했어요. 다시 시도해 주세요'));
+  };
+  const shelfPicker = item && (
+    <>
+      <ShelfMapPicker
+        category={item.category}
+        name={item.name}
+        current={item.shelf}
+        pending={pending}
+        anyCategory
+        items={items}
+        counts={counts}
+        disabled={updateItem.isPending}
+        onPick={pickShelf}
+      />
+      {pending !== null && (
+        <button
+          type="button"
+          disabled={updateItem.isPending}
+          onClick={() => moveTo(pending)}
+          className="mt-2 h-12 w-full rounded-xl bg-[#6B46C1] text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {CATEGORY_LABEL[item.category]}{' '}
+          {item.shelf === null ? '선반 미정' : `${item.shelf}번`} →{' '}
+          {pending.category !== item.category &&
+            `${CATEGORY_LABEL[pending.category]} `}
+          {pending.shelf}번으로 옮기기
+        </button>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-red-500">
+          {error}
+        </p>
+      )}
+    </>
+  );
+
   return (
     <BottomSheet
       isOpen={item !== null}
-      title={item?.name ?? ''}
+      title={
+        item ? (needsConfirm ? `${item.name}! 여기 둘까요?` : item.name) : ''
+      }
+      centerTitle={needsConfirm}
       onClose={close}
     >
-      {item && (
+      {item && needsConfirm && (
+        <section className={`p-4 ${SURFACE}`}>
+          <p className="mb-2 text-center text-sm text-gray-600">
+            앱이 추천 자리에 넣었어요:{' '}
+            <span className="font-semibold text-gray-800">
+              {currentPlaceLabel(item)}
+            </span>
+          </p>
+          {shelfPicker}
+          {pending === null && (
+            <button
+              type="button"
+              disabled={updateItem.isPending}
+              onClick={keepHere}
+              className="mt-2 h-12 w-full rounded-xl bg-[#6B46C1] text-sm font-semibold text-white disabled:opacity-50"
+            >
+              여기 둘게요
+            </button>
+          )}
+        </section>
+      )}
+      {item && !needsConfirm && (
         <div className="space-y-3">
           <section
             className={`flex items-center justify-between gap-3 p-4 ${SURFACE}`}
@@ -201,33 +288,7 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
                 {currentPlaceLabel(item)}
               </span>
             </p>
-            <ShelfMapPicker
-              category={item.category}
-              name={item.name}
-              current={item.shelf}
-              pending={pendingShelf}
-              items={items}
-              counts={counts}
-              disabled={updateItem.isPending}
-              onPick={pickShelf}
-            />
-            {pendingShelf !== null && (
-              <button
-                type="button"
-                disabled={updateItem.isPending}
-                onClick={() => moveTo(pendingShelf)}
-                className="mt-2 h-12 w-full rounded-xl bg-[#6B46C1] text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {CATEGORY_LABEL[item.category]}{' '}
-                {item.shelf === null ? '선반 미정' : `${item.shelf}번`} →{' '}
-                {pendingShelf}번으로 옮기기
-              </button>
-            )}
-            {error && (
-              <p role="alert" className="mt-2 text-xs text-red-500">
-                {error}
-              </p>
-            )}
+            {shelfPicker}
           </section>
 
           <section className={`p-4 ${SURFACE}`}>

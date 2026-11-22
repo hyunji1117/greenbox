@@ -7,7 +7,6 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -103,37 +102,35 @@ describe('ShelfItemCard 선반 정하기', () => {
 describe('ShelfItemCard 앱이 추천 자리에 넣어 둔 식재료', () => {
   const placed = { ...tofu, shelf: 2, autoPlaced: true };
 
-  it('여기 둘게요면 그 자리로 확정하고, 옮기기면 상세(냉장고 지도)를 연다', async () => {
-    mocks.mutateAsync.mockResolvedValue({});
+  it('카드 안에 확정 줄 없이 점선과 "추천 자리" 표식만 두고, 카드 어디를 눌러도 상세(자리 확정)를 연다', () => {
     const onOpenDetail = vi.fn();
-    render(
+    const onFinish = vi.fn();
+    const { container } = render(
       <ShelfItemCard
         item={placed}
         shelfCount={3}
-        onFinish={() => {}}
+        onFinish={onFinish}
         onEatSome={() => {}}
         onOpenDetail={onOpenDetail}
       />,
     );
-    expect(screen.getByText('추천 자리에 넣었어요')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '두부 여기 둘게요' }));
-    await waitFor(() =>
-      expect(mocks.mutateAsync).toHaveBeenCalledWith({
-        id: '5',
-        updates: { shelf: 2 },
-      }),
-    );
-    await waitFor(() =>
-      expect(mocks.track).toHaveBeenCalledWith('shelf_auto_checked', {
-        result: 'kept',
-      }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: '두부 옮기기' }));
-    expect(onOpenDetail).toHaveBeenCalled();
+    expect(screen.getByText('추천 자리')).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: '두부 여기 둘게요' }),
+    ).toBeNull();
+    const card = container.querySelector('article') as HTMLElement;
+    expect(card.dataset.autoPlaced).toBe('true');
+    // 카드 빈 곳을 눌러도 열린다
+    fireEvent.click(card);
+    expect(onOpenDetail).toHaveBeenCalledTimes(1);
+    // 먹음은 먹음만 한다 (상세를 열지 않는다)
+    fireEvent.click(screen.getByRole('button', { name: '두부 먹음' }));
+    expect(onFinish).toHaveBeenCalled();
+    expect(onOpenDetail).toHaveBeenCalledTimes(1);
   });
 
-  it('직접 놓은 식재료에는 나오지 않는다', () => {
-    render(
+  it('직접 놓은 식재료에는 표식이 없다', () => {
+    const { container } = render(
       <ShelfItemCard
         item={{ ...tofu, shelf: 2, autoPlaced: false }}
         shelfCount={3}
@@ -142,6 +139,7 @@ describe('ShelfItemCard 앱이 추천 자리에 넣어 둔 식재료', () => {
         onOpenDetail={() => {}}
       />,
     );
-    expect(screen.queryByText('추천 자리에 넣었어요')).toBeNull();
+    expect(screen.queryByText('추천 자리')).toBeNull();
+    expect(container.querySelector('[data-auto-placed]')).toBeNull();
   });
 });

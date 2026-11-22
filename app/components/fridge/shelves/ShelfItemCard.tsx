@@ -71,26 +71,53 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
       )
       .catch(() => {});
 
+  // 앱이 추천 자리에 놓고 아직 확인하지 않은 식재료: 점선 테두리와 이름 옆 작은 표식만 두고,
+  // 누르면 상세가 "○○! 여기 둘까요?"로 자리 확정부터 묻는다 (ItemDetailSheet, 2026-11-22. 카드 안 확정 줄은 목록을 어지럽혀 뺐다)
+  const needsConfirm = item.autoPlaced && item.shelf !== null;
+  // 카드 빈 곳을 눌러도 상세를 연다 (먹음, 알림 종, 먹은 양 고르기 같은 버튼은 그 버튼의 일만 한다)
+  const openFromCard = (event: React.MouseEvent<HTMLElement>) => {
+    if (eatCount !== null) return;
+    if ((event.target as HTMLElement).closest('button, input, label')) return;
+    onOpenDetail();
+  };
+
   return (
+    // 키보드와 화면 읽기 프로그램은 안의 이름 버튼으로 상세를 연다. 카드 클릭은 손가락이 닿는 범위를 넓히는 것뿐이다
     <article
       // 선반 둘러보기가 방금 넣은 식재료를 찾을 때 쓴다 (ShelfTour)
       data-tour-new={isNew ? 'true' : undefined}
       data-item-id={item.id}
-      className={`rounded-xl bg-white px-3 py-1.5 text-gray-800 shadow-[0_2px_10px_rgba(75,47,140,0.06)] ring-1 ring-black/5 ${
-        isNew ? 'motion-safe:animate-item-added' : ''
-      }`}
+      // 자리 확정 안내(AutoPlacedGuide)가 비추는 카드
+      data-auto-placed={needsConfirm ? 'true' : undefined}
+      onClick={openFromCard}
+      className={`cursor-pointer rounded-xl bg-white px-3 py-1.5 text-gray-800 shadow-[0_2px_10px_rgba(75,47,140,0.06)] ${
+        needsConfirm
+          ? 'border-[1.5px] border-dashed border-[#6B46C1]'
+          : 'ring-1 ring-black/5'
+      } ${isNew ? 'motion-safe:animate-item-added' : ''}`}
     >
       <div className="flex items-center gap-1.5">
         <button
           type="button"
           onClick={onOpenDetail}
-          aria-label={`${item.name} 상세: 수량, 유통기한, 선반, 기록`}
+          aria-label={
+            needsConfirm
+              ? `${item.name}, 앱이 추천 자리에 놓음. 눌러서 자리 정하기`
+              : `${item.name} 상세: 수량, 유통기한, 선반, 기록`
+          }
           // 선반 둘러보기가 비추는 곳 (ShelfTour)
           data-tour="item-name"
           className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-lg text-left active:bg-gray-50"
         >
-          <span className="truncate text-[15px] leading-tight font-semibold">
-            {item.name}
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-[15px] leading-tight font-semibold">
+              {item.name}
+            </span>
+            {needsConfirm && (
+              <span className="shrink-0 rounded-full bg-[#F1EDFA] px-1.5 py-0.5 text-[10px] leading-none font-bold text-[#553C9A]">
+                추천 자리
+              </span>
+            )}
           </span>
           <span className="mt-0.5 text-xs text-gray-500">
             {item.eatenQuantity > 0
@@ -164,38 +191,6 @@ const ShelfItemCard: React.FC<ShelfItemCardProps> = ({
           onConfirm={confirmEat}
           className="mb-1.5 rounded-lg p-1.5 pl-3"
         />
-      )}
-
-      {/* 앱이 추천 자리에 넣어 둔 예전 식재료: 여기서 자리를 확정한다 (점선 → 실선) */}
-      {item.autoPlaced && item.shelf !== null && (
-        <div className="mb-1.5 flex flex-wrap items-center gap-1.5 rounded-lg bg-[#F1EDFA] p-1.5 pl-2.5">
-          <span className="mr-auto text-xs font-semibold text-[#553C9A]">
-            추천 자리에 넣었어요
-          </span>
-          <button
-            type="button"
-            onClick={onOpenDetail}
-            aria-label={`${item.name} 옮기기`}
-            className="h-9 rounded-lg bg-white px-3 text-sm font-medium text-[#553C9A] ring-1 ring-[#DCD3F3]"
-          >
-            옮기기
-          </button>
-          <button
-            type="button"
-            disabled={updateItem.isPending}
-            onClick={() => {
-              const shelf = item.shelf as number;
-              updateItem
-                .mutateAsync({ id: item.id, updates: { shelf } })
-                .then(() => track('shelf_auto_checked', { result: 'kept' }))
-                .catch(() => {});
-            }}
-            aria-label={`${item.name} 여기 둘게요`}
-            className="h-9 rounded-lg bg-[#6B46C1] px-3 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            여기 둘게요
-          </button>
-        </div>
       )}
 
       {item.shelf === null && (

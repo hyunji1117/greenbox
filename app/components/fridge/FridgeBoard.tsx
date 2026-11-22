@@ -10,6 +10,7 @@ import FridgeShelfView, {
 import DoorNotes from '@/app/components/fridge/shelves/DoorNotes';
 import ItemDetailSheet from '@/app/components/fridge/shelves/ItemDetailSheet';
 import { ShelfTourList } from '@/app/components/fridge/shelves/ShelfTour';
+import AutoPlacedGuide from '@/app/components/fridge/shelves/AutoPlacedGuide';
 import { finishShelfTour, useShelfTourStep } from '@/app/lib/shelves/shelfTour';
 import ShelfBelow from '@/app/components/fridge/shelves/ShelfBelow';
 import ShelfItemCard from '@/app/components/fridge/shelves/ShelfItemCard';
@@ -206,6 +207,15 @@ const FridgeBoard: React.FC = () => {
           userId={currentFridge?.myUserId}
           // 둘러보기가 끝나면 냉장고로 돌아가 밀어서 닫기, 알림장 안내가 이어진다
           onFinish={() => setOpenShelf(null)}
+        />
+      )}
+      {/* 점선 카드(앱이 놓은 자리)가 처음 보이면 누르면 자리를 정한다고 한 번 알린다 (둘러보기 뒤) */}
+      {isShelfMode && openShelf && (
+        <AutoPlacedGuide
+          userId={currentFridge?.myUserId}
+          hasAutoPlaced={shownItems.some(
+            item => item.autoPlaced && item.shelf !== null && !item.finished,
+          )}
         />
       )}
       {/* 선반 목록: 왼쪽 위에 어느 선반인지와 들어 있는 식재료 수, 오른쪽 끝에 냉장고로 돌아가는 버튼 (2026-11-20) */}

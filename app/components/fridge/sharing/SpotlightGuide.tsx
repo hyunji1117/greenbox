@@ -61,6 +61,7 @@ export const GUIDE_ORDER: Record<GuideName, number> = {
   shelf_board: 40,
   door_swipe: 50,
   shelf_tour: 60,
+  shelf_auto_confirm: 70,
 };
 
 // 줄의 맨 앞이 지금 보이는 안내다. 한 번 보이기 시작한 안내는 순서가 앞선 안내가 늦게 와도 닫힐 때까지 맨 앞에 둔다

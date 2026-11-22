@@ -3,7 +3,8 @@
 // 선반 보기와 같은 배치(왼쪽 냉동실, 오른쪽 냉장실, 아래 상온)를 작게 그린 냉장고 지도
 // 품목 상세의 "선반 옮기기"와, 새로 넣을 때의 "○○! 어디에 넣을까요?"(PlaceSheet)가 함께 쓴다
 // - 지금 냉장고에 정한 칸 수 그대로 선반을 쌓고(1번이 맨 위), 선반마다 몇 개 있는지 적는다
-// - 고르는 칸의 선반만 누를 수 있다. 다른 칸은 흐리게 두어 위치만 알려 준다 (칸 바꾸기는 여기서 하지 않는다)
+// - 새로 넣을 때는 고르는 칸의 선반만 누를 수 있고, 다른 칸은 흐리게 두어 위치만 알려 준다
+// - 선반 옮기기(anyCategory)에서는 냉동실과 상온 선반도 고른다. 이때 선반 이름에 칸을 붙여 읽는다 (2026-11-22)
 // - 지금 자리는 색으로 칠하고 "지금", 추천 자리는 테두리와 "추천" 배지, 옮길 자리로 고른 선반은 점선 테두리와 "이동"
 // - 가득 찬 선반(냉장과 상온 20, 냉동 30)은 노란색 "가득"으로 알리되 고를 수 있고, 최대(30, 50)면 "최대"로 막는다
 // - "선반 미정"으로 되돌리는 선택은 두지 않는다 (2026-11-18)
@@ -38,23 +39,30 @@ interface ShelfMapPickerProps {
   current: number | null;
   // 추천 선반. 없으면 표시하지 않는다
   recommended?: number;
-  // 옮길 자리로 고른 선반 (선반 옮기기). "지금"은 그대로 두고 이 선반에 점선 테두리와 "이동"을 붙인다
-  pending?: number | null;
+  // 옮길 자리로 고른 칸과 선반 (선반 옮기기). "지금"은 그대로 두고 이 선반에 점선 테두리와 "이동"을 붙인다
+  pending?: { category: Category; shelf: number } | null;
+  // 다른 칸의 선반도 고를 수 있게 한다 (선반 옮기기)
+  anyCategory?: boolean;
   items: Item[];
   counts: ShelfCounts;
   disabled?: boolean;
-  onPick: (shelf: number) => void;
+  // 고른 선반과 그 칸
+  onPick: (shelf: number, category: Category) => void;
 }
 
 const Compartment: React.FC<
   Omit<ShelfMapPickerProps, 'counts' | 'category'> & {
     category: Category;
+    // 품목이 지금 있는 칸이거나 새로 넣을 칸인지 (지금 자리, 추천은 이 칸에만 있다)
+    isHome: boolean;
     active: boolean;
     count: number;
   }
 > = ({
   category,
+  isHome,
   active,
+  anyCategory,
   name,
   current,
   recommended,
@@ -93,9 +101,12 @@ const Compartment: React.FC<
               </div>
             );
           }
-          const isHere = current === shelf;
-          const isRecommended = !isHere && recommended === shelf;
-          const isPending = !isHere && pending === shelf;
+          const isHere = isHome && current === shelf;
+          const isRecommended = isHome && !isHere && recommended === shelf;
+          const isPending =
+            !isHere &&
+            pending?.category === category &&
+            pending.shelf === shelf;
           // 옮기는 품목 자신은 세지 않는다
           const isMax = !isHere && load >= SHELF_MAX[category];
           const isFull = !isHere && !isMax && load >= SHELF_FULL_AT[category];
@@ -116,9 +127,9 @@ const Compartment: React.FC<
               type="button"
               role="radio"
               aria-checked={isPending || (isHere && !pending)}
-              aria-label={`${shelf}번 선반, ${state}`}
+              aria-label={`${anyCategory ? `${CATEGORY_LABEL[category]} ` : ''}${shelf}번 선반, ${state}`}
               disabled={disabled || isMax}
-              onClick={() => onPick(shelf)}
+              onClick={() => onPick(shelf, category)}
               className={`flex h-9 items-center justify-between rounded-lg px-2 text-xs transition-colors ${
                 isHere
                   ? 'bg-[#6B46C1] text-white'
@@ -162,13 +173,14 @@ const Compartment: React.FC<
 };
 
 const ShelfMapPicker: React.FC<ShelfMapPickerProps> = props => {
-  const { category, counts } = props;
+  const { category, counts, anyCategory = false } = props;
   const compartment = (each: Category) => (
     <Compartment
       {...props}
       key={each}
       category={each}
-      active={each === category}
+      isHome={each === category}
+      active={anyCategory || each === category}
       count={counts[each]}
     />
   );
