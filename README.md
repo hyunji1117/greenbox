@@ -209,7 +209,7 @@ npm run dev
 npm test
 ```
 
-개발 서버가 실행되면 [http://localhost:3033](http://localhost:3033)에서 확인할 수 있습니다.
+개발 서버가 실행되면 [http://localhost:8809](http://localhost:8809)에서 확인할 수 있습니다.
 
 ### 환경 변수 (로그인과 DB)
 

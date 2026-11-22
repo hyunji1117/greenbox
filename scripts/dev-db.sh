@@ -11,7 +11,7 @@
 #   scripts/dev-db.sh setup              처음 한 번: DB 만들기, 인증서, 마이그레이션 적용
 #   scripts/dev-db.sh start | stop       DB 켜기 / 끄기
 #   scripts/dev-db.sh migrate            아직 적용하지 않은 db/migrations만 적용
-#   scripts/dev-db.sh dev [AUTH_URL]     DB를 켜고 이 DB를 보는 dev 서버(3033)를 띄운다
+#   scripts/dev-db.sh dev [AUTH_URL]     DB를 켜고 이 DB를 보는 dev 서버(8809)를 띄운다
 #                                        폰에서 Tailscale 주소로 로그인하려면 그 주소를 AUTH_URL로 넘긴다
 #   scripts/dev-db.sh dump [파일]         테스트 데이터를 파일로 저장 (다른 컴퓨터로 옮길 때)
 #   scripts/dev-db.sh restore 파일        저장한 파일로 테스트 데이터를 되살린다
@@ -125,7 +125,7 @@ cmd_dev() {
   export DATABASE_CA_CERT="$(cat "$CERTS/ca.crt")"
   [[ -n "${1:-}" ]] && export AUTH_URL="$1"
   cd "$ROOT"
-  exec npx next dev -p 3033
+  exec npx next dev -p 8809
 }
 
 cmd_dump() {
