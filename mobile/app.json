@@ -33,11 +33,15 @@
           "resizeMode": "contain",
           "backgroundColor": "#F0F0F4"
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "greenbox",
     "extra": {
-      "webUrl": "https://greenbox-seven.vercel.app"
+      "webUrl": "https://greenbox-seven.vercel.app",
+      "eas": {
+        "projectId": "cf72069e-c1a1-402c-a0c8-805870b356c9"
+      }
     }
   }
 }
