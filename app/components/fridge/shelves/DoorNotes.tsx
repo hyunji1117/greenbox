@@ -1,7 +1,7 @@
 'use client';
 // app/components/fridge/shelves/DoorNotes.tsx
 // 가족 게시판: 닫힌 냉장실 문에 붙은 작은 화이트보드 (선반 보기 베타)
-// - 문 위의 보드(표지판 아래부터 손잡이 위까지)에는 실제로 쓴 메모를 아주 작은 체크박스 목록으로 두 칸에 적어 둔다 (읽기는 크게 펼쳐서)
+// - 문 위의 보드(냉장실 문 중상단, 손잡이 오른쪽)에는 실제로 쓴 메모를 아주 작은 체크박스 목록으로 두 칸에 적어 둔다 (읽기는 크게 펼쳐서)
 // - 보드를 누르면 화면 가운데에 큰 화이트보드가 뜨고 뒤는 어둡게 가린다. 보드 안에서 스크롤로 모든 기록을 본다
 // - 큰 보드에서 가족 누구나 쓰고, 눌러서 확인(줄 긋기)하고, 확인된 메모만 "⋯"에서 지운다
 // - 새 메모는 다른 가족에게 알림이 간다 (서버가 알림 설정과 5분 간격을 지킨다)
@@ -18,10 +18,15 @@ import {
 } from '@/app/lib/notes/useNotes';
 import { NOTE_TEXT_MAX, type Note } from '@/app/lib/schemas/notes';
 
-// 문 위 보드에 작은 글씨로 적어 두는 메모 수. 보드 높이는 냉장고 높이(선반 수)를 따라 바뀌어
-// 가장 큰 냉장고(선반 7칸)에서 두 칸이 차는 만큼 넉넉히 두고, 넘치는 줄은 보드가 잘라 낸다
-export const PREVIEW_ON_BOARD = 60;
+// 문 위 보드에 작은 글씨로 적어 두는 메모 수. 보드 높이는 144px로 늘 같아
+// 두 칸이 차는 만큼 넉넉히 두고, 넘치는 줄은 보드가 잘라 낸다
+export const PREVIEW_ON_BOARD = 30;
 export const BOARD_TITLE = '알림장';
+// 쓰기 전 보드에 그리는 자리 표시 줄 폭(%). 왼쪽 칸, 오른쪽 칸
+const SKELETON_WIDTHS = [
+  [70, 50, 62, 45, 66, 54, 40],
+  [56, 68, 42, 60, 48, 72, 52],
+] as const;
 // 쓰기 칸 예시. 냉장고 앞에서 가족끼리 실제로 주고받는 말(찜하기, 부탁, 알림)을 번갈아 보여 준다
 // 좁은 화면에서도 잘리지 않게 10자 안팎으로
 export const NOTE_EXAMPLES = [
@@ -240,10 +245,10 @@ const NotesBoard: React.FC<{
   );
 };
 
-// 닫힌 냉장실 문에 붙은 화이트보드. 폭은 냉장실 문에 맞추고, 위는 표지판 아래(64px), 아래는 문 손잡이 위쪽 끝에서 8px 위
-// 손잡이는 문 세로 가운데에 놓인 144px 막대(FridgeShelfView)라 위쪽 끝이 "높이의 50% - 72px"이다.
-// 고정 높이 대신 손잡이에 맞춰 두어 냉장고 높이가 바뀌어도 늘 손잡이 위에서 멈춘다.
-// 선반이 적어 손잡이 위 자리가 거의 없으면 최소 40px은 남긴다 (그때만 손잡이와 살짝 겹친다)
+// 닫힌 냉장실 문에 붙은 화이트보드. 냉장고 길이와 상관없이 늘 같은 자리와 크기로 붙인다 (2026-11-22)
+// - 위는 표지판 바로 아래(80px), 높이는 손잡이와 같은 144px, 폭은 손잡이(왼쪽 12px, 폭 6px) 오른쪽부터 문 끝 12px 안쪽까지
+// - 예전에는 표지판 아래부터 손잡이 위까지라 선반 3칸이면 한 줄만 보였고, 손잡이 옆 가운데에 두면 긴 냉장고에서 문 한가운데로 내려갔다
+// - 선반이 1~2칸인 아주 짧은 냉장고에서는 문 아래를 넘지 않게 높이를 줄인다
 // 실제 메모를 아주 작게(7px) 적어 무엇이 붙어 있는지만 보이게 하고, 누르면 큰 보드가 열린다
 // 냉장고를 여는 버튼보다 위에 놓아 보드를 눌러도 문이 열리지 않는다
 const DoorNotes: React.FC = () => {
@@ -272,7 +277,7 @@ const DoorNotes: React.FC = () => {
               ? `${BOARD_TITLE} 열기, 확인 전 메모 ${unchecked.length}개`
               : `${BOARD_TITLE} 열기`
           }
-          className="pointer-events-auto absolute inset-x-3 top-16 bottom-[calc(50%+80px)] flex min-h-10 flex-col rounded-sm border-2 border-[#C9CED8] bg-white px-1.5 pt-0.5 pb-1 text-left shadow-[0_1px_3px_rgba(31,26,46,0.12)] active:bg-gray-50"
+          className="pointer-events-auto absolute top-20 right-3 left-[26px] flex h-36 max-h-[calc(100%-96px)] flex-col rounded-sm border-2 border-[#C9CED8] bg-white px-1.5 pt-0.5 pb-1 text-left shadow-[0_1px_3px_rgba(31,26,46,0.12)] active:bg-gray-50"
         >
           {/* 제목은 맨 위 가운데에 붙인다 */}
           <span
@@ -295,44 +300,63 @@ const DoorNotes: React.FC = () => {
               </span>
             )}
           </span>
-          {/* 체크박스 목록을 왼쪽 위부터 채우고, 왼쪽 칸이 차면 가운데 구분선 너머 오른쪽 칸으로 넘어간다 */}
+          {/* 체크박스 목록을 왼쪽 위부터 채우고, 왼쪽 칸이 차면 가운데 구분선 너머 오른쪽 칸으로 넘어간다
+              폭 320px 이하 휴대폰에서는 보드가 좁아 구분선 없이 한 칸으로, 줄마다 가운데 정렬한다 (2026-11-22) */}
           <span
             aria-hidden
-            className="relative mt-1 block min-h-0 flex-1 columns-2 gap-x-2 overflow-hidden [column-fill:auto]"
+            className={`relative mt-1 block min-h-0 flex-1 overflow-hidden ${
+              lines.length === 0
+                ? ''
+                : 'columns-2 gap-x-2 [column-fill:auto] max-[320px]:columns-1'
+            }`}
           >
             {/* 가운데 구분선은 메모가 한 칸만 차도 늘 보이게 따로 그린다 */}
-            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-200" />
-            {lines.length === 0
-              ? [70, 50, 60].map(width => (
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-200 max-[320px]:hidden" />
+            {lines.length === 0 ? (
+              // 쓰기 전 자리 표시: 두 칸 모두 줄을 채워 알림장처럼 보이게 한다 (전에는 한 칸에 세 줄뿐이었다)
+              <span className="grid grid-cols-2 gap-x-2 max-[320px]:grid-cols-1">
+                {SKELETON_WIDTHS.map((column, index) => (
                   <span
-                    key={width}
-                    className="mb-1 block h-[3px] rounded-full bg-gray-200"
-                    style={{ width: `${width}%` }}
-                  />
-                ))
-              : lines.map(note => (
-                  <span
-                    key={note.id}
-                    className="flex break-inside-avoid items-center gap-[3px]"
+                    key={index}
+                    className={`flex flex-col gap-[6px] pt-0.5 max-[320px]:items-center ${
+                      index > 0 ? 'max-[320px]:hidden' : ''
+                    }`}
                   >
-                    <span
-                      className={`h-[6px] w-[6px] shrink-0 rounded-[1px] border ${
-                        note.checked
-                          ? 'border-gray-400 bg-gray-400'
-                          : 'border-gray-500 bg-white'
-                      }`}
-                    />
-                    <span
-                      className={`min-w-0 truncate text-[7px] leading-[10px] ${
-                        note.checked
-                          ? 'text-gray-400 line-through'
-                          : 'text-gray-700'
-                      }`}
-                    >
-                      {note.text}
-                    </span>
+                    {column.map((width, row) => (
+                      <span
+                        key={row}
+                        className="block h-[3px] rounded-full bg-gray-200"
+                        style={{ width: `${width}%` }}
+                      />
+                    ))}
                   </span>
                 ))}
+              </span>
+            ) : (
+              lines.map(note => (
+                <span
+                  key={note.id}
+                  className="flex break-inside-avoid items-center gap-[3px] max-[320px]:justify-center"
+                >
+                  <span
+                    className={`h-[6px] w-[6px] shrink-0 rounded-[1px] border ${
+                      note.checked
+                        ? 'border-gray-400 bg-gray-400'
+                        : 'border-gray-500 bg-white'
+                    }`}
+                  />
+                  <span
+                    className={`min-w-0 truncate text-[7px] leading-[10px] ${
+                      note.checked
+                        ? 'text-gray-400 line-through'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {note.text}
+                  </span>
+                </span>
+              ))
+            )}
           </span>
         </button>
       </div>

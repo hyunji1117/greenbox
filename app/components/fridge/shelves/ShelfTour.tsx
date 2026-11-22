@@ -1,12 +1,13 @@
 // app/components/fridge/shelves/ShelfTour.tsx
-// 선반 둘러보기 안내 7장 (2026-11-20). 장마다 "가이드" 표시와 큰 제목 한 줄. 상자는 글 길이에 맞춘다
+// 선반 둘러보기 안내 6장 (2026-11-20, 2026-11-22 먹음은 알려 주기만). 장마다 "가이드" 표시와 큰 제목 한 줄. 상자는 글 길이에 맞춘다
 // - 직접 해 보는 장: 다음 버튼 없이 깜빡이는 테두리를 누르면 실제 그 버튼이 눌린다
 // - 알려 주기만 하는 장: 다음 버튼으로만 넘어간다 (다른 곳은 눌러도 아무 일이 없다)
 // 1) 냉장고: 냉장실 1번 선반 "선반 선택해요" → 그 선반 목록으로
 // 2) 입력창 "식재료 추가해요" → 입력창을 누르면 비켜 주고, 실제로 하나 넣으면 다음 장
 // 3) 사진과 음성 묶음 "사진과 음성으로도 추가 가능해요" (다음)
 // 4) 방금 넣은 식재료 이름 "이름을 누르면 다른 선반으로 옮길 수 있어요" (다음)
-// 5) 방금 넣은 식재료 먹음 "먹었으면 먹음 눌러요" → 실제로 먹음 → 아래 알림의 되돌리기 "잘못 눌렀다면 바로 되돌려요" (다음)
+// 5) 방금 넣은 식재료 먹음 "다 먹으면 먹음 눌러요" (다음). 누르게 하지 않는다: 2장에서 넣은 것은 실제로 넣을 식재료라
+//    먹음으로 만들면 되돌릴 생각만 남았다 (사용자 확인 2026-11-22). 되돌리기는 실제로 먹음을 누를 때 알림에서 본다
 // 6) 아래 메뉴 통계 "다 먹은 음식은 통계에서 다시 꺼낼 수 있어요 😅" (시작하기)
 // - 단위 바꾸기, 통계로 실제 이동하는 장은 뺐다: 단계가 많고 화면이 어두워졌다 밝아졌다 해 어지러웠다 (사용자 확인)
 // - 장과 장 사이에는 화면을 계속 어둡게 두고 비추는 자리만 옮긴다 (깜빡이지 않게)
@@ -31,7 +32,6 @@ import {
   finishShelfTour,
   setShelfTourStep,
   TOUR_LAST_STEP,
-  TOUR_UNDO,
   TOUR_WAIT_ADD,
   useShelfTourStep,
   wantsShelfTour,
@@ -69,24 +69,17 @@ const LIST_STEPS: Record<number, TourStep> = {
   4: {
     // 방금 넣은 식재료. 생소한 선반 옮기기만 알려 준다 (상세를 열지 않는다)
     selector: '[data-tour-new="true"] [data-tour="item-name"]',
-    title: '이름을 누르면 다른 선반으로 옮길 수 있어요',
+    title: '이름을 누르면\n다른 선반으로 옮길 수 있어요',
     spotLabel: '방금 넣은 식재료 이름',
   },
   5: {
     selector: '[data-tour-new="true"] [data-tour="item-eat"]',
-    title: '먹었으면 먹음 눌러요',
+    title: '다 먹으면 먹음 눌러요',
     spotLabel: '방금 넣은 식재료 먹음',
-    tap: true,
-  },
-  [TOUR_UNDO]: {
-    // 먹음 뒤 아래에 뜨는 알림의 되돌리기. 알려 주기만 하고 다음으로 넘어간다
-    selector: '[data-tour="undo"]',
-    title: '잘못 눌렀다면 바로 되돌려요',
-    spotLabel: '되돌리기',
   },
   6: {
     selector: '[data-nav-tab="stats"]',
-    title: '다 먹은 음식은 통계에서 다시 꺼낼 수 있어요 😅',
+    title: '다 먹은 음식은\n통계에서 다시 꺼낼 수 있어요 😅',
     spotLabel: '아래 메뉴의 통계',
   },
 };
@@ -143,9 +136,6 @@ export const ShelfTourStart: React.FC<ShelfTourStartProps> = ({
   );
 };
 
-// 다음 장 번호 (5장 먹음 뒤의 되돌리기 장은 6장으로 이어진다)
-const nextStepOf = (step: number) => (step === TOUR_UNDO ? 6 : step + 1);
-
 // 비출 것을 찾고, 없으면 그 장을 건너뛰고, 있으면 안내를 띄우는 공통 부분
 const TourStepGuide: React.FC<{
   step: number;
@@ -157,7 +147,7 @@ const TourStepGuide: React.FC<{
   onFinish?: () => void;
 }> = ({ step, current, selector, userId, onTap, onFinish }) => {
   const target = useMemo(() => targetOf(selector), [selector]);
-  // 중간 장 번호(51)가 마지막 장 번호보다 커서 크기로 비교하지 않는다
+  // 기다리는 장 번호(20)가 마지막 장 번호보다 커서 크기로 비교하지 않는다
   const isLast = step === TOUR_LAST_STEP;
   // 비출 것이 화면에 나타날 때까지 잠깐 기다린다 (막 나타나 움직이는 알림 등).
   // 나타난 뒤에 안내를 그려야 비출 자리를 잴 수 있다. 어느 장까지 준비됐는지 장 번호로 기억한다
@@ -178,7 +168,7 @@ const TourStepGuide: React.FC<{
       // 끝내 없으면 그 장은 건너뛴다
       window.clearInterval(timer);
       if (isLast) finishShelfTour(userId);
-      else setShelfTourStep(nextStepOf(step));
+      else setShelfTourStep(step + 1);
     }, TARGET_POLL_MS);
     return () => {
       window.clearInterval(timer);
@@ -218,7 +208,7 @@ const TourStepGuide: React.FC<{
         if (isLast) {
           finishShelfTour(userId);
           onFinish?.();
-        } else setShelfTourStep(nextStepOf(step));
+        } else setShelfTourStep(step + 1);
       }}
     />
   );
@@ -246,13 +236,7 @@ export const ShelfTourList: React.FC<{
           (element as HTMLInputElement).focus();
           return;
         }
-        if (step === 5) {
-          // 먹음 뒤에는 아래 알림의 되돌리기를 알려 준다
-          setShelfTourStep(TOUR_UNDO);
-          element.click();
-          return;
-        }
-        // 실제 그 버튼을 누른다 (먹음 처리, 통계 탭으로 가기)
+        // 실제 그 버튼을 누른다
         setShelfTourStep(step + 1);
         element.click();
       }}

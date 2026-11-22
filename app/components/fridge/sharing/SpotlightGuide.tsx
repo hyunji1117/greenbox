@@ -335,7 +335,12 @@ const SpotlightGuide: React.FC<SpotlightGuideProps> = ({
         }`}
         style={{ top: cardTop, left: cardLeft }}
       >
-        <h2 id={titleId} className="font-semibold text-gray-900">
+        {/* 긴 제목은 제목 안의 줄바꿈(\n)에서 나눈다. 글자 수로 아무 데서나 끊기면 "수 / 있어요"처럼 어색했다 (2026-11-22)
+            "가이드" 배지는 줄 수와 상관없이 첫 줄 앞에 둔다 (한 줄 제목과 같은 자리, 줄마다 가운데 정렬 유지) */}
+        <h2
+          id={titleId}
+          className="font-semibold whitespace-pre-line text-gray-900"
+        >
           {badge && (
             <span
               aria-hidden

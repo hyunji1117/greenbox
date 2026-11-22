@@ -10,11 +10,7 @@ import FridgeShelfView, {
 import DoorNotes from '@/app/components/fridge/shelves/DoorNotes';
 import ItemDetailSheet from '@/app/components/fridge/shelves/ItemDetailSheet';
 import { ShelfTourList } from '@/app/components/fridge/shelves/ShelfTour';
-import {
-  finishShelfTour,
-  TOUR_UNDO,
-  useShelfTourStep,
-} from '@/app/lib/shelves/shelfTour';
+import { finishShelfTour, useShelfTourStep } from '@/app/lib/shelves/shelfTour';
 import ShelfBelow from '@/app/components/fridge/shelves/ShelfBelow';
 import ShelfItemCard from '@/app/components/fridge/shelves/ShelfItemCard';
 import { ApiError } from '@/app/lib/api/apiFetch';
@@ -461,8 +457,7 @@ const FridgeBoard: React.FC = () => {
         />
       )}
       <ActionToast
-        // 선반 둘러보기가 되돌리기를 알려 주는 동안에는 알림을 남겨 둔다
-        isVisible={isNoticeVisible || tourStep === TOUR_UNDO}
+        isVisible={isNoticeVisible}
         subject={notice?.subject}
         message={notice?.message ?? ''}
         actionLabel={

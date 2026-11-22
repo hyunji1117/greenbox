@@ -9,8 +9,6 @@ import { useSyncExternalStore } from 'react';
 export const TOUR_LAST_STEP = 6;
 // 2장("식재료 추가해요")에서 입력창을 누른 뒤, 실제로 하나 넣을 때까지 기다리는 상태
 export const TOUR_WAIT_ADD = 20;
-// 5장 먹음 뒤: 아래 알림의 되돌리기를 알려 주는 장 (알림은 이 장이 끝날 때까지 남겨 둔다)
-export const TOUR_UNDO = 51;
 
 let step: number | null = null;
 const listeners = new Set<() => void>();

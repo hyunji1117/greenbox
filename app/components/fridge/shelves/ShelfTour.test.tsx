@@ -87,11 +87,6 @@ const ListScreen: React.FC<{
           </button>
         </article>
       )}
-      {eaten && (
-        <button type="button" data-tour="undo">
-          되돌리기
-        </button>
-      )}
       <button type="button" data-nav-tab="stats" onClick={onStats}>
         통계
       </button>
@@ -141,7 +136,7 @@ describe('선반 둘러보기', () => {
     expect(onOpenDoors).toHaveBeenCalled();
   });
 
-  it('7장: 직접 해 보는 장은 실제로 누르고, 알려 주는 장은 다음으로만 넘어가며 한 번만 본다', async () => {
+  it('6장: 직접 해 보는 장은 실제로 누르고, 알려 주는 장은 다음으로만 넘어가며 한 번만 본다', async () => {
     const onEat = vi.fn();
     const onStats = vi.fn();
     render(<ListScreen onEat={onEat} onStats={onStats} />);
@@ -174,24 +169,23 @@ describe('선반 둘러보기', () => {
 
     // 4) 선반 옮기기는 알려 주기만 (상세를 열지 않는다)
     await screen.findByRole('dialog', {
-      name: '이름을 누르면 다른 선반으로 옮길 수 있어요',
+      name: '이름을 누르면\n다른 선반으로 옮길 수 있어요',
     });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-    // 5) 먹음을 직접 누르면 실제 먹음 버튼이 눌리고, 되돌리기를 알려 준다
+    // 5) 먹음은 알려 주기만 한다. 2장에서 넣은 것은 실제로 넣을 식재료라 먹음으로 만들지 않는다
     const eat = await screen.findByRole('dialog', {
-      name: '먹었으면 먹음 눌러요',
+      name: '다 먹으면 먹음 눌러요',
     });
     fireEvent.click(
       within(eat).getByRole('button', { name: '방금 넣은 식재료 먹음' }),
     );
-    expect(onEat).toHaveBeenCalled();
-    await screen.findByRole('dialog', { name: '잘못 눌렀다면 바로 되돌려요' });
+    expect(onEat).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     // 6) 통계는 비추며 알려 주기만 하고 끝 (통계로 옮겨 가지 않는다)
     await screen.findByRole('dialog', {
-      name: '다 먹은 음식은 통계에서 다시 꺼낼 수 있어요 😅',
+      name: '다 먹은 음식은\n통계에서 다시 꺼낼 수 있어요 😅',
     });
     fireEvent.click(screen.getByRole('button', { name: '시작하기' }));
     expect(onStats).not.toHaveBeenCalled();
@@ -221,7 +215,7 @@ describe('선반 둘러보기', () => {
     expect(
       await screen.findByRole(
         'dialog',
-        { name: '다 먹은 음식은 통계에서 다시 꺼낼 수 있어요 😅' },
+        { name: '다 먹은 음식은\n통계에서 다시 꺼낼 수 있어요 😅' },
         { timeout: 5000 },
       ),
     ).toBeTruthy();
