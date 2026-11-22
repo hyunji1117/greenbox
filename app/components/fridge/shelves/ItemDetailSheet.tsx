@@ -4,7 +4,7 @@
 // 목록 줄을 촘촘하게 하려고 뺀 것들을, 품목을 누르면 여기서 보고 고친다
 
 import React, { useState } from 'react';
-import { CalendarDaysIcon, Trash2 } from 'lucide-react';
+import { CalendarDaysIcon, PencilIcon, Trash2 } from 'lucide-react';
 import BottomSheet from '@/app/components/common/BottomSheet';
 import QuantityStepper from '@/app/components/common/QuantityStepper';
 import { SURFACE } from '@/app/components/common/SegmentedTabs';
@@ -13,14 +13,22 @@ import { track } from '@/app/lib/analytics/gtag';
 import { isSavableExpiryDate } from '@/app/lib/items/expiry';
 import UnitChooser from '@/app/components/fridge/UnitChooser';
 import { quantityLimits, unitFor, withUnit } from '@/app/lib/items/units';
-import { useUpdateItem } from '@/app/lib/items/useItems';
-import type { Category, Item } from '@/app/lib/schemas/item';
+import { useDeleteItem, useUpdateItem } from '@/app/lib/items/useItems';
+import {
+  ITEM_NAME_MAX,
+  type Category,
+  type Item,
+} from '@/app/lib/schemas/item';
 import type { ShelfCounts } from '@/app/lib/shelves/rules';
 import ShelfMapPicker, {
   CATEGORY_LABEL,
   currentPlaceLabel,
 } from '@/app/components/fridge/shelves/ShelfMapPicker';
-import { personLabel, withSubjectParticle } from '@/app/lib/user/displayName';
+import {
+  personLabel,
+  withObjectParticle,
+  withSubjectParticle,
+} from '@/app/lib/user/displayName';
 
 interface ItemDetailSheetProps {
   item: Item | null;
@@ -44,6 +52,12 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
   const updateItem = useUpdateItem(item?.id);
   const [expiryDraft, setExpiryDraft] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // 고치는 중인 이름. null이면 고치지 않는 중 (제목의 이름을 누르면 입력칸으로 바뀐다, 2026-11-22)
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  // "잘못 넣었어요"를 눌러 지울지 한 번 더 묻는 중인지 (지우면 되돌릴 수 없다)
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const deleteItem = useDeleteItem();
   // 옮길 자리로 고른 칸과 선반. 누르는 즉시 옮기지 않고 "지금 → 옮길 자리"를 보여 준 뒤 버튼으로 옮긴다 (2026-11-20)
   // 냉장실에서 넣었어도 냉동실이나 상온 선반으로 옮길 수 있다 (2026-11-22)
   const [pending, setPending] = useState<{
@@ -53,6 +67,9 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
   const expiryValue = expiryDraft ?? item?.expiryDate ?? '';
 
   const close = () => {
+    setNameDraft(null);
+    setConfirmingDelete(false);
+    setDeleteError('');
     setExpiryDraft(null);
     setError('');
     setPending(null);
@@ -171,9 +188,124 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
     </>
   );
 
+  // 이름 고치기. 앞뒤 공백은 지우고, 비었거나 너무 길면 저장하지 않는다. 같은 이름이 이미 있어도 막지 않는다
+  const trimmedName = nameDraft?.trim() ?? '';
+  const canSaveName =
+    trimmedName.length > 0 && trimmedName.length <= ITEM_NAME_MAX;
+  const saveName = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!item || !canSaveName) return;
+    if (trimmedName !== item.name) {
+      updateItem.mutate(
+        { id: item.id, updates: { name: trimmedName } },
+        { onSuccess: () => track('item_edited', { field: 'name' }) },
+      );
+    }
+    setNameDraft(null);
+  };
+  // 자리 확정 화면에서는 이름을 고치지 않는다 (확정한 뒤 평소 상세에서 고친다)
+  const nameTitle =
+    item && !needsConfirm ? (
+      nameDraft === null ? (
+        <button
+          type="button"
+          onClick={() => setNameDraft(item.name)}
+          aria-label={`${item.name}, 이름 고치기`}
+          className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-lg px-1 text-left active:bg-gray-200/60"
+        >
+          <span className="truncate">{item.name}</span>
+          <PencilIcon
+            size={14}
+            aria-hidden
+            className="shrink-0 text-gray-400"
+          />
+        </button>
+      ) : (
+        <form onSubmit={saveName} className="flex items-center gap-2">
+          <input
+            // 이름을 누른 직후 바로 고치게 한다
+            autoFocus
+            value={nameDraft}
+            onChange={event => setNameDraft(event.target.value)}
+            onBlur={() => setNameDraft(null)}
+            onKeyDown={event => {
+              if (event.key === 'Escape') setNameDraft(null);
+            }}
+            maxLength={ITEM_NAME_MAX}
+            enterKeyHint="done"
+            aria-label="식재료 이름"
+            className="h-10 min-w-0 flex-1 rounded-xl bg-white px-3 text-base font-normal ring-1 ring-[#A794D6] outline-none"
+          />
+          <button
+            type="submit"
+            // 누르는 순간 입력칸이 포커스를 잃어 취소되지 않게 한다
+            onPointerDown={event => event.preventDefault()}
+            onMouseDown={event => event.preventDefault()}
+            disabled={!canSaveName}
+            className="h-10 shrink-0 rounded-xl bg-[#6B46C1] px-3 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            저장
+          </button>
+        </form>
+      )
+    ) : undefined;
+
+  // 버림: 상해서 버린 것 (통계와 쓰레기통에 남고, 알림에서 되돌릴 수 있다)
+  const discard = () => {
+    if (!item) return;
+    onDiscard(item);
+    close();
+  };
+  // 잘못 넣었어요: 기록을 지운다 (통계에 남지 않는다). 서버가 지운 뒤에 닫는다
+  const removeItem = (from: 'detail' | 'confirm') => {
+    if (!item) return;
+    setDeleteError('');
+    deleteItem.mutate(item.id, {
+      onSuccess: () => {
+        track('item_deleted', { from });
+        close();
+      },
+      onError: () => setDeleteError('지우지 못했어요. 다시 시도해 주세요'),
+    });
+  };
+  const deleteConfirm = (from: 'detail' | 'confirm') =>
+    item && (
+      <div className="rounded-2xl bg-red-50 p-3 text-center ring-1 ring-red-100">
+        <p className="text-sm font-semibold text-red-900">
+          {withObjectParticle(item.name)} 지울까요?
+        </p>
+        <p className="mt-0.5 text-xs text-red-800">
+          잘못 넣었을 때만 지워요. 통계에도 남지 않아요
+        </p>
+        {deleteError && (
+          <p role="alert" className="mt-1 text-xs text-red-600">
+            {deleteError}
+          </p>
+        )}
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(false)}
+            className="h-11 flex-1 rounded-xl bg-white text-sm font-semibold text-gray-700 ring-1 ring-black/5"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            disabled={deleteItem.isPending}
+            onClick={() => removeItem(from)}
+            className="h-11 flex-1 rounded-xl bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            지우기
+          </button>
+        </div>
+      </div>
+    );
+
   return (
     <BottomSheet
       isOpen={item !== null}
+      titleContent={nameTitle}
       title={
         item ? (needsConfirm ? `${item.name}! 여기 둘까요?` : item.name) : ''
       }
@@ -199,6 +331,28 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
               여기 둘게요
             </button>
           )}
+          {/* 추천 자리가 마음에 들지 않는 게 아니라 식재료 자체가 없을 때 (이미 버렸거나 잘못 들어감) */}
+          {pending === null &&
+            (confirmingDelete ? (
+              <div className="mt-2">{deleteConfirm('confirm')}</div>
+            ) : (
+              <div className="mt-1 flex justify-center gap-1">
+                <button
+                  type="button"
+                  onClick={discard}
+                  className="h-10 px-3 text-sm font-medium text-gray-500"
+                >
+                  버렸어요
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(true)}
+                  className="h-10 px-3 text-sm font-medium text-gray-500"
+                >
+                  잘못 넣었어요
+                </button>
+              </div>
+            ))}
         </section>
       )}
       {item && !needsConfirm && (
@@ -299,17 +453,29 @@ const ItemDetailSheet: React.FC<ItemDetailSheetProps> = ({
             </p>
           </section>
 
-          <button
-            type="button"
-            onClick={() => {
-              onDiscard(item);
-              close();
-            }}
-            className="flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-[#F4F4F8] text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-200"
-          >
-            <Trash2 size={16} />
-            버림
-          </button>
+          {/* 버림(상해서 버림, 통계에 남음)과 잘못 넣었어요(기록을 지움, 통계에 안 남음)를 나눈다 (2026-11-22)
+              잘못 넣은 것까지 버림으로 지우면 버린 음식 통계가 꼬였다 */}
+          {confirmingDelete ? (
+            deleteConfirm('detail')
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={discard}
+                className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#F4F4F8] text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-200"
+              >
+                <Trash2 size={16} />
+                버림
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-[#F4F4F8] text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-200"
+              >
+                잘못 넣었어요
+              </button>
+            </div>
+          )}
         </div>
       )}
     </BottomSheet>

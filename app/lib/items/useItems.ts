@@ -10,6 +10,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
+import { z } from 'zod';
 import { apiFetch } from '@/app/lib/api/apiFetch';
 import { track, type ItemAddSource } from '@/app/lib/analytics/gtag';
 import { useCurrentFridge } from '@/app/lib/fridges/useCurrentFridge';
@@ -161,6 +162,26 @@ export function useUpdateItem(itemId?: string) {
         return invalidateList(queryClient, fridgeId);
       }
     },
+  });
+}
+
+const DeletedItemSchema = z.object({ id: z.string() });
+
+// 잘못 넣은 식재료를 지운다 (버림과 달리 통계에 남지 않는다, 0020)
+// 되돌릴 수 없어 화면에서 한 번 더 묻고, 서버가 지운 뒤에 목록에서 뺀다 (실패하면 그대로 남아 다시 누를 수 있다)
+export function useDeleteItem() {
+  const queryClient = useQueryClient();
+  const fridgeId = useCurrentFridgeId();
+  const listKey = itemKeys.list(fridgeId ?? '');
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch(`${ITEMS_URL}/${id}`, DeletedItemSchema, { method: 'DELETE' }),
+    onSuccess: ({ id }) => {
+      queryClient.setQueryData<Item[]>(listKey, items =>
+        items?.filter(item => item.id !== id),
+      );
+    },
+    onSettled: () => invalidateList(queryClient, fridgeId),
   });
 }
 

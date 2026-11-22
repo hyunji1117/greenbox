@@ -224,6 +224,19 @@ export async function updateItem(
   return rowCount ? findItem(itemId, userId) : null;
 }
 
+// 잘못 넣은 식재료를 지운다 (버림과 달리 통계와 쓰레기통에 남지 않는다, 0020)
+// 내가 구성원인 냉장고의 품목만 지운다. 지웠으면 true, 없거나 다른 냉장고 품목이면 false
+export async function deleteItem(
+  userId: string,
+  itemId: string,
+): Promise<boolean> {
+  const { rowCount } = await getPool().query(
+    `DELETE FROM items i WHERE i.id = $2 AND ${MEMBER_OF_ITEM_FRIDGE}`,
+    [Number(userId), itemId],
+  );
+  return Boolean(rowCount);
+}
+
 interface CommentRow {
   id: string;
   text: string;

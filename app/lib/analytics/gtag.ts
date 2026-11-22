@@ -38,7 +38,9 @@ type EventParams = {
   // auto: 말을 마친 뒤 저절로(또는 지금 보내기로) 보냈는지
   feedback_sent: { input: 'text' | 'voice'; auto: boolean };
   // 품목 카드에서 바로 고치기. 무엇을 고쳤는지만 보낸다
-  item_edited: { field: 'quantity' | 'expiry' };
+  item_edited: { field: 'quantity' | 'expiry' | 'name' };
+  // 잘못 넣은 식재료 지우기 (버림과 따로 센다). 어디서 지웠는지: 평소 상세, 자리 확정 화면
+  item_deleted: { from: 'detail' | 'confirm' };
   item_comments_opened: undefined;
   invite_link_revoked: undefined;
   grocery_favorite_saved: { count: number };

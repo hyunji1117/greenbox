@@ -1,8 +1,8 @@
 // app/api/items/[id]/route.ts
-// 품목 수정과 소진 처리. 내가 구성원인 냉장고의 품목만 고칠 수 있다
+// 품목 수정과 소진 처리, 잘못 넣은 품목 지우기. 내가 구성원인 냉장고의 품목만 고치고 지울 수 있다
 
 import { NextResponse } from 'next/server';
-import { updateItem } from '@/app/lib/items/store';
+import { deleteItem, updateItem } from '@/app/lib/items/store';
 import { ItemIdSchema, UpdateItemSchema } from '@/app/lib/schemas/item';
 import { findItemPlacement, shelfSlotState } from '@/app/lib/shelves/store';
 import { invalidRequest, notFound, requireUser, shelfConflict } from '../guard';
@@ -47,4 +47,22 @@ export async function PATCH(
   return NextResponse.json(item, {
     headers: { 'Cache-Control': 'private, no-store' },
   });
+}
+
+// 잘못 넣은 품목을 지운다 (버림과 달리 통계에 남지 않는다). 다른 냉장고의 품목도 없는 품목과 똑같이 404
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { userId, response } = await requireUser();
+  if (response) return response;
+
+  const id = ItemIdSchema.safeParse((await params).id);
+  if (!id.success) return notFound();
+
+  if (!(await deleteItem(userId, id.data))) return notFound();
+  return NextResponse.json(
+    { id: id.data },
+    { headers: { 'Cache-Control': 'private, no-store' } },
+  );
 }

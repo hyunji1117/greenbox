@@ -11,6 +11,8 @@ import { XIcon } from 'lucide-react';
 interface BottomSheetProps {
   isOpen: boolean;
   title: string;
+  // 제목 자리에 글 대신 그릴 것 (예: 눌러서 고치는 식재료 이름). 없으면 title을 그대로 쓴다
+  titleContent?: React.ReactNode;
   onClose: () => void;
   children: React.ReactNode;
   // 휴대폰에서 짧은 질문형 제목("오이! 어디에 넣을까요?")은 가운데에 둔다
@@ -20,6 +22,7 @@ interface BottomSheetProps {
 const BottomSheet: React.FC<BottomSheetProps> = ({
   isOpen,
   title,
+  titleContent,
   onClose,
   children,
   centerTitle = false,
@@ -91,7 +94,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
               centerTitle ? 'text-center text-balance' : ''
             }`}
           >
-            {title}
+            {titleContent ?? title}
           </h2>
           <button
             type="button"

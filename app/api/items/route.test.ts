@@ -7,7 +7,7 @@ import { toItemJson, type ItemRow } from '@/app/lib/items/store';
 import { ItemSchema } from '@/app/lib/schemas/item';
 import { PATCH as PATCH_COMMENT } from './[id]/comments/[commentId]/route';
 import { POST as POST_COMMENT } from './[id]/comments/route';
-import { PATCH } from './[id]/route';
+import { DELETE, PATCH } from './[id]/route';
 import { GET, POST } from './route';
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   listItems: vi.fn(),
   createItem: vi.fn(),
   updateItem: vi.fn(),
+  deleteItem: vi.fn(),
   addComment: vi.fn(),
   updateComment: vi.fn(),
   isShelfViewOn: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock('@/app/lib/items/store', async importOriginal => ({
   listItems: mocks.listItems,
   createItem: mocks.createItem,
   updateItem: mocks.updateItem,
+  deleteItem: mocks.deleteItem,
   addComment: mocks.addComment,
   updateComment: mocks.updateComment,
 }));
@@ -293,6 +295,37 @@ describe('PATCH /api/items/[id]', () => {
     expect(mocks.updateItem).toHaveBeenCalledWith('7', '999', {
       finished: true,
     });
+  });
+});
+
+describe('DELETE /api/items/[id]', () => {
+  const remove = (id: string) =>
+    DELETE(
+      new Request('http://localhost/api/items/1', { method: 'DELETE' }),
+      params(id),
+    );
+
+  it('구성원인 냉장고의 품목을 지운다', async () => {
+    mocks.deleteItem.mockResolvedValue(true);
+
+    const res = await remove('12');
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: '12' });
+    expect(mocks.deleteItem).toHaveBeenCalledWith('7', '12');
+  });
+
+  it('없거나 다른 냉장고의 품목이면 404다', async () => {
+    mocks.deleteItem.mockResolvedValue(false);
+
+    expect((await remove('999')).status).toBe(404);
+  });
+
+  it('로그인하지 않았으면 지우지 않는다', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    expect((await remove('12')).status).toBe(401);
+    expect(mocks.deleteItem).not.toHaveBeenCalled();
   });
 });
 
